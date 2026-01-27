@@ -113,6 +113,7 @@ interface AppState {
   collapsedActionIds: Set<string>;
   isQuickEntryOpen: boolean;
   isSearchOpen: boolean;
+  isCommandPaletteOpen: boolean;
   isPerspectiveEditorOpen: boolean;
   isSettingsOpen: boolean;
   isKeyboardHelpOpen: boolean;
@@ -133,6 +134,7 @@ interface AppState {
   setSelectedProject: (id: string | null) => void;
   setQuickEntryOpen: (open: boolean) => void;
   setSearchOpen: (open: boolean) => void;
+  setCommandPaletteOpen: (open: boolean) => void;
   setShowCompleted: (show: boolean) => void;
   setFilterTagId: (tagId: string | null) => void;
   toggleActionSelection: (id: string) => void;
@@ -205,6 +207,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   collapsedActionIds: new Set<string>(),
   isQuickEntryOpen: false,
   isSearchOpen: false,
+  isCommandPaletteOpen: false,
   isPerspectiveEditorOpen: false,
   isSettingsOpen: false,
   isKeyboardHelpOpen: false,
@@ -225,6 +228,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setSelectedProject: (id) => set({ selectedProjectId: id }),
   setQuickEntryOpen: (open) => set({ isQuickEntryOpen: open }),
   setSearchOpen: (open) => set({ isSearchOpen: open }),
+  setCommandPaletteOpen: (open) => set({ isCommandPaletteOpen: open }),
   setShowCompleted: (show) => set({ showCompleted: show }),
   setFilterTagId: (tagId) => set({ filterTagId: tagId }),
 

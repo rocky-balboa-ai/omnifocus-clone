@@ -9,6 +9,7 @@ export function useKeyboardShortcuts() {
     selectedActionId,
     setQuickEntryOpen,
     setSearchOpen,
+    setCommandPaletteOpen,
     setKeyboardHelpOpen,
     setFocusTimerOpen,
     setWeeklyReviewOpen,
@@ -23,6 +24,7 @@ export function useKeyboardShortcuts() {
     actions,
     isQuickEntryOpen,
     isSearchOpen,
+    isCommandPaletteOpen,
     isKeyboardHelpOpen,
     isFocusTimerOpen,
     isWeeklyReviewOpen,
@@ -43,6 +45,13 @@ export function useKeyboardShortcuts() {
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
       e.preventDefault();
       setSearchOpen(true);
+      return;
+    }
+
+    // Cmd/Ctrl + P: Open command palette
+    if ((e.metaKey || e.ctrlKey) && e.key === 'p') {
+      e.preventDefault();
+      setCommandPaletteOpen(true);
       return;
     }
 
@@ -109,7 +118,7 @@ export function useKeyboardShortcuts() {
     if (isInputField) return;
 
     // Skip if modals are open
-    if (isQuickEntryOpen || isSearchOpen || isKeyboardHelpOpen || isFocusTimerOpen || isWeeklyReviewOpen || isHabitTrackerOpen || isTimeBlockerOpen) return;
+    if (isQuickEntryOpen || isSearchOpen || isCommandPaletteOpen || isKeyboardHelpOpen || isFocusTimerOpen || isWeeklyReviewOpen || isHabitTrackerOpen || isTimeBlockerOpen) return;
 
     switch (e.key.toLowerCase()) {
       case 'n':
@@ -248,6 +257,7 @@ export function useKeyboardShortcuts() {
     selectedActionId,
     setQuickEntryOpen,
     setSearchOpen,
+    setCommandPaletteOpen,
     setKeyboardHelpOpen,
     setFocusTimerOpen,
     setWeeklyReviewOpen,
@@ -260,6 +270,7 @@ export function useKeyboardShortcuts() {
     actions,
     isQuickEntryOpen,
     isSearchOpen,
+    isCommandPaletteOpen,
     isKeyboardHelpOpen,
     isFocusTimerOpen,
     isWeeklyReviewOpen,

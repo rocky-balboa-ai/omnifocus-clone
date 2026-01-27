@@ -32,6 +32,7 @@ import { HabitTracker } from '@/components/HabitTracker';
 import { TimeBlocker } from '@/components/TimeBlocker';
 import { GlobalProgressBar } from '@/components/GlobalProgressBar';
 import { OnboardingTour } from '@/components/OnboardingTour';
+import { CommandPalette } from '@/components/CommandPalette';
 import { useAppStore } from '@/stores/app.store';
 import { useKeyboardShortcuts } from '@/lib/useKeyboardShortcuts';
 import { useThemeInit } from '@/lib/useThemeInit';
@@ -53,6 +54,8 @@ export default function Home() {
     setQuickEntryOpen,
     isSearchOpen,
     setSearchOpen,
+    isCommandPaletteOpen,
+    setCommandPaletteOpen,
     isPerspectiveEditorOpen,
     editingPerspectiveId,
     closePerspectiveEditor,
@@ -170,6 +173,12 @@ export default function Home() {
       <SearchCommand
         isOpen={isSearchOpen}
         onClose={() => setSearchOpen(false)}
+      />
+
+      {/* Command Palette - opens with cmd+p */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
       />
 
       {/* Perspective Editor */}
