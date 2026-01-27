@@ -1,9 +1,10 @@
 'use client';
 
 import { useAppStore, Project } from '@/stores/app.store';
-import { FolderKanban, Flag, Calendar, ChevronRight, Plus, Layers, List } from 'lucide-react';
+import { FolderKanban, Flag, Calendar, ChevronRight, Plus, Layers, List, Eye, EyeOff, Search } from 'lucide-react';
 import clsx from 'clsx';
 import { format, isPast, isToday } from 'date-fns';
+import { useMemo } from 'react';
 
 interface ProjectItemProps {
   project: Project;
@@ -17,6 +18,10 @@ function ProjectItem({ project }: ProjectItemProps) {
 
   const typeIcon = project.type === 'sequential' ? List : project.type === 'parallel' ? Layers : FolderKanban;
   const TypeIcon = typeIcon;
+
+  const totalActions = project._count?.actions || 0;
+  const completedActions = project._count?.completedActions || 0;
+  const progressPercent = totalActions > 0 ? Math.round((completedActions / totalActions) * 100) : 0;
 
   const handleClick = () => {
     setSelectedProject(project.id);
@@ -48,7 +53,22 @@ function ProjectItem({ project }: ProjectItemProps) {
         </div>
 
         <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-          <span>{project._count?.actions || 0} actions</span>
+          {totalActions > 0 ? (
+            <div className="flex items-center gap-2">
+              <div className="w-16 h-1.5 bg-omnifocus-surface rounded-full overflow-hidden">
+                <div
+                  className={clsx(
+                    'h-full rounded-full transition-all',
+                    progressPercent === 100 ? 'bg-green-500' : 'bg-omnifocus-purple'
+                  )}
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <span>{completedActions}/{totalActions}</span>
+            </div>
+          ) : (
+            <span>No actions</span>
+          )}
 
           {project.dueDate && (
             <span
@@ -70,10 +90,14 @@ function ProjectItem({ project }: ProjectItemProps) {
 }
 
 export function ProjectList() {
-  const { projects, isLoading, setQuickEntryOpen } = useAppStore();
+  const { projects, isLoading, setQuickEntryOpen, setSearchOpen, showCompleted, setShowCompleted } = useAppStore();
 
-  // Filter out completed projects by default
-  const activeProjects = projects.filter(p => p.status === 'active');
+  const completedCount = projects.filter(p => p.status === 'completed').length;
+
+  // Filter projects based on showCompleted state
+  const filteredProjects = useMemo(() => {
+    return showCompleted ? projects : projects.filter(p => p.status === 'active');
+  }, [projects, showCompleted]);
 
   if (isLoading) {
     return (
@@ -85,10 +109,40 @@ export function ProjectList() {
 
   return (
     <div className="h-full flex flex-col">
-      <header className="px-4 md:px-6 py-3 md:py-4 border-b border-omnifocus-border safe-area-top flex items-center justify-between">
-        <h2 className="text-xl md:text-2xl font-semibold text-white">
-          Projects
-        </h2>
+      <header className="px-4 md:px-6 py-3 md:py-4 border-b border-omnifocus-border safe-area-top flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 flex-1">
+          <FolderKanban size={24} className="text-blue-400" />
+          <h2 className="text-xl md:text-2xl font-semibold text-white">
+            Projects
+          </h2>
+        </div>
+
+        {/* Show/Hide Completed toggle */}
+        {completedCount > 0 && (
+          <button
+            onClick={() => setShowCompleted(!showCompleted)}
+            className={clsx(
+              'flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm',
+              showCompleted
+                ? 'bg-omnifocus-purple/20 text-omnifocus-purple'
+                : 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+            )}
+            title={showCompleted ? 'Hide completed' : 'Show completed'}
+          >
+            {showCompleted ? <Eye size={16} /> : <EyeOff size={16} />}
+            <span className="hidden md:inline">{completedCount}</span>
+          </button>
+        )}
+
+        {/* Search button */}
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border transition-colors text-sm"
+        >
+          <Search size={16} />
+          <kbd className="hidden md:inline px-1.5 py-0.5 text-xs bg-omnifocus-bg rounded">⌘K</kbd>
+        </button>
+
         <button
           onClick={() => setQuickEntryOpen(true)}
           className="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-omnifocus-purple text-white hover:bg-omnifocus-purple/90 transition-colors text-sm"
@@ -99,7 +153,7 @@ export function ProjectList() {
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 md:px-6 py-3 md:py-4">
-        {activeProjects.length === 0 ? (
+        {filteredProjects.length === 0 ? (
           <div className="text-center py-12">
             <FolderKanban size={48} className="mx-auto text-gray-600 mb-4" />
             <p className="text-gray-500">No projects yet</p>
@@ -107,7 +161,7 @@ export function ProjectList() {
           </div>
         ) : (
           <ul className="space-y-2">
-            {activeProjects.map((project) => (
+            {filteredProjects.map((project) => (
               <ProjectItem key={project.id} project={project} />
             ))}
           </ul>

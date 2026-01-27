@@ -43,7 +43,7 @@ export interface Project {
   nextReviewAt?: string;
   folderId?: string;
   actions?: Action[];
-  _count?: { actions: number };
+  _count?: { actions: number; completedActions?: number };
 }
 
 export interface Tag {

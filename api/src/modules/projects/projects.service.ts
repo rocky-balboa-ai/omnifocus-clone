@@ -39,7 +39,7 @@ export class ProjectsService {
   }
 
   async findAll(folderId?: string) {
-    return this.prisma.project.findMany({
+    const projects = await this.prisma.project.findMany({
       where: folderId ? { folderId } : undefined,
       include: {
         tags: { include: { tag: true } },
@@ -48,6 +48,27 @@ export class ProjectsService {
       },
       orderBy: [{ position: 'asc' }, { createdAt: 'asc' }],
     });
+
+    // Add completed count for each project
+    const projectsWithProgress = await Promise.all(
+      projects.map(async (project) => {
+        const completedCount = await this.prisma.action.count({
+          where: {
+            projectId: project.id,
+            status: ItemStatus.completed,
+          },
+        });
+        return {
+          ...project,
+          _count: {
+            ...project._count,
+            completedActions: completedCount,
+          },
+        };
+      }),
+    );
+
+    return projectsWithProgress;
   }
 
   async findOne(id: string) {

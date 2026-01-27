@@ -38,7 +38,28 @@ function ReviewProjectItem({ project, onReview, onSelect }: ReviewProjectItemPro
           {project.name}
         </button>
         <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-          <span>{project._count?.actions || 0} actions</span>
+          {(() => {
+            const totalActions = project._count?.actions || 0;
+            const completedActions = project._count?.completedActions || 0;
+            const progressPercent = totalActions > 0 ? Math.round((completedActions / totalActions) * 100) : 0;
+
+            return totalActions > 0 ? (
+              <div className="flex items-center gap-2">
+                <div className="w-12 h-1.5 bg-omnifocus-bg rounded-full overflow-hidden">
+                  <div
+                    className={clsx(
+                      'h-full rounded-full transition-all',
+                      progressPercent === 100 ? 'bg-green-500' : 'bg-omnifocus-purple'
+                    )}
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+                <span>{completedActions}/{totalActions}</span>
+              </div>
+            ) : (
+              <span>No actions</span>
+            );
+          })()}
           {project.nextReviewAt && (
             <span className={clsx(
               'flex items-center gap-1',
