@@ -163,7 +163,7 @@ export function StatusPicker({ value, onChange, className, compact = false }: St
 }
 
 // Status badge for display
-export function StatusBadge({ status, size = 'sm' }: { status: ActionStatus; size?: 'sm' | 'md' }) {
+export function ActionStatusBadge({ status, size = 'sm' }: { status: ActionStatus; size?: 'sm' | 'md' }) {
   const statusData = STATUS_OPTIONS.find(s => s.value === status);
   if (!statusData) return null;
 
