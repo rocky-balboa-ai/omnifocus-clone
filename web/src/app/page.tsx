@@ -31,6 +31,7 @@ import { EndOfDaySummary } from '@/components/EndOfDaySummary';
 import { HabitTracker } from '@/components/HabitTracker';
 import { TimeBlocker } from '@/components/TimeBlocker';
 import { GlobalProgressBar } from '@/components/GlobalProgressBar';
+import { OnboardingTour } from '@/components/OnboardingTour';
 import { useAppStore } from '@/stores/app.store';
 import { useKeyboardShortcuts } from '@/lib/useKeyboardShortcuts';
 import { useThemeInit } from '@/lib/useThemeInit';
@@ -231,6 +232,9 @@ export default function Home() {
 
       {/* End of Day Summary */}
       <EndOfDaySummary />
+
+      {/* Onboarding Tour */}
+      <OnboardingTour />
     </div>
   );
 }
