@@ -1,10 +1,10 @@
 'use client';
 
 import { useAppStore, Project } from '@/stores/app.store';
-import { FolderKanban, Flag, Calendar, ChevronRight, Plus, Layers, List, Eye, EyeOff, Search } from 'lucide-react';
+import { FolderKanban, Flag, Calendar, ChevronRight, Plus, Layers, List, Eye, EyeOff, Search, X, CornerDownLeft } from 'lucide-react';
 import clsx from 'clsx';
 import { format, isPast, isToday } from 'date-fns';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 interface ProjectItemProps {
   project: Project;
@@ -97,7 +97,11 @@ function ProjectItem({ project }: ProjectItemProps) {
 }
 
 export function ProjectList() {
-  const { projects, isLoading, setQuickEntryOpen, setSearchOpen, showCompleted, setShowCompleted, theme } = useAppStore();
+  const { projects, isLoading, setQuickEntryOpen, setSearchOpen, showCompleted, setShowCompleted, theme, createProject } = useAppStore();
+  const [showNewProjectForm, setShowNewProjectForm] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectType, setNewProjectType] = useState<'parallel' | 'sequential' | 'single_actions'>('parallel');
+  const [isCreating, setIsCreating] = useState(false);
 
   const completedCount = projects.filter(p => p.status === 'completed').length;
 
@@ -105,6 +109,26 @@ export function ProjectList() {
   const filteredProjects = useMemo(() => {
     return showCompleted ? projects : projects.filter(p => p.status === 'active');
   }, [projects, showCompleted]);
+
+  const handleCreateProject = async () => {
+    if (!newProjectName.trim()) return;
+
+    setIsCreating(true);
+    try {
+      await createProject({
+        name: newProjectName.trim(),
+        type: newProjectType,
+        status: 'active',
+      });
+      setNewProjectName('');
+      setShowNewProjectForm(false);
+    } catch (error) {
+      console.error('Failed to create project:', error);
+      alert('Failed to create project.');
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -167,13 +191,101 @@ export function ProjectList() {
         </button>
 
         <button
-          onClick={() => setQuickEntryOpen(true)}
+          onClick={() => setShowNewProjectForm(true)}
           className="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-omnifocus-purple text-white hover:bg-omnifocus-purple/90 transition-colors text-sm"
         >
           <Plus size={16} />
           <span>New Project</span>
         </button>
       </header>
+
+      {/* New Project Form */}
+      {showNewProjectForm && (
+        <div className={clsx(
+          'mx-4 md:mx-6 mt-3 p-4 rounded-lg border',
+          theme === 'dark'
+            ? 'bg-omnifocus-surface border-omnifocus-border'
+            : 'bg-white border-gray-200'
+        )}>
+          <div className="space-y-3">
+            <input
+              type="text"
+              value={newProjectName}
+              onChange={(e) => setNewProjectName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleCreateProject();
+                } else if (e.key === 'Escape') {
+                  setShowNewProjectForm(false);
+                  setNewProjectName('');
+                }
+              }}
+              placeholder="Project name..."
+              autoFocus
+              className={clsx(
+                'w-full px-3 py-2 rounded-lg border bg-transparent outline-none text-sm',
+                theme === 'dark'
+                  ? 'border-omnifocus-border text-white placeholder-gray-500 focus:border-omnifocus-purple'
+                  : 'border-gray-200 text-gray-900 placeholder-gray-400 focus:border-omnifocus-purple'
+              )}
+            />
+
+            <div className="flex items-center gap-2">
+              <span className={clsx('text-xs', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>Type:</span>
+              {(['parallel', 'sequential', 'single_actions'] as const).map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setNewProjectType(type)}
+                  className={clsx(
+                    'px-3 py-1 rounded text-xs capitalize transition-colors flex items-center gap-1',
+                    newProjectType === type
+                      ? 'bg-omnifocus-purple text-white'
+                      : theme === 'dark'
+                        ? 'bg-omnifocus-bg text-gray-400 hover:text-white'
+                        : 'bg-gray-100 text-gray-600 hover:text-gray-900'
+                  )}
+                >
+                  {type === 'parallel' && <Layers size={12} />}
+                  {type === 'sequential' && <List size={12} />}
+                  {type === 'single_actions' && <FolderKanban size={12} />}
+                  {type.replace('_', ' ')}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-end gap-2">
+              <button
+                onClick={() => {
+                  setShowNewProjectForm(false);
+                  setNewProjectName('');
+                }}
+                className={clsx(
+                  'px-3 py-1.5 rounded-lg transition-colors text-sm',
+                  theme === 'dark'
+                    ? 'text-gray-400 hover:text-white hover:bg-omnifocus-border'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+                )}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateProject}
+                disabled={isCreating || !newProjectName.trim()}
+                className="px-4 py-1.5 rounded-lg bg-omnifocus-purple text-white text-sm flex items-center gap-2 hover:bg-omnifocus-purple/90 disabled:opacity-50"
+              >
+                {isCreating ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <CornerDownLeft size={14} />
+                    <span>Create Project</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto px-4 md:px-6 py-3 md:py-4">
         {filteredProjects.length === 0 ? (
