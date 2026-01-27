@@ -82,6 +82,18 @@ export interface Perspective {
   groupBy?: string;
 }
 
+export interface ActionTemplate {
+  id: string;
+  name: string;
+  title?: string;
+  note?: string;
+  flagged?: boolean;
+  estimatedMinutes?: number;
+  projectId?: string;
+  deferDays?: number; // Days from creation to defer
+  dueDays?: number; // Days from creation to due
+}
+
 interface AppState {
   // Data
   actions: Action[];
@@ -89,6 +101,7 @@ interface AppState {
   tags: Tag[];
   folders: Folder[];
   perspectives: Perspective[];
+  templates: ActionTemplate[];
 
   // UI State
   currentPerspective: string;
@@ -162,6 +175,11 @@ interface AppState {
 
   createTag: (data: Partial<Tag>) => Promise<Tag>;
   deleteTag: (id: string) => Promise<void>;
+
+  // Templates
+  saveTemplate: (template: Omit<ActionTemplate, 'id'>) => void;
+  deleteTemplate: (id: string) => void;
+  createActionFromTemplate: (templateId: string) => Promise<Action>;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -171,6 +189,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   tags: [],
   folders: [],
   perspectives: [],
+  templates: typeof window !== 'undefined'
+    ? JSON.parse(localStorage.getItem('omnifocus-templates') || '[]')
+    : [],
   currentPerspective: 'inbox',
   selectedActionId: null,
   selectedProjectId: null,
@@ -515,5 +536,60 @@ export const useAppStore = create<AppState>((set, get) => ({
     set((state) => ({
       tags: state.tags.filter((t) => t.id !== id),
     }));
+  },
+
+  // Templates
+  saveTemplate: (template) => {
+    const newTemplate: ActionTemplate = {
+      ...template,
+      id: Math.random().toString(36).substr(2, 9),
+    };
+    set((state) => {
+      const templates = [...state.templates, newTemplate];
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('omnifocus-templates', JSON.stringify(templates));
+      }
+      return { templates };
+    });
+  },
+
+  deleteTemplate: (id) => {
+    set((state) => {
+      const templates = state.templates.filter((t) => t.id !== id);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('omnifocus-templates', JSON.stringify(templates));
+      }
+      return { templates };
+    });
+  },
+
+  createActionFromTemplate: async (templateId) => {
+    const { templates, createAction } = get();
+    const template = templates.find((t) => t.id === templateId);
+    if (!template) throw new Error('Template not found');
+
+    const now = new Date();
+    const actionData: Partial<Action> = {
+      title: template.title || '',
+      note: template.note,
+      flagged: template.flagged,
+      estimatedMinutes: template.estimatedMinutes,
+      projectId: template.projectId,
+      status: 'active',
+    };
+
+    if (template.deferDays) {
+      const deferDate = new Date(now);
+      deferDate.setDate(deferDate.getDate() + template.deferDays);
+      actionData.deferDate = deferDate.toISOString();
+    }
+
+    if (template.dueDays) {
+      const dueDate = new Date(now);
+      dueDate.setDate(dueDate.getDate() + template.dueDays);
+      actionData.dueDate = dueDate.toISOString();
+    }
+
+    return createAction(actionData);
   },
 }));

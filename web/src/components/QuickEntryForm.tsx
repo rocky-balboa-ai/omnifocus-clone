@@ -14,6 +14,9 @@ import {
   Clock,
   FileText,
   Timer,
+  Bookmark,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { addDays, addWeeks, startOfTomorrow, nextMonday, format } from 'date-fns';
@@ -31,7 +34,7 @@ const quickDueDates = [
 ];
 
 export function QuickEntryForm({ isOpen, onClose }: QuickEntryFormProps) {
-  const { createAction, projects, tags, fetchActions, currentPerspective, theme } = useAppStore();
+  const { createAction, projects, tags, fetchActions, currentPerspective, theme, templates, saveTemplate, deleteTemplate } = useAppStore();
 
   const [title, setTitle] = useState('');
   const [note, setNote] = useState('');
@@ -45,6 +48,9 @@ export function QuickEntryForm({ isOpen, onClose }: QuickEntryFormProps) {
   const [showTagPicker, setShowTagPicker] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [templateName, setTemplateName] = useState('');
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
 
   const resetForm = () => {
     setTitle('');
@@ -58,6 +64,50 @@ export function QuickEntryForm({ isOpen, onClose }: QuickEntryFormProps) {
     setShowProjectPicker(false);
     setShowTagPicker(false);
     setShowAdvanced(false);
+    setShowTemplates(false);
+    setShowSaveTemplate(false);
+    setTemplateName('');
+  };
+
+  const applyTemplate = (template: typeof templates[0]) => {
+    if (template.title) setTitle(template.title);
+    if (template.note) setNote(template.note);
+    if (template.projectId) setProjectId(template.projectId);
+    if (template.flagged) setFlagged(template.flagged);
+    if (template.estimatedMinutes) setEstimatedMinutes(String(template.estimatedMinutes));
+    if (template.dueDays) {
+      const date = new Date();
+      date.setDate(date.getDate() + template.dueDays);
+      setDueDate(format(date, 'yyyy-MM-dd'));
+    }
+    if (template.deferDays) {
+      const date = new Date();
+      date.setDate(date.getDate() + template.deferDays);
+      setDeferDate(format(date, 'yyyy-MM-dd'));
+    }
+    setShowTemplates(false);
+  };
+
+  const handleSaveTemplate = () => {
+    if (!templateName.trim()) return;
+
+    const today = new Date();
+    const dueDays = dueDate ? Math.round((new Date(dueDate).getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : undefined;
+    const deferDays = deferDate ? Math.round((new Date(deferDate).getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : undefined;
+
+    saveTemplate({
+      name: templateName.trim(),
+      title: title || undefined,
+      note: note || undefined,
+      projectId: projectId || undefined,
+      flagged: flagged || undefined,
+      estimatedMinutes: estimatedMinutes ? parseInt(estimatedMinutes) : undefined,
+      dueDays: dueDays && dueDays > 0 ? dueDays : undefined,
+      deferDays: deferDays && deferDays > 0 ? deferDays : undefined,
+    });
+
+    setTemplateName('');
+    setShowSaveTemplate(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -141,6 +191,71 @@ export function QuickEntryForm({ isOpen, onClose }: QuickEntryFormProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+          {/* Templates */}
+          {templates.length > 0 && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowTemplates(!showTemplates)}
+                className={clsx(
+                  'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors',
+                  theme === 'dark'
+                    ? 'bg-omnifocus-surface text-gray-400 hover:text-white'
+                    : 'bg-gray-100 text-gray-500 hover:text-gray-900'
+                )}
+              >
+                <Bookmark size={14} />
+                <span>Use Template</span>
+                <ChevronDown size={14} className={clsx('transition-transform', showTemplates && 'rotate-180')} />
+              </button>
+
+              {showTemplates && (
+                <div className={clsx(
+                  'absolute top-full left-0 mt-1 w-64 rounded-lg border shadow-lg z-10 max-h-48 overflow-y-auto',
+                  theme === 'dark'
+                    ? 'bg-omnifocus-surface border-omnifocus-border'
+                    : 'bg-white border-gray-200'
+                )}>
+                  {templates.map(template => (
+                    <div
+                      key={template.id}
+                      className={clsx(
+                        'flex items-center justify-between px-3 py-2 group',
+                        theme === 'dark' ? 'hover:bg-omnifocus-border' : 'hover:bg-gray-100'
+                      )}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => applyTemplate(template)}
+                        className={clsx(
+                          'flex-1 text-left text-sm',
+                          theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                        )}
+                      >
+                        {template.name}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteTemplate(template.id);
+                        }}
+                        className={clsx(
+                          'opacity-0 group-hover:opacity-100 p-1 rounded transition-all',
+                          theme === 'dark'
+                            ? 'text-gray-500 hover:text-red-400 hover:bg-omnifocus-bg'
+                            : 'text-gray-400 hover:text-red-500 hover:bg-gray-200'
+                        )}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Title Input */}
           <div>
             <input
@@ -428,6 +543,69 @@ export function QuickEntryForm({ isOpen, onClose }: QuickEntryFormProps) {
                     className="w-20 px-3 py-1.5 rounded-full text-sm bg-omnifocus-surface text-gray-300 border-none text-center"
                   />
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Save as Template */}
+          {!showSaveTemplate ? (
+            <button
+              type="button"
+              onClick={() => setShowSaveTemplate(true)}
+              className={clsx(
+                'w-full flex items-center justify-center gap-2 py-2 text-sm transition-colors',
+                theme === 'dark'
+                  ? 'text-gray-500 hover:text-gray-300'
+                  : 'text-gray-400 hover:text-gray-600'
+              )}
+            >
+              <Bookmark size={14} />
+              <span>Save as Template</span>
+            </button>
+          ) : (
+            <div className={clsx(
+              'p-3 rounded-lg',
+              theme === 'dark' ? 'bg-omnifocus-surface' : 'bg-gray-50'
+            )}>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  placeholder="Template name..."
+                  className={clsx(
+                    'flex-1 px-3 py-1.5 rounded-lg text-sm border',
+                    theme === 'dark'
+                      ? 'bg-omnifocus-bg border-omnifocus-border text-white placeholder-gray-500'
+                      : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'
+                  )}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSaveTemplate();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleSaveTemplate}
+                  disabled={!templateName.trim()}
+                  className="px-3 py-1.5 rounded-lg bg-omnifocus-purple text-white text-sm font-medium disabled:opacity-50"
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowSaveTemplate(false); setTemplateName(''); }}
+                  className={clsx(
+                    'p-1.5 rounded-lg transition-colors',
+                    theme === 'dark'
+                      ? 'text-gray-400 hover:text-white hover:bg-omnifocus-border'
+                      : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200'
+                  )}
+                >
+                  <X size={16} />
+                </button>
               </div>
             </div>
           )}
