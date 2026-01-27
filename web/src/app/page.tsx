@@ -17,6 +17,7 @@ import { SearchCommand } from '@/components/SearchCommand';
 import { ProjectDetailPanel } from '@/components/ProjectDetailPanel';
 import { PerspectiveEditor } from '@/components/PerspectiveEditor';
 import { SettingsPanel } from '@/components/SettingsPanel';
+import { UndoToast } from '@/components/UndoToast';
 import { useAppStore } from '@/stores/app.store';
 import { useKeyboardShortcuts } from '@/lib/useKeyboardShortcuts';
 import { useThemeInit } from '@/lib/useThemeInit';
@@ -145,6 +146,9 @@ export default function Home() {
         isOpen={isSettingsOpen}
         onClose={() => setSettingsOpen(false)}
       />
+
+      {/* Undo Toast */}
+      <UndoToast />
     </div>
   );
 }

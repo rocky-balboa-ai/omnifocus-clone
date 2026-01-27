@@ -50,6 +50,11 @@ export class ActionsController {
     return this.actionsService.complete(id);
   }
 
+  @Post(':id/uncomplete')
+  uncomplete(@Param('id') id: string) {
+    return this.actionsService.uncomplete(id);
+  }
+
   @Post(':id/drop')
   drop(@Param('id') id: string) {
     return this.actionsService.drop(id);

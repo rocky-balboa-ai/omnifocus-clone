@@ -129,6 +129,7 @@ interface AppState {
   createAction: (data: Partial<Action>) => Promise<Action>;
   updateAction: (id: string, data: Partial<Action>) => Promise<Action>;
   completeAction: (id: string) => Promise<void>;
+  uncompleteAction: (id: string) => Promise<void>;
   deleteAction: (id: string) => Promise<void>;
   reorderActions: (actionIds: string[]) => void;
   toggleActionCollapsed: (id: string) => void;
@@ -313,10 +314,34 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   completeAction: async (id) => {
+    const { actions, showCompleted } = get();
+    const action = actions.find(a => a.id === id);
+    const actionTitle = action?.title || 'Action';
+
     await api.post(`/actions/${id}/complete`);
+
+    // Update action status instead of removing (so undo can work)
     set((state) => ({
-      actions: state.actions.filter((a) => a.id !== id),
+      actions: state.actions.map(a =>
+        a.id === id
+          ? { ...a, status: 'completed' as const, completedAt: new Date().toISOString() }
+          : a
+      ).filter(a => showCompleted || a.status !== 'completed'),
     }));
+
+    // Dispatch undo event
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('action-completed', {
+        detail: { actionId: id, title: actionTitle }
+      }));
+    }
+  },
+
+  uncompleteAction: async (id) => {
+    await api.post(`/actions/${id}/uncomplete`);
+    // Refresh actions to get the updated state
+    const { currentPerspective, fetchActions } = get();
+    await fetchActions(currentPerspective);
   },
 
   deleteAction: async (id) => {

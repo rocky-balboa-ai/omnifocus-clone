@@ -176,6 +176,22 @@ export class ActionsService {
     });
   }
 
+  async uncomplete(id: string) {
+    return this.prisma.action.update({
+      where: { id },
+      data: {
+        status: ItemStatus.active,
+        completedAt: null,
+      },
+      include: {
+        tags: { include: { tag: true } },
+        project: true,
+        parent: true,
+        children: true,
+      },
+    });
+  }
+
   async reorder(actionIds: string[]) {
     // Update position for each action
     const updates = actionIds.map((id, index) =>
