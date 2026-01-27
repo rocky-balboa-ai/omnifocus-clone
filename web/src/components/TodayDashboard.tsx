@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { useAppStore } from '@/stores/app.store';
 import { ActionItem } from './ActionItem';
+import { StreakCounter } from './StreakCounter';
 import {
   Sun,
   AlertTriangle,
@@ -108,6 +109,11 @@ export function TodayDashboard() {
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 md:px-6 py-3 md:py-4">
+        {/* Streak Counter */}
+        <div className="mb-4">
+          <StreakCounter />
+        </div>
+
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           <div className={clsx(
