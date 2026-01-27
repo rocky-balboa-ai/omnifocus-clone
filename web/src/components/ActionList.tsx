@@ -204,6 +204,24 @@ export function ActionList() {
     return result;
   }, [filteredActions, collapsedActionIds, sortBy]);
 
+  // Calculate total estimated time for visible actions
+  const totalEstimatedMinutes = useMemo(() => {
+    return flattenedActions.reduce((total, { action }) => {
+      if (action.status === 'active' && action.estimatedMinutes) {
+        return total + action.estimatedMinutes;
+      }
+      return total;
+    }, 0);
+  }, [flattenedActions]);
+
+  // Format minutes to hours and minutes
+  const formatDuration = (minutes: number): string => {
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+  };
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -307,6 +325,18 @@ export function ActionList() {
             >
               <X size={14} />
             </button>
+          )}
+          {/* Estimated time badge */}
+          {totalEstimatedMinutes > 0 && (
+            <span className={clsx(
+              'hidden md:flex items-center gap-1 px-2 py-0.5 rounded-full text-xs shrink-0',
+              theme === 'dark'
+                ? 'bg-omnifocus-surface text-gray-400'
+                : 'bg-gray-100 text-gray-500'
+            )}>
+              <Clock size={12} />
+              {formatDuration(totalEstimatedMinutes)}
+            </span>
           )}
         </div>
 
