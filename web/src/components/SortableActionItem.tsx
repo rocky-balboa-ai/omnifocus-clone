@@ -21,6 +21,7 @@ import {
   Sun,
   CalendarClock,
   X,
+  Copy,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { format, isPast, isToday, isFuture, addDays, startOfDay, nextMonday } from 'date-fns';
@@ -52,6 +53,7 @@ export function SortableActionItem({
     indentAction,
     outdentAction,
     updateAction,
+    createAction,
     theme,
   } = useAppStore();
 
@@ -101,6 +103,20 @@ export function SortableActionItem({
   const handleToggleFlag = async (e: React.MouseEvent) => {
     e.stopPropagation();
     await updateAction(action.id, { flagged: !action.flagged } as any);
+  };
+
+  const handleDuplicate = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await createAction({
+      title: `${action.title} (copy)`,
+      note: action.note,
+      status: 'active',
+      flagged: action.flagged,
+      dueDate: action.dueDate,
+      deferDate: action.deferDate,
+      estimatedMinutes: action.estimatedMinutes,
+      projectId: action.projectId,
+    });
   };
 
   return (
@@ -201,6 +217,16 @@ export function SortableActionItem({
             </span>
           )}
         </div>
+
+        {/* Notes preview */}
+        {action.note && (
+          <p className={clsx(
+            'text-xs mt-1 line-clamp-1',
+            theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+          )}>
+            {action.note}
+          </p>
+        )}
 
         <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
           {action.project && (
@@ -324,6 +350,20 @@ export function SortableActionItem({
           title={action.flagged ? 'Remove flag' : 'Add flag'}
         >
           <Flag size={14} />
+        </button>
+
+        {/* Duplicate */}
+        <button
+          onClick={handleDuplicate}
+          className={clsx(
+            'p-1 rounded transition-colors',
+            theme === 'dark'
+              ? 'hover:bg-omnifocus-border text-gray-500 hover:text-omnifocus-purple'
+              : 'hover:bg-purple-50 text-gray-400 hover:text-omnifocus-purple'
+          )}
+          title="Duplicate action"
+        >
+          <Copy size={14} />
         </button>
 
         {/* Indent/outdent */}
