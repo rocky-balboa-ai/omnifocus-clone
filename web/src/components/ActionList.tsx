@@ -19,7 +19,7 @@ import {
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { useAppStore, Action } from '@/stores/app.store';
 import { SortableActionItem } from './SortableActionItem';
-import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff, Inbox, CheckCircle2, Sparkles, CornerDownLeft, Maximize2, Minimize2, AlertTriangle, Calendar, Filter, Sun, CalendarDays, CalendarClock, ArrowUpDown } from 'lucide-react';
+import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff, Inbox, CheckCircle2, Sparkles, CornerDownLeft, Maximize2, Minimize2, AlertTriangle, Calendar, Filter, Sun, CalendarDays, CalendarClock, ArrowUpDown, FolderKanban } from 'lucide-react';
 import { isBefore, isToday, startOfDay, isFuture, addDays, nextMonday } from 'date-fns';
 import { parseQuickAdd } from '@/lib/parseQuickAdd';
 
@@ -59,6 +59,7 @@ export function ActionList() {
     bulkDeleteActions,
     bulkFlagActions,
     bulkSetDueDate,
+    bulkSetProject,
     theme,
     createAction,
     projects,
@@ -74,6 +75,7 @@ export function ActionList() {
   const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
   const [sortBy, setSortBy] = useState<SortOption>('manual');
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [showBulkProjectMenu, setShowBulkProjectMenu] = useState(false);
 
   const selectionCount = selectedActionIds.size;
 
@@ -751,6 +753,74 @@ export function ActionList() {
             >
               <X size={18} />
             </button>
+
+            {/* Separator */}
+            <div className={clsx(
+              'w-px h-6',
+              theme === 'dark' ? 'bg-omnifocus-border' : 'bg-gray-200'
+            )} />
+
+            {/* Project assignment dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowBulkProjectMenu(!showBulkProjectMenu)}
+                className={clsx(
+                  'p-2 rounded-lg transition-colors',
+                  theme === 'dark'
+                    ? 'bg-omnifocus-surface text-gray-400 hover:text-blue-400 hover:bg-omnifocus-border'
+                    : 'bg-white text-gray-400 hover:text-blue-500 hover:bg-gray-100'
+                )}
+                title="Assign to project"
+              >
+                <FolderKanban size={18} />
+              </button>
+              {showBulkProjectMenu && (
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setShowBulkProjectMenu(false)}
+                  />
+                  <div className={clsx(
+                    'absolute right-0 bottom-full mb-1 py-1 rounded-lg shadow-lg border z-20 min-w-[160px] max-h-[200px] overflow-y-auto',
+                    theme === 'dark'
+                      ? 'bg-omnifocus-surface border-omnifocus-border'
+                      : 'bg-white border-gray-200'
+                  )}>
+                    <button
+                      onClick={() => {
+                        bulkSetProject(null);
+                        setShowBulkProjectMenu(false);
+                      }}
+                      className={clsx(
+                        'w-full px-3 py-1.5 text-left text-xs transition-colors',
+                        theme === 'dark'
+                          ? 'text-gray-300 hover:bg-omnifocus-border'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      )}
+                    >
+                      No Project (Inbox)
+                    </button>
+                    {projects.filter(p => p.status === 'active').map((project) => (
+                      <button
+                        key={project.id}
+                        onClick={() => {
+                          bulkSetProject(project.id);
+                          setShowBulkProjectMenu(false);
+                        }}
+                        className={clsx(
+                          'w-full px-3 py-1.5 text-left text-xs transition-colors truncate',
+                          theme === 'dark'
+                            ? 'text-gray-300 hover:bg-omnifocus-border'
+                            : 'text-gray-700 hover:bg-gray-100'
+                        )}
+                      >
+                        {project.name}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
 
             {/* Separator */}
             <div className={clsx(
