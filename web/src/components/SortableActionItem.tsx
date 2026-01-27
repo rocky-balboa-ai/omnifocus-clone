@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useAppStore, Action } from '@/stores/app.store';
@@ -22,6 +23,7 @@ import {
   CalendarClock,
   X,
   Copy,
+  FolderKanban,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { format, isPast, isToday, isFuture, addDays, startOfDay, nextMonday } from 'date-fns';
@@ -55,7 +57,10 @@ export function SortableActionItem({
     updateAction,
     createAction,
     theme,
+    projects,
   } = useAppStore();
+
+  const [showProjectMenu, setShowProjectMenu] = useState(false);
 
   const {
     attributes,
@@ -114,6 +119,14 @@ export function SortableActionItem({
     e.stopPropagation();
     await updateAction(action.id, { estimatedMinutes: minutes } as any);
   };
+
+  const handleAssignProject = async (e: React.MouseEvent, projectId: string | null) => {
+    e.stopPropagation();
+    await updateAction(action.id, { projectId } as any);
+    setShowProjectMenu(false);
+  };
+
+  const activeProjects = projects.filter(p => p.status === 'active');
 
   const handleDuplicate = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -390,6 +403,74 @@ export function SortableActionItem({
             <PauseCircle size={14} />
           </button>
         )}
+
+        {/* Project assignment */}
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowProjectMenu(!showProjectMenu);
+            }}
+            className={clsx(
+              'p-1 rounded transition-colors',
+              action.projectId
+                ? 'text-blue-400'
+                : theme === 'dark'
+                  ? 'hover:bg-omnifocus-border text-gray-500 hover:text-blue-400'
+                  : 'hover:bg-blue-50 text-gray-400 hover:text-blue-500'
+            )}
+            title={action.project ? `Project: ${action.project.name}` : 'Assign to project'}
+          >
+            <FolderKanban size={14} />
+          </button>
+          {showProjectMenu && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowProjectMenu(false);
+                }}
+              />
+              <div className={clsx(
+                'absolute right-0 top-full mt-1 py-1 rounded-lg shadow-lg border z-20 min-w-[160px] max-h-[200px] overflow-y-auto',
+                theme === 'dark'
+                  ? 'bg-omnifocus-surface border-omnifocus-border'
+                  : 'bg-white border-gray-200'
+              )}>
+                <button
+                  onClick={(e) => handleAssignProject(e, null)}
+                  className={clsx(
+                    'w-full px-3 py-1.5 text-left text-xs transition-colors',
+                    !action.projectId
+                      ? 'text-omnifocus-purple font-medium'
+                      : theme === 'dark'
+                        ? 'text-gray-300 hover:bg-omnifocus-border'
+                        : 'text-gray-700 hover:bg-gray-100'
+                  )}
+                >
+                  No Project (Inbox)
+                </button>
+                {activeProjects.map((project) => (
+                  <button
+                    key={project.id}
+                    onClick={(e) => handleAssignProject(e, project.id)}
+                    className={clsx(
+                      'w-full px-3 py-1.5 text-left text-xs transition-colors truncate',
+                      action.projectId === project.id
+                        ? 'text-omnifocus-purple font-medium'
+                        : theme === 'dark'
+                          ? 'text-gray-300 hover:bg-omnifocus-border'
+                          : 'text-gray-700 hover:bg-gray-100'
+                    )}
+                  >
+                    {project.name}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Duplicate */}
         <button
