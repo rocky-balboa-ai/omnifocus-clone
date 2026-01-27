@@ -18,7 +18,7 @@ type SearchResult = {
 };
 
 export function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
-  const { actions, projects, tags, setSelectedAction, setSelectedProject, setCurrentPerspective } = useAppStore();
+  const { actions, projects, tags, setSelectedAction, setSelectedProject, setCurrentPerspective, theme } = useAppStore();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -160,7 +160,11 @@ export function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
 
       {/* Search Modal */}
       <div className={clsx(
-        'fixed z-50 bg-omnifocus-sidebar border border-omnifocus-border overflow-hidden shadow-2xl',
+        'fixed z-50 overflow-hidden shadow-2xl',
+        theme === 'dark'
+          ? 'bg-omnifocus-sidebar border-omnifocus-border'
+          : 'bg-white border-gray-200',
+        'border',
         // Mobile: full width with padding
         'inset-x-4 top-20',
         // Desktop: centered, narrower
@@ -168,7 +172,10 @@ export function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
         'rounded-xl'
       )}>
         {/* Search Input */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-omnifocus-border">
+        <div className={clsx(
+          'flex items-center gap-3 px-4 py-3 border-b',
+          theme === 'dark' ? 'border-omnifocus-border' : 'border-gray-200'
+        )}>
           <Search size={20} className="text-gray-400 shrink-0" />
           <input
             ref={inputRef}
@@ -176,19 +183,30 @@ export function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="flex-1 bg-transparent text-white placeholder-gray-500 outline-none text-base"
+            className={clsx(
+              'flex-1 bg-transparent placeholder-gray-500 outline-none text-base',
+              theme === 'dark' ? 'text-white' : 'text-gray-900'
+            )}
             placeholder="Search actions, projects, tags..."
           />
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="p-1 rounded hover:bg-omnifocus-surface text-gray-400 hover:text-white"
+              className={clsx(
+                'p-1 rounded transition-colors',
+                theme === 'dark'
+                  ? 'hover:bg-omnifocus-surface text-gray-400 hover:text-white'
+                  : 'hover:bg-gray-100 text-gray-400 hover:text-gray-900'
+              )}
             >
               <X size={16} />
             </button>
           )}
           <div className="hidden md:flex items-center gap-1 text-xs text-gray-500">
-            <kbd className="px-1.5 py-0.5 bg-omnifocus-surface rounded text-gray-400">esc</kbd>
+            <kbd className={clsx(
+              'px-1.5 py-0.5 rounded',
+              theme === 'dark' ? 'bg-omnifocus-surface text-gray-400' : 'bg-gray-100 text-gray-500'
+            )}>esc</kbd>
             <span>to close</span>
           </div>
         </div>
@@ -197,7 +215,7 @@ export function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
         <div ref={listRef} className="max-h-80 overflow-y-auto">
           {query && results.length === 0 && (
             <div className="px-4 py-8 text-center text-gray-500">
-              No results found for "{query}"
+              No results found for &quot;{query}&quot;
             </div>
           )}
 
@@ -209,12 +227,14 @@ export function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
                 'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors',
                 index === selectedIndex
                   ? 'bg-omnifocus-purple/20'
-                  : 'hover:bg-omnifocus-surface'
+                  : theme === 'dark'
+                    ? 'hover:bg-omnifocus-surface'
+                    : 'hover:bg-gray-100'
               )}
             >
               {getIcon(result.type)}
               <div className="flex-1 min-w-0">
-                <p className="text-white truncate">{result.title}</p>
+                <p className={clsx('truncate', theme === 'dark' ? 'text-white' : 'text-gray-900')}>{result.title}</p>
                 {result.subtitle && (
                   <p className="text-xs text-gray-500 truncate">{result.subtitle}</p>
                 )}
@@ -228,7 +248,10 @@ export function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
 
         {/* Footer hint */}
         {!query && (
-          <div className="px-4 py-3 border-t border-omnifocus-border">
+          <div className={clsx(
+            'px-4 py-3 border-t',
+            theme === 'dark' ? 'border-omnifocus-border' : 'border-gray-200'
+          )}>
             <p className="text-sm text-gray-500 text-center">
               Start typing to search...
             </p>
@@ -236,14 +259,17 @@ export function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
         )}
 
         {results.length > 0 && (
-          <div className="hidden md:flex items-center justify-center gap-4 px-4 py-2 border-t border-omnifocus-border text-xs text-gray-500">
+          <div className={clsx(
+            'hidden md:flex items-center justify-center gap-4 px-4 py-2 border-t text-xs text-gray-500',
+            theme === 'dark' ? 'border-omnifocus-border' : 'border-gray-200'
+          )}>
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-omnifocus-surface rounded">↑</kbd>
-              <kbd className="px-1.5 py-0.5 bg-omnifocus-surface rounded">↓</kbd>
+              <kbd className={clsx('px-1.5 py-0.5 rounded', theme === 'dark' ? 'bg-omnifocus-surface' : 'bg-gray-100')}>↑</kbd>
+              <kbd className={clsx('px-1.5 py-0.5 rounded', theme === 'dark' ? 'bg-omnifocus-surface' : 'bg-gray-100')}>↓</kbd>
               <span>navigate</span>
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 bg-omnifocus-surface rounded">↵</kbd>
+              <kbd className={clsx('px-1.5 py-0.5 rounded', theme === 'dark' ? 'bg-omnifocus-surface' : 'bg-gray-100')}>↵</kbd>
               <span>select</span>
             </span>
           </div>
