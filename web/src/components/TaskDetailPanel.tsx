@@ -157,22 +157,27 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 z-40 md:bg-black/30"
+        className="fixed inset-0 bg-black/50 z-40 md:bg-black/30 animate-in fade-in duration-200"
         onClick={onClose}
       />
 
       {/* Panel - slides up on mobile, side panel on desktop */}
-      <div className={clsx(
-        'fixed z-50 overflow-hidden',
-        'flex flex-col',
-        theme === 'dark'
-          ? 'bg-omnifocus-sidebar border-omnifocus-border'
-          : 'bg-white border-gray-200',
-        // Mobile: bottom sheet
-        'inset-x-0 bottom-0 max-h-[90vh] rounded-t-2xl border-t',
-        // Desktop: side panel
-        'md:inset-y-0 md:right-0 md:left-auto md:w-[420px] md:max-h-none md:rounded-none md:border-l md:border-t-0'
-      )}>
+      <div
+        data-testid="task-detail-panel"
+        className={clsx(
+          'fixed z-50 overflow-hidden',
+          'flex flex-col',
+          'transition-transform duration-300 ease-out',
+          'animate-slide-in-right',
+          theme === 'dark'
+            ? 'bg-omnifocus-sidebar border-omnifocus-border'
+            : 'bg-white border-gray-200',
+          // Mobile: bottom sheet
+          'inset-x-0 bottom-0 max-h-[90vh] rounded-t-2xl border-t',
+          // Desktop: side panel
+          'md:inset-y-0 md:right-0 md:left-auto md:w-[420px] md:max-h-none md:rounded-none md:border-l md:border-t-0'
+        )}
+      >
         {/* Header */}
         <div className={clsx(
           'flex items-center justify-between px-4 py-3 border-b',

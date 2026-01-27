@@ -31,6 +31,30 @@ const config: Config = {
       padding: {
         'safe': 'env(safe-area-inset-bottom)',
       },
+      keyframes: {
+        'slide-in-right': {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(0)' },
+        },
+        'slide-out-right': {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+        'slide-in-up': {
+          '0%': { transform: 'translateY(100%)' },
+          '100%': { transform: 'translateY(0)' },
+        },
+        'slide-out-down': {
+          '0%': { transform: 'translateY(0)' },
+          '100%': { transform: 'translateY(100%)' },
+        },
+      },
+      animation: {
+        'slide-in-right': 'slide-in-right 0.3s ease-out',
+        'slide-out-right': 'slide-out-right 0.3s ease-out',
+        'slide-in-up': 'slide-in-up 0.3s ease-out',
+        'slide-out-down': 'slide-out-down 0.3s ease-out',
+      },
     },
   },
   plugins: [],
