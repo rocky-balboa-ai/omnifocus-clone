@@ -25,6 +25,8 @@ import { WeeklyReviewFlow } from '@/components/WeeklyReviewFlow';
 import { KeyboardHintBar } from '@/components/KeyboardHintBar';
 import { Scratchpad } from '@/components/Scratchpad';
 import { BatchActionsBar } from '@/components/BatchActionsBar';
+import { FocusModeOverlay } from '@/components/FocusModeOverlay';
+import { MorningBriefing } from '@/components/MorningBriefing';
 import { useAppStore } from '@/stores/app.store';
 import { useKeyboardShortcuts } from '@/lib/useKeyboardShortcuts';
 import { useThemeInit } from '@/lib/useThemeInit';
@@ -193,6 +195,12 @@ export default function Home() {
 
       {/* Batch Actions Bar - appears when multiple actions selected */}
       <BatchActionsBar />
+
+      {/* Focus Mode Overlay */}
+      <FocusModeOverlay />
+
+      {/* Morning Briefing */}
+      <MorningBriefing />
     </div>
   );
 }

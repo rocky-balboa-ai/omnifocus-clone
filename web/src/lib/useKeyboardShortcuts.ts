@@ -25,6 +25,7 @@ export function useKeyboardShortcuts() {
     isFocusTimerOpen,
     isWeeklyReviewOpen,
     toggleFocusMode,
+    isFocusMode,
   } = useAppStore();
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -45,6 +46,23 @@ export function useKeyboardShortcuts() {
     if ((e.metaKey || e.ctrlKey) && e.key === '\\') {
       e.preventDefault();
       toggleFocusMode();
+      return;
+    }
+
+    // Focus mode specific shortcuts
+    if (isFocusMode && selectedActionId) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        toggleFocusMode();
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        completeAction(selectedActionId);
+        toggleFocusMode();
+        return;
+      }
+      // Space is handled by the FocusModeOverlay component for pause/resume
       return;
     }
 
@@ -230,6 +248,7 @@ export function useKeyboardShortcuts() {
     isFocusTimerOpen,
     isWeeklyReviewOpen,
     toggleFocusMode,
+    isFocusMode,
   ]);
 
   useEffect(() => {
