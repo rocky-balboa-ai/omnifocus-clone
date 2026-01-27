@@ -889,6 +889,42 @@ export function ActionList() {
                   <Sparkles size={18} />
                   <span>Add Your First Action</span>
                 </button>
+
+                {/* Pro tips */}
+                <div className={clsx(
+                  'mt-8 p-4 rounded-lg text-left max-w-sm',
+                  theme === 'dark' ? 'bg-omnifocus-surface/50' : 'bg-gray-50'
+                )}>
+                  <h4 className={clsx(
+                    'text-xs font-semibold uppercase tracking-wider mb-3',
+                    theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                  )}>
+                    Pro Tips
+                  </h4>
+                  <ul className={clsx(
+                    'space-y-2 text-xs',
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                  )}>
+                    <li className="flex items-center gap-2">
+                      <kbd className={clsx(
+                        'px-1.5 py-0.5 rounded font-mono text-[10px]',
+                        theme === 'dark' ? 'bg-omnifocus-bg text-gray-500' : 'bg-white text-gray-400 border border-gray-200'
+                      )}>n</kbd>
+                      <span>Quick add new action</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <kbd className={clsx(
+                        'px-1.5 py-0.5 rounded font-mono text-[10px]',
+                        theme === 'dark' ? 'bg-omnifocus-bg text-gray-500' : 'bg-white text-gray-400 border border-gray-200'
+                      )}>?</kbd>
+                      <span>Show all keyboard shortcuts</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="shrink-0">Try:</span>
+                      <span className="text-omnifocus-purple">&quot;task tomorrow !flag ~15m&quot;</span>
+                    </li>
+                  </ul>
+                </div>
               </>
             )}
           </div>
