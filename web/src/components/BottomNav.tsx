@@ -9,11 +9,13 @@ import {
   Calendar,
   Flag,
   RefreshCw,
+  Sun,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { isBefore, isToday, startOfDay } from 'date-fns';
 
 const perspectiveIcons: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+  today: Sun,
   inbox: Inbox,
   projects: FolderKanban,
   tags: Tags,
@@ -22,7 +24,8 @@ const perspectiveIcons: Record<string, React.ComponentType<{ size?: number; clas
   review: RefreshCw,
 };
 
-const perspectiveOrder = ['inbox', 'projects', 'tags', 'forecast', 'flagged', 'review'];
+// Mobile shows fewer items due to space constraints
+const perspectiveOrder = ['today', 'inbox', 'forecast', 'flagged', 'projects'];
 
 export function BottomNav() {
   const { perspectives, currentPerspective, setCurrentPerspective, actions, projects, theme } = useAppStore();
@@ -32,7 +35,16 @@ export function BottomNav() {
     const today = startOfDay(new Date());
     const activeActions = actions.filter(a => a.status === 'active');
 
+    const overdueCount = activeActions.filter(a =>
+      a.dueDate && isBefore(new Date(a.dueDate), today)
+    ).length;
+
+    const dueTodayCount = activeActions.filter(a =>
+      a.dueDate && isToday(new Date(a.dueDate))
+    ).length;
+
     return {
+      today: overdueCount + dueTodayCount,
       inbox: activeActions.filter(a => !a.projectId).length,
       flagged: activeActions.filter(a => a.flagged).length,
       forecast: activeActions.filter(a => {
@@ -48,9 +60,14 @@ export function BottomNav() {
     };
   }, [actions, projects]);
 
-  // Get perspectives in the correct order
+  // Get perspectives in the correct order (including special 'today')
   const orderedPerspectives = perspectiveOrder
-    .map(id => perspectives.find(p => p.id === id))
+    .map(id => {
+      if (id === 'today') {
+        return { id: 'today', name: 'Today', isBuiltIn: true };
+      }
+      return perspectives.find(p => p.id === id);
+    })
     .filter(Boolean);
 
   return (

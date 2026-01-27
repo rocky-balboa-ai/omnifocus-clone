@@ -8,6 +8,7 @@ import { TagList } from '@/components/TagList';
 import { ForecastList } from '@/components/ForecastList';
 import { FlaggedList } from '@/components/FlaggedList';
 import { ReviewList } from '@/components/ReviewList';
+import { TodayDashboard } from '@/components/TodayDashboard';
 import { BottomNav } from '@/components/BottomNav';
 import { FloatingActionButton } from '@/components/FloatingActionButton';
 import { TaskDetailPanel } from '@/components/TaskDetailPanel';
@@ -95,6 +96,8 @@ export default function Home() {
           <FlaggedList />
         ) : currentPerspective === 'review' ? (
           <ReviewList />
+        ) : currentPerspective === 'today' ? (
+          <TodayDashboard />
         ) : (
           <ActionList />
         )}

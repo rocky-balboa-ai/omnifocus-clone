@@ -17,9 +17,13 @@ import {
   PauseCircle,
   Square,
   CheckSquare,
+  CalendarDays,
+  Sun,
+  CalendarClock,
+  X,
 } from 'lucide-react';
 import clsx from 'clsx';
-import { format, isPast, isToday, isFuture } from 'date-fns';
+import { format, isPast, isToday, isFuture, addDays, startOfDay, nextMonday } from 'date-fns';
 
 interface SortableActionItemProps {
   action: Action;
@@ -47,6 +51,7 @@ export function SortableActionItem({
     toggleActionCollapsed,
     indentAction,
     outdentAction,
+    updateAction,
     theme,
   } = useAppStore();
 
@@ -86,6 +91,16 @@ export function SortableActionItem({
   const handleOutdent = async (e: React.MouseEvent) => {
     e.stopPropagation();
     await outdentAction(action.id);
+  };
+
+  const handleQuickDate = async (e: React.MouseEvent, date: Date | null) => {
+    e.stopPropagation();
+    await updateAction(action.id, { dueDate: date?.toISOString() || null } as any);
+  };
+
+  const handleToggleFlag = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await updateAction(action.id, { flagged: !action.flagged } as any);
   };
 
   return (
@@ -241,8 +256,77 @@ export function SortableActionItem({
         </div>
       </div>
 
-      {/* Indent/Outdent buttons - shown on hover */}
+      {/* Action buttons - shown on hover */}
       <div className="hidden group-hover:flex items-center gap-1 shrink-0">
+        {/* Quick date buttons */}
+        <button
+          onClick={(e) => handleQuickDate(e, startOfDay(new Date()))}
+          className={clsx(
+            'p-1 rounded transition-colors',
+            theme === 'dark'
+              ? 'hover:bg-omnifocus-border text-gray-500 hover:text-omnifocus-orange'
+              : 'hover:bg-orange-50 text-gray-400 hover:text-omnifocus-orange'
+          )}
+          title="Due today"
+        >
+          <Sun size={14} />
+        </button>
+        <button
+          onClick={(e) => handleQuickDate(e, addDays(startOfDay(new Date()), 1))}
+          className={clsx(
+            'p-1 rounded transition-colors',
+            theme === 'dark'
+              ? 'hover:bg-omnifocus-border text-gray-500 hover:text-blue-400'
+              : 'hover:bg-blue-50 text-gray-400 hover:text-blue-500'
+          )}
+          title="Due tomorrow"
+        >
+          <CalendarDays size={14} />
+        </button>
+        <button
+          onClick={(e) => handleQuickDate(e, nextMonday(startOfDay(new Date())))}
+          className={clsx(
+            'p-1 rounded transition-colors',
+            theme === 'dark'
+              ? 'hover:bg-omnifocus-border text-gray-500 hover:text-purple-400'
+              : 'hover:bg-purple-50 text-gray-400 hover:text-purple-500'
+          )}
+          title="Due next week"
+        >
+          <CalendarClock size={14} />
+        </button>
+        {action.dueDate && (
+          <button
+            onClick={(e) => handleQuickDate(e, null)}
+            className={clsx(
+              'p-1 rounded transition-colors',
+              theme === 'dark'
+                ? 'hover:bg-omnifocus-border text-gray-500 hover:text-red-400'
+                : 'hover:bg-red-50 text-gray-400 hover:text-red-500'
+            )}
+            title="Remove due date"
+          >
+            <X size={14} />
+          </button>
+        )}
+
+        {/* Flag toggle */}
+        <button
+          onClick={handleToggleFlag}
+          className={clsx(
+            'p-1 rounded transition-colors',
+            action.flagged
+              ? 'text-omnifocus-orange'
+              : theme === 'dark'
+                ? 'hover:bg-omnifocus-border text-gray-500 hover:text-omnifocus-orange'
+                : 'hover:bg-orange-50 text-gray-400 hover:text-omnifocus-orange'
+          )}
+          title={action.flagged ? 'Remove flag' : 'Add flag'}
+        >
+          <Flag size={14} />
+        </button>
+
+        {/* Indent/outdent */}
         {depth > 0 && (
           <button
             onClick={handleOutdent}

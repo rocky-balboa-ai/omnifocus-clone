@@ -10,6 +10,7 @@ import {
   RefreshCw,
   Plus,
   Settings,
+  Sun,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -50,6 +51,7 @@ const iconMap: Record<string, React.ReactNode> = {
   calendar: <Calendar size={18} />,
   flag: <Flag size={18} />,
   refresh: <RefreshCw size={18} />,
+  sun: <Sun size={18} />,
 };
 
 export function Sidebar() {
@@ -69,6 +71,20 @@ export function Sidebar() {
 
       <nav className="flex-1 overflow-y-auto px-2">
         <div className="space-y-1">
+          {/* Today - special perspective */}
+          <button
+            onClick={() => setCurrentPerspective('today')}
+            className={clsx(
+              'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
+              currentPerspective === 'today'
+                ? themeClasses.navItem.active
+                : themeClasses.navItem.inactive[theme]
+            )}
+          >
+            <Sun size={18} />
+            <span>Today</span>
+          </button>
+
           {builtInPerspectives.map((perspective) => (
             <button
               key={perspective.id}
