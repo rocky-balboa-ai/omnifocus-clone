@@ -118,6 +118,7 @@ interface AppState {
   isKeyboardHelpOpen: boolean;
   isFocusTimerOpen: boolean;
   isWeeklyReviewOpen: boolean;
+  isHabitTrackerOpen: boolean;
   showCompleted: boolean;
   isLoading: boolean;
   error: string | null;
@@ -147,6 +148,7 @@ interface AppState {
   setKeyboardHelpOpen: (open: boolean) => void;
   setFocusTimerOpen: (open: boolean) => void;
   setWeeklyReviewOpen: (open: boolean) => void;
+  setHabitTrackerOpen: (open: boolean) => void;
   setTheme: (theme: 'light' | 'dark') => void;
   setThemeMode: (mode: 'light' | 'dark' | 'auto') => void;
   toggleTheme: () => void;
@@ -206,6 +208,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   isKeyboardHelpOpen: false,
   isFocusTimerOpen: false,
   isWeeklyReviewOpen: false,
+  isHabitTrackerOpen: false,
   showCompleted: false,
   isLoading: false,
   error: null,
@@ -287,6 +290,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setKeyboardHelpOpen: (open) => set({ isKeyboardHelpOpen: open }),
   setFocusTimerOpen: (open) => set({ isFocusTimerOpen: open }),
   setWeeklyReviewOpen: (open) => set({ isWeeklyReviewOpen: open }),
+  setHabitTrackerOpen: (open) => set({ isHabitTrackerOpen: open }),
 
   setTheme: (theme) => {
     set({ theme });

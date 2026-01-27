@@ -21,7 +21,10 @@ import {
   Image,
   Download,
   Loader2,
+  Eye,
+  Edit3,
 } from 'lucide-react';
+import { MarkdownPreview, hasMarkdown } from './MarkdownPreview';
 import clsx from 'clsx';
 import { format } from 'date-fns';
 
@@ -50,6 +53,7 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
   const [isDirty, setIsDirty] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isNotePreview, setIsNotePreview] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -254,21 +258,58 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
 
           {/* Note */}
           <div>
-            <label className={clsx('flex items-center gap-2 text-sm mb-2', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>
-              <FileText size={16} />
-              Notes
-            </label>
-            <textarea
-              value={note}
-              onChange={(e) => { setNote(e.target.value); markDirty(); }}
-              className={clsx(
-                'w-full h-24 px-3 py-2 rounded-lg border placeholder-gray-500 resize-none',
-                theme === 'dark'
-                  ? 'bg-omnifocus-surface border-omnifocus-border text-white'
-                  : 'bg-gray-50 border-gray-200 text-gray-900'
+            <div className="flex items-center justify-between mb-2">
+              <label className={clsx('flex items-center gap-2 text-sm', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>
+                <FileText size={16} />
+                Notes
+                {hasMarkdown(note) && (
+                  <span className={clsx(
+                    'text-xs px-1.5 py-0.5 rounded',
+                    theme === 'dark' ? 'bg-omnifocus-surface text-gray-500' : 'bg-gray-100 text-gray-400'
+                  )}>
+                    Markdown
+                  </span>
+                )}
+              </label>
+              {note && (
+                <button
+                  onClick={() => setIsNotePreview(!isNotePreview)}
+                  className={clsx(
+                    'flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors',
+                    isNotePreview
+                      ? 'bg-omnifocus-purple/20 text-omnifocus-purple'
+                      : theme === 'dark'
+                        ? 'text-gray-500 hover:text-gray-300'
+                        : 'text-gray-400 hover:text-gray-600'
+                  )}
+                >
+                  {isNotePreview ? <Edit3 size={12} /> : <Eye size={12} />}
+                  {isNotePreview ? 'Edit' : 'Preview'}
+                </button>
               )}
-              placeholder="Add notes..."
-            />
+            </div>
+            {isNotePreview && note ? (
+              <div className={clsx(
+                'w-full min-h-[96px] px-3 py-2 rounded-lg border',
+                theme === 'dark'
+                  ? 'bg-omnifocus-surface border-omnifocus-border'
+                  : 'bg-gray-50 border-gray-200'
+              )}>
+                <MarkdownPreview content={note} />
+              </div>
+            ) : (
+              <textarea
+                value={note}
+                onChange={(e) => { setNote(e.target.value); markDirty(); }}
+                className={clsx(
+                  'w-full h-24 px-3 py-2 rounded-lg border placeholder-gray-500 resize-none',
+                  theme === 'dark'
+                    ? 'bg-omnifocus-surface border-omnifocus-border text-white'
+                    : 'bg-gray-50 border-gray-200 text-gray-900'
+                )}
+                placeholder="Add notes... (supports **markdown**)"
+              />
+            )}
           </div>
 
           {/* Project */}

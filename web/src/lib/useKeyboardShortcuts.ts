@@ -12,6 +12,7 @@ export function useKeyboardShortcuts() {
     setKeyboardHelpOpen,
     setFocusTimerOpen,
     setWeeklyReviewOpen,
+    setHabitTrackerOpen,
     setSelectedAction,
     completeAction,
     updateAction,
@@ -24,6 +25,7 @@ export function useKeyboardShortcuts() {
     isKeyboardHelpOpen,
     isFocusTimerOpen,
     isWeeklyReviewOpen,
+    isHabitTrackerOpen,
     toggleFocusMode,
     isFocusMode,
   } = useAppStore();
@@ -105,7 +107,7 @@ export function useKeyboardShortcuts() {
     if (isInputField) return;
 
     // Skip if modals are open
-    if (isQuickEntryOpen || isSearchOpen || isKeyboardHelpOpen || isFocusTimerOpen || isWeeklyReviewOpen) return;
+    if (isQuickEntryOpen || isSearchOpen || isKeyboardHelpOpen || isFocusTimerOpen || isWeeklyReviewOpen || isHabitTrackerOpen) return;
 
     switch (e.key.toLowerCase()) {
       case 'n':
@@ -227,6 +229,12 @@ export function useKeyboardShortcuts() {
         e.preventDefault();
         setWeeklyReviewOpen(true);
         break;
+
+      case 'h':
+        // Open habit tracker
+        e.preventDefault();
+        setHabitTrackerOpen(true);
+        break;
     }
   }, [
     selectedActionId,
@@ -247,6 +255,8 @@ export function useKeyboardShortcuts() {
     isKeyboardHelpOpen,
     isFocusTimerOpen,
     isWeeklyReviewOpen,
+    isHabitTrackerOpen,
+    setHabitTrackerOpen,
     toggleFocusMode,
     isFocusMode,
   ]);

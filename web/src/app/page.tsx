@@ -28,6 +28,7 @@ import { BatchActionsBar } from '@/components/BatchActionsBar';
 import { FocusModeOverlay } from '@/components/FocusModeOverlay';
 import { MorningBriefing } from '@/components/MorningBriefing';
 import { EndOfDaySummary } from '@/components/EndOfDaySummary';
+import { HabitTracker } from '@/components/HabitTracker';
 import { useAppStore } from '@/stores/app.store';
 import { useKeyboardShortcuts } from '@/lib/useKeyboardShortcuts';
 import { useThemeInit } from '@/lib/useThemeInit';
@@ -60,6 +61,8 @@ export default function Home() {
     setFocusTimerOpen,
     isWeeklyReviewOpen,
     setWeeklyReviewOpen,
+    isHabitTrackerOpen,
+    setHabitTrackerOpen,
     theme,
     isFocusMode,
   } = useAppStore();
@@ -193,6 +196,12 @@ export default function Home() {
       <WeeklyReviewFlow
         isOpen={isWeeklyReviewOpen}
         onClose={() => setWeeklyReviewOpen(false)}
+      />
+
+      {/* Habit Tracker */}
+      <HabitTracker
+        isOpen={isHabitTrackerOpen}
+        onClose={() => setHabitTrackerOpen(false)}
       />
 
       {/* Scratchpad - floating quick notes */}
