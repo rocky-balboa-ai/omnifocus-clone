@@ -13,6 +13,7 @@ export function useKeyboardShortcuts() {
     setFocusTimerOpen,
     setWeeklyReviewOpen,
     setHabitTrackerOpen,
+    setTimeBlockerOpen,
     setSelectedAction,
     completeAction,
     updateAction,
@@ -26,6 +27,7 @@ export function useKeyboardShortcuts() {
     isFocusTimerOpen,
     isWeeklyReviewOpen,
     isHabitTrackerOpen,
+    isTimeBlockerOpen,
     toggleFocusMode,
     isFocusMode,
   } = useAppStore();
@@ -107,7 +109,7 @@ export function useKeyboardShortcuts() {
     if (isInputField) return;
 
     // Skip if modals are open
-    if (isQuickEntryOpen || isSearchOpen || isKeyboardHelpOpen || isFocusTimerOpen || isWeeklyReviewOpen || isHabitTrackerOpen) return;
+    if (isQuickEntryOpen || isSearchOpen || isKeyboardHelpOpen || isFocusTimerOpen || isWeeklyReviewOpen || isHabitTrackerOpen || isTimeBlockerOpen) return;
 
     switch (e.key.toLowerCase()) {
       case 'n':
@@ -235,6 +237,12 @@ export function useKeyboardShortcuts() {
         e.preventDefault();
         setHabitTrackerOpen(true);
         break;
+
+      case 'b':
+        // Open time blocker
+        e.preventDefault();
+        setTimeBlockerOpen(true);
+        break;
     }
   }, [
     selectedActionId,
@@ -257,6 +265,8 @@ export function useKeyboardShortcuts() {
     isWeeklyReviewOpen,
     isHabitTrackerOpen,
     setHabitTrackerOpen,
+    setTimeBlockerOpen,
+    isTimeBlockerOpen,
     toggleFocusMode,
     isFocusMode,
   ]);

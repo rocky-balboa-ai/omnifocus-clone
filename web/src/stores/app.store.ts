@@ -119,6 +119,7 @@ interface AppState {
   isFocusTimerOpen: boolean;
   isWeeklyReviewOpen: boolean;
   isHabitTrackerOpen: boolean;
+  isTimeBlockerOpen: boolean;
   showCompleted: boolean;
   isLoading: boolean;
   error: string | null;
@@ -149,6 +150,7 @@ interface AppState {
   setFocusTimerOpen: (open: boolean) => void;
   setWeeklyReviewOpen: (open: boolean) => void;
   setHabitTrackerOpen: (open: boolean) => void;
+  setTimeBlockerOpen: (open: boolean) => void;
   setTheme: (theme: 'light' | 'dark') => void;
   setThemeMode: (mode: 'light' | 'dark' | 'auto') => void;
   toggleTheme: () => void;
@@ -209,6 +211,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   isFocusTimerOpen: false,
   isWeeklyReviewOpen: false,
   isHabitTrackerOpen: false,
+  isTimeBlockerOpen: false,
   showCompleted: false,
   isLoading: false,
   error: null,
@@ -291,6 +294,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setFocusTimerOpen: (open) => set({ isFocusTimerOpen: open }),
   setWeeklyReviewOpen: (open) => set({ isWeeklyReviewOpen: open }),
   setHabitTrackerOpen: (open) => set({ isHabitTrackerOpen: open }),
+  setTimeBlockerOpen: (open) => set({ isTimeBlockerOpen: open }),
 
   setTheme: (theme) => {
     set({ theme });

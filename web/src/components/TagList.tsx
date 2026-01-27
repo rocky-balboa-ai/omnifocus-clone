@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAppStore, Tag } from '@/stores/app.store';
-import { Tags as TagsIcon, ChevronRight, Plus, Search, X, CornerDownLeft, Trash2 } from 'lucide-react';
+import { Tags as TagsIcon, ChevronRight, Plus, Search, X, CornerDownLeft, Trash2, Palette } from 'lucide-react';
+import { TagColorPicker, getTagColor } from './TagColorPicker';
 import clsx from 'clsx';
 
 interface TagItemProps {
@@ -13,6 +14,22 @@ interface TagItemProps {
 function TagItem({ tag, level = 0 }: TagItemProps) {
   const { setFilterTagId, fetchActions, currentPerspective, theme, deleteTag } = useAppStore();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [tagColor, setTagColor] = useState(() => getTagColor(tag.id));
+  const colorPickerRef = useRef<HTMLDivElement>(null);
+
+  // Close color picker on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (colorPickerRef.current && !colorPickerRef.current.contains(e.target as Node)) {
+        setShowColorPicker(false);
+      }
+    }
+    if (showColorPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showColorPicker]);
 
   const handleClick = () => {
     setFilterTagId(tag.id);
@@ -34,6 +51,19 @@ function TagItem({ tag, level = 0 }: TagItemProps) {
     }
   };
 
+  const handleColorClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowColorPicker(!showColorPicker);
+  };
+
+  const handleColorSelect = (colorName: string | null) => {
+    setTagColor(getTagColor(tag.id));
+    setShowColorPicker(false);
+  };
+
+  // Get background color for the tag dot
+  const dotColor = tagColor?.bg || `hsl(${(tag.name.charCodeAt(0) * 47) % 360}, 70%, 60%)`;
+
   return (
     <>
       <li
@@ -44,10 +74,39 @@ function TagItem({ tag, level = 0 }: TagItemProps) {
         )}
         style={{ paddingLeft: `${12 + level * 16}px` }}
       >
-        <div
-          className="w-3 h-3 rounded-full shrink-0"
-          style={{ backgroundColor: `hsl(${(tag.name.charCodeAt(0) * 47) % 360}, 70%, 60%)` }}
-        />
+        {/* Color dot with picker */}
+        <div className="relative">
+          <button
+            onClick={handleColorClick}
+            className={clsx(
+              'w-5 h-5 rounded-full shrink-0 flex items-center justify-center transition-transform hover:scale-110',
+              tagColor ? tagColor.bg : ''
+            )}
+            style={!tagColor ? { backgroundColor: dotColor as string } : undefined}
+            title="Change color"
+          >
+            <Palette
+              size={10}
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-white"
+            />
+          </button>
+
+          {/* Color picker dropdown */}
+          {showColorPicker && (
+            <div
+              ref={colorPickerRef}
+              onClick={(e) => e.stopPropagation()}
+              className={clsx(
+                'absolute left-0 top-7 z-50 rounded-lg shadow-xl border',
+                theme === 'dark'
+                  ? 'bg-omnifocus-sidebar border-omnifocus-border'
+                  : 'bg-white border-gray-200'
+              )}
+            >
+              <TagColorPicker tagId={tag.id} onSelect={handleColorSelect} />
+            </div>
+          )}
+        </div>
 
         <div className="flex-1 min-w-0">
           <span className={clsx('text-sm', theme === 'dark' ? 'text-white' : 'text-gray-900')}>{tag.name}</span>
