@@ -11,6 +11,9 @@ import {
   ChevronDown,
   Check,
   Zap,
+  Clock,
+  FileText,
+  Timer,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { addDays, addWeeks, startOfTomorrow, nextMonday, format } from 'date-fns';
@@ -28,25 +31,33 @@ const quickDueDates = [
 ];
 
 export function QuickEntryForm({ isOpen, onClose }: QuickEntryFormProps) {
-  const { createAction, projects, tags, fetchActions, currentPerspective } = useAppStore();
+  const { createAction, projects, tags, fetchActions, currentPerspective, theme } = useAppStore();
 
   const [title, setTitle] = useState('');
+  const [note, setNote] = useState('');
   const [projectId, setProjectId] = useState<string>('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [dueDate, setDueDate] = useState('');
+  const [deferDate, setDeferDate] = useState('');
+  const [estimatedMinutes, setEstimatedMinutes] = useState('');
   const [flagged, setFlagged] = useState(false);
   const [showProjectPicker, setShowProjectPicker] = useState(false);
   const [showTagPicker, setShowTagPicker] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const resetForm = () => {
     setTitle('');
+    setNote('');
     setProjectId('');
     setSelectedTags([]);
     setDueDate('');
+    setDeferDate('');
+    setEstimatedMinutes('');
     setFlagged(false);
     setShowProjectPicker(false);
     setShowTagPicker(false);
+    setShowAdvanced(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,9 +68,13 @@ export function QuickEntryForm({ isOpen, onClose }: QuickEntryFormProps) {
     try {
       await createAction({
         title: title.trim(),
+        note: note.trim() || undefined,
         projectId: projectId || undefined,
         dueDate: dueDate || undefined,
+        deferDate: deferDate || undefined,
+        estimatedMinutes: estimatedMinutes ? parseInt(estimatedMinutes, 10) : undefined,
         flagged,
+        tagIds: selectedTags.length > 0 ? selectedTags : undefined,
       } as any);
 
       // Refresh the current view
@@ -93,36 +108,71 @@ export function QuickEntryForm({ isOpen, onClose }: QuickEntryFormProps) {
 
       {/* Form - centered modal on desktop, bottom sheet on mobile */}
       <div className={clsx(
-        'fixed z-50 bg-omnifocus-sidebar border border-omnifocus-border overflow-hidden',
+        'fixed z-50 overflow-hidden',
+        theme === 'dark'
+          ? 'bg-omnifocus-sidebar border-omnifocus-border'
+          : 'bg-white border-gray-200',
+        'border',
         // Mobile: bottom sheet
         'inset-x-0 bottom-0 rounded-t-2xl',
         // Desktop: centered modal
         'md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[480px] md:rounded-2xl md:max-h-[85vh]'
       )}>
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-omnifocus-border">
+        <div className={clsx(
+          'flex items-center justify-between px-4 py-3 border-b',
+          theme === 'dark' ? 'border-omnifocus-border' : 'border-gray-200'
+        )}>
           <div className="flex items-center gap-2">
             <Zap size={20} className="text-omnifocus-purple" />
-            <h2 className="text-lg font-semibold text-white">New Action</h2>
+            <h2 className={clsx('text-lg font-semibold', theme === 'dark' ? 'text-white' : 'text-gray-900')}>New Action</h2>
           </div>
           <button
             onClick={handleClose}
-            className="p-2 rounded-lg hover:bg-omnifocus-surface text-gray-400 hover:text-white transition-colors"
+            className={clsx(
+              'p-2 rounded-lg transition-colors',
+              theme === 'dark'
+                ? 'hover:bg-omnifocus-surface text-gray-400 hover:text-white'
+                : 'hover:bg-gray-100 text-gray-500 hover:text-gray-900'
+            )}
           >
             <X size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Title Input */}
           <div>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full text-lg bg-transparent border-none outline-none text-white placeholder-gray-500"
+              className={clsx(
+                'w-full text-lg bg-transparent border-none outline-none placeholder-gray-500',
+                theme === 'dark' ? 'text-white' : 'text-gray-900'
+              )}
               placeholder="What needs to be done?"
               autoFocus
+            />
+          </div>
+
+          {/* Notes Input */}
+          <div>
+            <label className={clsx('flex items-center gap-2 text-sm mb-2', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>
+              <FileText size={16} />
+              Notes (optional)
+            </label>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              className={clsx(
+                'w-full px-3 py-2 rounded-lg border text-sm resize-none',
+                theme === 'dark'
+                  ? 'bg-omnifocus-surface border-omnifocus-border text-white placeholder-gray-500'
+                  : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'
+              )}
+              placeholder="Add details, links, or context..."
+              rows={2}
             />
           </div>
 
@@ -278,6 +328,109 @@ export function QuickEntryForm({ isOpen, onClose }: QuickEntryFormProps) {
               )} />
             </button>
           </div>
+
+          {/* Advanced Options Toggle */}
+          <button
+            type="button"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="w-full flex items-center justify-center gap-2 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+          >
+            <ChevronDown
+              size={16}
+              className={clsx('transition-transform', showAdvanced && 'rotate-180')}
+            />
+            <span>{showAdvanced ? 'Hide' : 'Show'} advanced options</span>
+          </button>
+
+          {/* Advanced Options */}
+          {showAdvanced && (
+            <div className="space-y-4 pt-2 border-t border-omnifocus-border">
+              {/* Defer Date */}
+              <div>
+                <label className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+                  <Clock size={16} />
+                  Defer Until
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setDeferDate(format(startOfTomorrow(), 'yyyy-MM-dd'))}
+                    className={clsx(
+                      'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
+                      deferDate === format(startOfTomorrow(), 'yyyy-MM-dd')
+                        ? 'bg-omnifocus-purple text-white'
+                        : 'bg-omnifocus-surface text-gray-300 hover:bg-omnifocus-border'
+                    )}
+                  >
+                    Tomorrow
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeferDate(format(nextMonday(new Date()), 'yyyy-MM-dd'))}
+                    className={clsx(
+                      'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
+                      deferDate === format(nextMonday(new Date()), 'yyyy-MM-dd')
+                        ? 'bg-omnifocus-purple text-white'
+                        : 'bg-omnifocus-surface text-gray-300 hover:bg-omnifocus-border'
+                    )}
+                  >
+                    Next Week
+                  </button>
+                  <input
+                    type="date"
+                    value={deferDate}
+                    onChange={(e) => setDeferDate(e.target.value)}
+                    className="px-3 py-1.5 rounded-full text-sm bg-omnifocus-surface text-gray-300 border-none"
+                  />
+                  {deferDate && (
+                    <button
+                      type="button"
+                      onClick={() => setDeferDate('')}
+                      className="px-2 py-1.5 rounded-full text-sm text-gray-400 hover:text-white"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  Action will be hidden until this date
+                </p>
+              </div>
+
+              {/* Estimated Time */}
+              <div>
+                <label className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+                  <Timer size={16} />
+                  Estimated Time
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {[5, 15, 30, 60].map((minutes) => (
+                    <button
+                      key={minutes}
+                      type="button"
+                      onClick={() => setEstimatedMinutes(String(minutes))}
+                      className={clsx(
+                        'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
+                        estimatedMinutes === String(minutes)
+                          ? 'bg-omnifocus-purple text-white'
+                          : 'bg-omnifocus-surface text-gray-300 hover:bg-omnifocus-border'
+                      )}
+                    >
+                      {minutes < 60 ? `${minutes}m` : `${minutes / 60}h`}
+                    </button>
+                  ))}
+                  <input
+                    type="number"
+                    value={estimatedMinutes}
+                    onChange={(e) => setEstimatedMinutes(e.target.value)}
+                    placeholder="min"
+                    min="1"
+                    className="w-20 px-3 py-1.5 rounded-full text-sm bg-omnifocus-surface text-gray-300 border-none text-center"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Submit Button */}
           <button
