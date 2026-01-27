@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { startOfDay, isBefore, isToday } from 'date-fns';
+import { SidebarCalendar } from './MiniCalendar';
 
 const themeClasses = {
   sidebar: {
@@ -214,6 +215,11 @@ export function Sidebar() {
               No custom perspectives yet
             </p>
           )}
+        </div>
+
+        {/* Mini Calendar */}
+        <div className="mt-6 px-2">
+          <SidebarCalendar onSelectDate={(date) => setCurrentPerspective('forecast')} />
         </div>
       </nav>
 

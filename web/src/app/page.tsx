@@ -33,6 +33,9 @@ import { TimeBlocker } from '@/components/TimeBlocker';
 import { GlobalProgressBar } from '@/components/GlobalProgressBar';
 import { OnboardingTour } from '@/components/OnboardingTour';
 import { CommandPalette } from '@/components/CommandPalette';
+import { ToastProvider } from '@/components/Toast';
+import { ConfettiProvider } from '@/components/Confetti';
+import { KeyboardShortcutHints, useKeyboardShortcutsModal } from '@/components/KeyboardShortcutHints';
 import { useAppStore } from '@/stores/app.store';
 import { useKeyboardShortcuts } from '@/lib/useKeyboardShortcuts';
 import { useThemeInit } from '@/lib/useThemeInit';
@@ -108,7 +111,12 @@ export default function Home() {
     setSelectedAction(null);
   };
 
+  // Keyboard shortcuts modal
+  const keyboardShortcutsModal = useKeyboardShortcutsModal();
+
   return (
+    <ToastProvider>
+    <ConfettiProvider>
     <div className={clsx(
       'flex h-screen',
       theme === 'dark' ? 'bg-omnifocus-bg' : 'bg-omnifocus-light-bg'
@@ -244,6 +252,14 @@ export default function Home() {
 
       {/* Onboarding Tour */}
       <OnboardingTour />
+
+      {/* Keyboard Shortcuts Modal (press ? to toggle) */}
+      <KeyboardShortcutHints
+        isOpen={keyboardShortcutsModal.isOpen}
+        onClose={keyboardShortcutsModal.close}
+      />
     </div>
+    </ConfettiProvider>
+    </ToastProvider>
   );
 }
