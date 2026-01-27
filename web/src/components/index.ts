@@ -12,14 +12,19 @@ export * from './Button';
 export * from './Card';
 export * from './Checklist';
 export * from './CollapsibleSection';
+export * from './ContextMenu';
+export * from './Drawer';
 export * from './Dropdown';
 export * from './EmptyState';
 export * from './Input';
 export * from './LoadingState';
 export * from './Modal';
+export * from './Popover';
 export * from './ProgressRing';
+export * from './Skeleton';
 export * from './Switch';
 export * from './Tabs';
+export * from './ThemeToggle';
 export * from './Toast';
 export * from './Tooltip';
 
@@ -45,18 +50,22 @@ export * from './TagFilterBar';
 export * from './BatchActions';
 export * from './BatchActionsBar';
 export * from './BottomNav';
+export * from './Breadcrumb';
 export * from './ContextSwitcher';
 export * from './FlaggedList';
 export * from './ForecastList';
+export * from './KanbanBoard';
 export * from './ProjectList';
 export * from './ReviewList';
 export * from './Sidebar';
 export * from './SortableActionItem';
 export * from './TagList';
+export * from './Timeline';
 
 // Dashboard & Stats Components
 export * from './DailyProgress';
 export * from './GlobalProgressBar';
+export * from './GoalTracker';
 export * from './StatsDashboard';
 export * from './StreakCounter';
 export * from './TodayDashboard';
@@ -81,9 +90,11 @@ export * from './QuickEntryForm';
 
 // Tag Components
 export * from './TagColorPicker';
+export * from './TagInput';
 
 // Timer & Focus Components
 export * from './FocusModeOverlay';
+export * from './FocusSessionHistory';
 export * from './FocusTimer';
 export * from './TimeBlocker';
 
@@ -115,6 +126,7 @@ export * from './SettingsPanel';
 export * from './Confetti';
 export * from './EnergyFilter';
 export * from './FloatingActionButton';
+export * from './NotificationCenter';
 export * from './Scratchpad';
 export * from './SmartSuggestions';
 export * from './UndoToast';
