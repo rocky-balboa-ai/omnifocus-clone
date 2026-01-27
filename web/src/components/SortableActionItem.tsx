@@ -47,6 +47,7 @@ export function SortableActionItem({
     toggleActionCollapsed,
     indentAction,
     outdentAction,
+    theme,
   } = useAppStore();
 
   const {
@@ -96,8 +97,10 @@ export function SortableActionItem({
         'group flex items-start gap-1 p-2 rounded-lg cursor-pointer transition-colors',
         isHighlighted
           ? 'bg-omnifocus-purple/20 border border-omnifocus-purple'
-          : 'hover:bg-omnifocus-surface border border-transparent',
-        isDragging && 'opacity-50 shadow-lg bg-omnifocus-surface',
+          : theme === 'dark'
+            ? 'hover:bg-omnifocus-surface border border-transparent'
+            : 'hover:bg-gray-100 border border-transparent',
+        isDragging && (theme === 'dark' ? 'opacity-50 shadow-lg bg-omnifocus-surface' : 'opacity-50 shadow-lg bg-gray-100'),
         isSelected && isSelectMode && 'bg-omnifocus-purple/10'
       )}
     >
@@ -163,8 +166,10 @@ export function SortableActionItem({
           <span
             className={clsx(
               'text-sm',
-              action.status === 'completed' ? 'line-through text-gray-500' : 'text-white',
-              isDeferred && 'text-gray-400'
+              action.status === 'completed'
+                ? 'line-through text-gray-500'
+                : theme === 'dark' ? 'text-white' : 'text-gray-900',
+              isDeferred && (theme === 'dark' ? 'text-gray-400' : 'text-gray-500')
             )}
           >
             {action.title}
@@ -218,7 +223,12 @@ export function SortableActionItem({
               {action.tags.slice(0, 2).map(({ tag }) => (
                 <span
                   key={tag.id}
-                  className="px-1.5 py-0.5 bg-omnifocus-surface rounded text-gray-400"
+                  className={clsx(
+                    'px-1.5 py-0.5 rounded',
+                    theme === 'dark'
+                      ? 'bg-omnifocus-surface text-gray-400'
+                      : 'bg-gray-200 text-gray-600'
+                  )}
                 >
                   {tag.name}
                 </span>
@@ -236,7 +246,12 @@ export function SortableActionItem({
         {depth > 0 && (
           <button
             onClick={handleOutdent}
-            className="p-1 rounded hover:bg-omnifocus-border text-gray-500 hover:text-white transition-colors"
+            className={clsx(
+              'p-1 rounded transition-colors',
+              theme === 'dark'
+                ? 'hover:bg-omnifocus-border text-gray-500 hover:text-white'
+                : 'hover:bg-gray-200 text-gray-400 hover:text-gray-900'
+            )}
             title="Outdent (move up a level)"
           >
             <CornerUpLeft size={14} />
@@ -244,7 +259,12 @@ export function SortableActionItem({
         )}
         <button
           onClick={handleIndent}
-          className="p-1 rounded hover:bg-omnifocus-border text-gray-500 hover:text-white transition-colors"
+          className={clsx(
+            'p-1 rounded transition-colors',
+            theme === 'dark'
+              ? 'hover:bg-omnifocus-border text-gray-500 hover:text-white'
+              : 'hover:bg-gray-200 text-gray-400 hover:text-gray-900'
+          )}
           title="Indent (make subtask)"
         >
           <CornerDownRight size={14} />
