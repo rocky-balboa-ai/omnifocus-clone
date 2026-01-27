@@ -19,10 +19,11 @@ import {
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { useAppStore, Action } from '@/stores/app.store';
 import { SortableActionItem } from './SortableActionItem';
-import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff, Inbox, CheckCircle2, Sparkles, CornerDownLeft, Maximize2, Minimize2, AlertTriangle, Calendar, Filter, Sun, CalendarDays, CalendarClock } from 'lucide-react';
+import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff, Inbox, CheckCircle2, Sparkles, CornerDownLeft, Maximize2, Minimize2, AlertTriangle, Calendar, Filter, Sun, CalendarDays, CalendarClock, ArrowUpDown } from 'lucide-react';
 import { isBefore, isToday, startOfDay, isFuture, addDays, nextMonday } from 'date-fns';
 
 type QuickFilter = 'all' | 'overdue' | 'today' | 'flagged' | 'upcoming';
+type SortOption = 'manual' | 'due-date' | 'name' | 'flagged' | 'created';
 import clsx from 'clsx';
 
 interface ActionWithDepth {
@@ -69,6 +70,8 @@ export function ActionList() {
   const [quickAddText, setQuickAddText] = useState('');
   const [isQuickAdding, setIsQuickAdding] = useState(false);
   const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('manual');
+  const [showSortMenu, setShowSortMenu] = useState(false);
 
   const selectionCount = selectedActionIds.size;
 
@@ -133,6 +136,34 @@ export function ActionList() {
   const completedCount = actions.filter((a) => a.status === 'completed').length;
   const deferredCount = actions.filter((a) => a.status === 'active' && isDeferred(a)).length;
 
+  // Sort function for actions
+  const sortActions = (actions: Action[]): Action[] => {
+    if (sortBy === 'manual') return actions;
+
+    return [...actions].sort((a, b) => {
+      switch (sortBy) {
+        case 'due-date':
+          // Actions with no due date go to the end
+          if (!a.dueDate && !b.dueDate) return 0;
+          if (!a.dueDate) return 1;
+          if (!b.dueDate) return -1;
+          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        case 'name':
+          return a.title.localeCompare(b.title);
+        case 'flagged':
+          // Flagged first
+          if (a.flagged && !b.flagged) return -1;
+          if (!a.flagged && b.flagged) return 1;
+          return 0;
+        case 'created':
+          // Use position as proxy for creation order (newer = higher position)
+          return b.position - a.position;
+        default:
+          return 0;
+      }
+    });
+  };
+
   // Build flattened tree with depth info
   const flattenedActions = useMemo(() => {
     const result: ActionWithDepth[] = [];
@@ -145,6 +176,11 @@ export function ActionList() {
         childrenMap.set(parentId, []);
       }
       childrenMap.get(parentId)!.push(action);
+    });
+
+    // Sort each group
+    childrenMap.forEach((children, parentId) => {
+      childrenMap.set(parentId, sortActions(children));
     });
 
     // Recursive function to flatten tree
@@ -166,7 +202,7 @@ export function ActionList() {
 
     flatten(null, 0);
     return result;
-  }, [filteredActions, collapsedActionIds]);
+  }, [filteredActions, collapsedActionIds, sortBy]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -350,6 +386,64 @@ export function ActionList() {
         >
           <CheckSquare size={16} />
         </button>
+
+        {/* Sort menu */}
+        <div className="relative">
+          <button
+            onClick={() => setShowSortMenu(!showSortMenu)}
+            className={clsx(
+              'flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm',
+              sortBy !== 'manual'
+                ? 'bg-omnifocus-purple/20 text-omnifocus-purple'
+                : theme === 'dark'
+                  ? 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+                  : 'bg-gray-100 text-gray-500 hover:text-gray-900 hover:bg-gray-200'
+            )}
+            title="Sort actions"
+          >
+            <ArrowUpDown size={16} />
+          </button>
+          {showSortMenu && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setShowSortMenu(false)}
+              />
+              <div className={clsx(
+                'absolute right-0 top-full mt-1 py-1 rounded-lg shadow-lg border z-20 min-w-[140px]',
+                theme === 'dark'
+                  ? 'bg-omnifocus-surface border-omnifocus-border'
+                  : 'bg-white border-gray-200'
+              )}>
+                {[
+                  { value: 'manual', label: 'Manual' },
+                  { value: 'due-date', label: 'Due Date' },
+                  { value: 'name', label: 'Name' },
+                  { value: 'flagged', label: 'Flagged' },
+                  { value: 'created', label: 'Newest First' },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      setSortBy(option.value as SortOption);
+                      setShowSortMenu(false);
+                    }}
+                    className={clsx(
+                      'w-full px-3 py-1.5 text-left text-sm transition-colors',
+                      sortBy === option.value
+                        ? 'text-omnifocus-purple font-medium'
+                        : theme === 'dark'
+                          ? 'text-gray-300 hover:bg-omnifocus-border'
+                          : 'text-gray-700 hover:bg-gray-100'
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Focus mode toggle */}
         <button
