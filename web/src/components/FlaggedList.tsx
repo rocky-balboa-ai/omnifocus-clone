@@ -7,7 +7,7 @@ import { Flag, Plus, Search, Eye, EyeOff } from 'lucide-react';
 import clsx from 'clsx';
 
 export function FlaggedList() {
-  const { actions, isLoading, setQuickEntryOpen, setSearchOpen, showCompleted, setShowCompleted } = useAppStore();
+  const { actions, isLoading, setQuickEntryOpen, setSearchOpen, showCompleted, setShowCompleted, theme } = useAppStore();
 
   // Filter to only flagged actions (optionally including completed)
   const flaggedActions = actions.filter(a =>
@@ -26,10 +26,16 @@ export function FlaggedList() {
 
   return (
     <div className="h-full flex flex-col">
-      <header className="px-4 md:px-6 py-3 md:py-4 border-b border-omnifocus-border safe-area-top flex items-center justify-between gap-3">
+      <header className={clsx(
+        'px-4 md:px-6 py-3 md:py-4 border-b safe-area-top flex items-center justify-between gap-3',
+        theme === 'dark' ? 'border-omnifocus-border' : 'border-gray-200'
+      )}>
         <div className="flex items-center gap-3 flex-1">
           <Flag size={24} className="text-omnifocus-orange" />
-          <h2 className="text-xl md:text-2xl font-semibold text-white">
+          <h2 className={clsx(
+            'text-xl md:text-2xl font-semibold',
+            theme === 'dark' ? 'text-white' : 'text-gray-900'
+          )}>
             Flagged
           </h2>
         </div>
@@ -42,7 +48,9 @@ export function FlaggedList() {
               'flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm',
               showCompleted
                 ? 'bg-omnifocus-purple/20 text-omnifocus-purple'
-                : 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+                : theme === 'dark'
+                  ? 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+                  : 'bg-gray-100 text-gray-500 hover:text-gray-900 hover:bg-gray-200'
             )}
             title={showCompleted ? 'Hide completed' : 'Show completed'}
           >
@@ -53,10 +61,18 @@ export function FlaggedList() {
 
         <button
           onClick={() => setSearchOpen(true)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border transition-colors text-sm"
+          className={clsx(
+            'flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm',
+            theme === 'dark'
+              ? 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+              : 'bg-gray-100 text-gray-500 hover:text-gray-900 hover:bg-gray-200'
+          )}
         >
           <Search size={16} />
-          <kbd className="hidden md:inline px-1.5 py-0.5 text-xs bg-omnifocus-bg rounded">⌘K</kbd>
+          <kbd className={clsx(
+            'hidden md:inline px-1.5 py-0.5 text-xs rounded',
+            theme === 'dark' ? 'bg-omnifocus-bg' : 'bg-white border border-gray-200'
+          )}>⌘K</kbd>
         </button>
 
         <button
@@ -71,9 +87,9 @@ export function FlaggedList() {
       <div className="flex-1 overflow-y-auto px-4 md:px-6 py-3 md:py-4">
         {flaggedActions.length === 0 ? (
           <div className="text-center py-12">
-            <Flag size={48} className="mx-auto text-gray-600 mb-4" />
+            <Flag size={48} className={theme === 'dark' ? 'mx-auto text-gray-600 mb-4' : 'mx-auto text-gray-300 mb-4'} />
             <p className="text-gray-500">No flagged actions</p>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className={clsx('text-sm mt-1', theme === 'dark' ? 'text-gray-600' : 'text-gray-400')}>
               Flag important actions to see them here
             </p>
           </div>

@@ -8,7 +8,7 @@ import { format, isToday, isTomorrow, isThisWeek, startOfDay, addDays, isBefore,
 import clsx from 'clsx';
 
 export function ForecastList() {
-  const { actions, isLoading, setQuickEntryOpen, setSearchOpen, showCompleted, setShowCompleted } = useAppStore();
+  const { actions, isLoading, setQuickEntryOpen, setSearchOpen, showCompleted, setShowCompleted, theme } = useAppStore();
 
   const completedCount = actions.filter(a => a.dueDate && a.status === 'completed').length;
 
@@ -88,10 +88,16 @@ export function ForecastList() {
 
   return (
     <div className="h-full flex flex-col">
-      <header className="px-4 md:px-6 py-3 md:py-4 border-b border-omnifocus-border safe-area-top flex items-center justify-between gap-3">
+      <header className={clsx(
+        'px-4 md:px-6 py-3 md:py-4 border-b safe-area-top flex items-center justify-between gap-3',
+        theme === 'dark' ? 'border-omnifocus-border' : 'border-gray-200'
+      )}>
         <div className="flex items-center gap-3 flex-1">
           <Calendar size={24} className="text-omnifocus-purple" />
-          <h2 className="text-xl md:text-2xl font-semibold text-white">
+          <h2 className={clsx(
+            'text-xl md:text-2xl font-semibold',
+            theme === 'dark' ? 'text-white' : 'text-gray-900'
+          )}>
             Forecast
           </h2>
         </div>
@@ -104,7 +110,9 @@ export function ForecastList() {
               'flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm',
               showCompleted
                 ? 'bg-omnifocus-purple/20 text-omnifocus-purple'
-                : 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+                : theme === 'dark'
+                  ? 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+                  : 'bg-gray-100 text-gray-500 hover:text-gray-900 hover:bg-gray-200'
             )}
             title={showCompleted ? 'Hide completed' : 'Show completed'}
           >
@@ -116,10 +124,18 @@ export function ForecastList() {
         {/* Search button */}
         <button
           onClick={() => setSearchOpen(true)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border transition-colors text-sm"
+          className={clsx(
+            'flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm',
+            theme === 'dark'
+              ? 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+              : 'bg-gray-100 text-gray-500 hover:text-gray-900 hover:bg-gray-200'
+          )}
         >
           <Search size={16} />
-          <kbd className="hidden md:inline px-1.5 py-0.5 text-xs bg-omnifocus-bg rounded">⌘K</kbd>
+          <kbd className={clsx(
+            'hidden md:inline px-1.5 py-0.5 text-xs rounded',
+            theme === 'dark' ? 'bg-omnifocus-bg' : 'bg-white border border-gray-200'
+          )}>⌘K</kbd>
         </button>
 
         <button
