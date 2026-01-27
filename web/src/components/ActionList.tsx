@@ -10,13 +10,15 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
 } from '@dnd-kit/core';
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+// Removed restrictToVerticalAxis to allow horizontal drag for indent/outdent
 import { useAppStore, Action } from '@/stores/app.store';
 import { SortableActionItem } from './SortableActionItem';
 import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff, Inbox, CheckCircle2, Sparkles, CornerDownLeft, Maximize2, Minimize2, AlertTriangle, Calendar, Filter, Sun, CalendarDays, CalendarClock, ArrowUpDown, FolderKanban, Timer } from 'lucide-react';
@@ -67,6 +69,9 @@ export function ActionList() {
     isFocusMode,
     toggleFocusMode,
     setFocusTimerOpen,
+    updateAction,
+    indentAction,
+    outdentAction,
   } = useAppStore();
 
   const [isCleaningUp, setIsCleaningUp] = useState(false);
@@ -80,6 +85,8 @@ export function ActionList() {
   const [showBulkProjectMenu, setShowBulkProjectMenu] = useState(false);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
   const [showTimeFilter, setShowTimeFilter] = useState(false);
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [dragStartX, setDragStartX] = useState<number>(0);
 
   const selectionCount = selectedActionIds.size;
 
@@ -253,12 +260,46 @@ export function ActionList() {
     })
   );
 
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event;
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveDragId(event.active.id as string);
+    // Track initial X position for horizontal movement detection
+    const rect = event.active.rect.current?.initial;
+    if (rect) {
+      setDragStartX(rect.left);
+    }
+  }, []);
 
-    if (over && active.id !== over.id) {
-      const oldIndex = flattenedActions.findIndex((a) => a.action.id === active.id);
-      const newIndex = flattenedActions.findIndex((a) => a.action.id === over.id);
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over, delta } = event;
+    setActiveDragId(null);
+
+    if (!over) return;
+
+    const draggedId = active.id as string;
+    const targetId = over.id as string;
+
+    // Check for horizontal movement (indent/outdent)
+    const horizontalThreshold = 40; // pixels
+
+    if (delta && Math.abs(delta.x) > horizontalThreshold) {
+      // Horizontal drag detected
+      if (delta.x > horizontalThreshold) {
+        // Dragged right - indent (make child of item above)
+        indentAction(draggedId);
+        return;
+      } else if (delta.x < -horizontalThreshold) {
+        // Dragged left - outdent (move up a level)
+        outdentAction(draggedId);
+        return;
+      }
+    }
+
+    // Check if dropped directly on another task (to make it a subtask)
+    // This happens when active and over are the same (dropped in place but with intent)
+    // For now, use vertical reorder logic
+    if (draggedId !== targetId) {
+      const oldIndex = flattenedActions.findIndex((a) => a.action.id === draggedId);
+      const newIndex = flattenedActions.findIndex((a) => a.action.id === targetId);
 
       if (oldIndex !== -1 && newIndex !== -1) {
         const newOrder = [...flattenedActions];
@@ -268,7 +309,7 @@ export function ActionList() {
         reorderActions(newOrder.map((a) => a.action.id));
       }
     }
-  }, [flattenedActions, reorderActions]);
+  }, [flattenedActions, reorderActions, indentAction, outdentAction]);
 
   const handleAddAction = () => {
     setQuickEntryOpen(true);
@@ -1085,8 +1126,8 @@ export function ActionList() {
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
-            modifiers={[restrictToVerticalAxis]}
           >
             <SortableContext
               items={flattenedActions.map((a) => a.action.id)}
@@ -1107,6 +1148,20 @@ export function ActionList() {
                 ))}
               </ul>
             </SortableContext>
+
+            {/* Drag overlay shows hint about horizontal drag */}
+            <DragOverlay>
+              {activeDragId ? (
+                <div className={clsx(
+                  'px-3 py-2 rounded-lg shadow-lg border text-sm',
+                  theme === 'dark'
+                    ? 'bg-omnifocus-sidebar border-omnifocus-purple text-white'
+                    : 'bg-white border-omnifocus-purple text-gray-900'
+                )}>
+                  <span className="opacity-75">Drag right to indent, left to outdent</span>
+                </div>
+              ) : null}
+            </DragOverlay>
           </DndContext>
         )}
       </div>
