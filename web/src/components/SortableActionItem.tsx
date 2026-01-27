@@ -24,6 +24,7 @@ import {
   X,
   Copy,
   FolderKanban,
+  Tags,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { format, isPast, isToday, isFuture, addDays, startOfDay, nextMonday } from 'date-fns';
@@ -58,9 +59,13 @@ export function SortableActionItem({
     createAction,
     theme,
     projects,
+    setFilterTagId,
+    fetchActions,
+    currentPerspective,
   } = useAppStore();
 
   const [showProjectMenu, setShowProjectMenu] = useState(false);
+  const [showTagMenu, setShowTagMenu] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
 
   const {
@@ -480,6 +485,76 @@ export function SortableActionItem({
                     )}
                   >
                     {project.name}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Tag quick-view */}
+        <div className="relative">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (action.tags.length === 0) {
+                // No tags - open detail panel to add
+                setSelectedAction(action.id);
+              } else {
+                setShowTagMenu(!showTagMenu);
+              }
+            }}
+            className={clsx(
+              'p-1 rounded transition-colors',
+              action.tags.length > 0
+                ? 'text-green-400'
+                : theme === 'dark'
+                  ? 'hover:bg-omnifocus-border text-gray-500 hover:text-green-400'
+                  : 'hover:bg-green-50 text-gray-400 hover:text-green-500'
+            )}
+            title={action.tags.length > 0 ? `Tags: ${action.tags.map(t => t.tag.name).join(', ')}` : 'Add tags (opens detail)'}
+          >
+            <Tags size={14} />
+          </button>
+          {showTagMenu && action.tags.length > 0 && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowTagMenu(false);
+                }}
+              />
+              <div className={clsx(
+                'absolute right-0 top-full mt-1 py-1 rounded-lg shadow-lg border z-20 min-w-[140px]',
+                theme === 'dark'
+                  ? 'bg-omnifocus-surface border-omnifocus-border'
+                  : 'bg-white border-gray-200'
+              )}>
+                <div className={clsx(
+                  'px-3 py-1 text-xs font-medium border-b mb-1',
+                  theme === 'dark' ? 'text-gray-500 border-omnifocus-border' : 'text-gray-400 border-gray-200'
+                )}>
+                  Click to filter by tag
+                </div>
+                {action.tags.map(({ tag }) => (
+                  <button
+                    key={tag.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFilterTagId(tag.id);
+                      fetchActions(currentPerspective);
+                      setShowTagMenu(false);
+                    }}
+                    className={clsx(
+                      'w-full px-3 py-1.5 text-left text-xs transition-colors flex items-center gap-2',
+                      theme === 'dark'
+                        ? 'text-gray-300 hover:bg-omnifocus-border'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    )}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-green-400" />
+                    {tag.name}
                   </button>
                 ))}
               </div>
