@@ -18,6 +18,7 @@ import {
   MoreHorizontal,
   Clock,
   ArrowRight,
+  Plus,
 } from 'lucide-react';
 import { addDays, startOfDay } from 'date-fns';
 import clsx from 'clsx';
@@ -34,6 +35,7 @@ export function ActionContextMenu({ action, position, onClose }: ActionContextMe
     updateAction,
     completeAction,
     deleteAction,
+    createAction,
     indentAction,
     outdentAction,
     fetchActions,
@@ -131,6 +133,16 @@ export function ActionContextMenu({ action, position, onClose }: ActionContextMe
 
   const handleOutdent = async () => {
     await outdentAction(action.id);
+    onClose();
+  };
+
+  const handleAddSubtask = async () => {
+    await createAction({
+      title: 'New Subtask',
+      parentId: action.id,
+      projectId: action.projectId,
+    });
+    fetchActions(currentPerspective);
     onClose();
   };
 
@@ -298,6 +310,11 @@ export function ActionContextMenu({ action, position, onClose }: ActionContextMe
         label="Outdent"
         onClick={handleOutdent}
         shortcut="⌘["
+      />
+      <MenuItem
+        icon={Plus}
+        label="Add Subtask"
+        onClick={handleAddSubtask}
       />
 
       <Divider />
