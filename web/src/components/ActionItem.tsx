@@ -10,7 +10,7 @@ interface ActionItemProps {
 }
 
 export function ActionItem({ action }: ActionItemProps) {
-  const { completeAction, setSelectedAction, selectedActionId } = useAppStore();
+  const { completeAction, setSelectedAction, selectedActionId, theme } = useAppStore();
 
   const isSelected = selectedActionId === action.id;
   const isDueSoon = action.dueDate && (isToday(new Date(action.dueDate)) || isPast(new Date(action.dueDate)));
@@ -28,12 +28,17 @@ export function ActionItem({ action }: ActionItemProps) {
         'group flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors',
         isSelected
           ? 'bg-omnifocus-purple/20 border border-omnifocus-purple'
-          : 'hover:bg-omnifocus-surface border border-transparent'
+          : theme === 'dark'
+            ? 'hover:bg-omnifocus-surface border border-transparent'
+            : 'hover:bg-gray-100 border border-transparent'
       )}
     >
       <button
         onClick={handleComplete}
-        className="mt-0.5 text-gray-500 hover:text-omnifocus-purple transition-colors"
+        className={clsx(
+          'mt-0.5 hover:text-omnifocus-purple transition-colors',
+          theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+        )}
       >
         {action.status === 'completed' ? (
           <CheckCircle2 size={20} className="text-green-500" />
@@ -47,8 +52,10 @@ export function ActionItem({ action }: ActionItemProps) {
           <span
             className={clsx(
               'text-sm',
-              action.status === 'completed' ? 'line-through text-gray-500' : 'text-white',
-              isDeferred && 'text-gray-400'
+              action.status === 'completed'
+                ? 'line-through text-gray-500'
+                : theme === 'dark' ? 'text-white' : 'text-gray-900',
+              isDeferred && (theme === 'dark' ? 'text-gray-400' : 'text-gray-500')
             )}
           >
             {action.title}
@@ -97,13 +104,18 @@ export function ActionItem({ action }: ActionItemProps) {
               {action.tags.slice(0, 2).map(({ tag }) => (
                 <span
                   key={tag.id}
-                  className="px-1.5 py-0.5 bg-omnifocus-surface rounded text-gray-400"
+                  className={clsx(
+                    'px-1.5 py-0.5 rounded',
+                    theme === 'dark'
+                      ? 'bg-omnifocus-surface text-gray-400'
+                      : 'bg-gray-100 text-gray-600'
+                  )}
                 >
                   {tag.name}
                 </span>
               ))}
               {action.tags.length > 2 && (
-                <span className="text-gray-500">+{action.tags.length - 2}</span>
+                <span className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}>+{action.tags.length - 2}</span>
               )}
             </div>
           )}

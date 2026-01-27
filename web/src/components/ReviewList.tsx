@@ -21,19 +21,28 @@ interface ReviewProjectItemProps {
 }
 
 function ReviewProjectItem({ project, onReview, onSelect }: ReviewProjectItemProps) {
+  const { theme } = useAppStore();
   const isOverdue = project.nextReviewAt && isBefore(new Date(project.nextReviewAt), startOfDay(new Date()));
 
   const typeIcon = project.type === 'sequential' ? List : project.type === 'parallel' ? Layers : FolderKanban;
   const TypeIcon = typeIcon;
 
   return (
-    <li className="flex items-center gap-3 p-3 rounded-lg bg-omnifocus-surface border border-omnifocus-border">
+    <li className={clsx(
+      'flex items-center gap-3 p-3 rounded-lg border',
+      theme === 'dark'
+        ? 'bg-omnifocus-surface border-omnifocus-border'
+        : 'bg-white border-gray-200'
+    )}>
       <TypeIcon size={18} className="text-blue-400 shrink-0" />
 
       <div className="flex-1 min-w-0">
         <button
           onClick={() => onSelect(project.id)}
-          className="text-sm text-white hover:text-omnifocus-purple transition-colors text-left"
+          className={clsx(
+            'text-sm hover:text-omnifocus-purple transition-colors text-left',
+            theme === 'dark' ? 'text-white' : 'text-gray-900'
+          )}
         >
           {project.name}
         </button>
@@ -45,7 +54,10 @@ function ReviewProjectItem({ project, onReview, onSelect }: ReviewProjectItemPro
 
             return totalActions > 0 ? (
               <div className="flex items-center gap-2">
-                <div className="w-12 h-1.5 bg-omnifocus-bg rounded-full overflow-hidden">
+                <div className={clsx(
+                  'w-12 h-1.5 rounded-full overflow-hidden',
+                  theme === 'dark' ? 'bg-omnifocus-bg' : 'bg-gray-200'
+                )}>
                   <div
                     className={clsx(
                       'h-full rounded-full transition-all',
@@ -82,7 +94,12 @@ function ReviewProjectItem({ project, onReview, onSelect }: ReviewProjectItemPro
 
       <button
         onClick={() => onSelect(project.id)}
-        className="p-2 rounded-lg hover:bg-omnifocus-border text-gray-400 hover:text-white transition-colors"
+        className={clsx(
+          'p-2 rounded-lg transition-colors',
+          theme === 'dark'
+            ? 'hover:bg-omnifocus-border text-gray-400 hover:text-white'
+            : 'hover:bg-gray-100 text-gray-400 hover:text-gray-900'
+        )}
       >
         <ChevronRight size={16} />
       </button>
@@ -91,7 +108,7 @@ function ReviewProjectItem({ project, onReview, onSelect }: ReviewProjectItemPro
 }
 
 export function ReviewList() {
-  const { projects, isLoading, setSelectedProject, updateProject } = useAppStore();
+  const { projects, isLoading, setSelectedProject, updateProject, theme } = useAppStore();
 
   // Filter to projects that need review
   const projectsToReview = useMemo(() => {
@@ -161,16 +178,22 @@ export function ReviewList() {
 
   return (
     <div className="h-full flex flex-col">
-      <header className="px-4 md:px-6 py-3 md:py-4 border-b border-omnifocus-border safe-area-top flex items-center justify-between">
+      <header className={clsx(
+        'px-4 md:px-6 py-3 md:py-4 border-b safe-area-top flex items-center justify-between',
+        theme === 'dark' ? 'border-omnifocus-border' : 'border-gray-200'
+      )}>
         <div className="flex items-center gap-3">
           <RefreshCw size={24} className="text-green-400" />
-          <h2 className="text-xl md:text-2xl font-semibold text-white">
+          <h2 className={clsx(
+            'text-xl md:text-2xl font-semibold',
+            theme === 'dark' ? 'text-white' : 'text-gray-900'
+          )}>
             Review
           </h2>
         </div>
 
         {projectsToReview.length > 0 && (
-          <span className="text-sm text-gray-400">
+          <span className={clsx('text-sm', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>
             {projectsToReview.length} project{projectsToReview.length !== 1 ? 's' : ''} to review
           </span>
         )}
@@ -179,9 +202,9 @@ export function ReviewList() {
       <div className="flex-1 overflow-y-auto px-4 md:px-6 py-3 md:py-4">
         {projectsToReview.length === 0 ? (
           <div className="text-center py-12">
-            <RefreshCw size={48} className="mx-auto text-gray-600 mb-4" />
+            <RefreshCw size={48} className={clsx('mx-auto mb-4', theme === 'dark' ? 'text-gray-600' : 'text-gray-300')} />
             <p className="text-gray-500">All caught up!</p>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className={clsx('text-sm mt-1', theme === 'dark' ? 'text-gray-600' : 'text-gray-400')}>
               No projects need review right now
             </p>
           </div>
