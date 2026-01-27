@@ -15,6 +15,7 @@ import { QuickEntryForm } from '@/components/QuickEntryForm';
 import { SearchCommand } from '@/components/SearchCommand';
 import { ProjectDetailPanel } from '@/components/ProjectDetailPanel';
 import { PerspectiveEditor } from '@/components/PerspectiveEditor';
+import { SettingsPanel } from '@/components/SettingsPanel';
 import { useAppStore } from '@/stores/app.store';
 import { useKeyboardShortcuts } from '@/lib/useKeyboardShortcuts';
 
@@ -36,6 +37,8 @@ export default function Home() {
     isPerspectiveEditorOpen,
     editingPerspectiveId,
     closePerspectiveEditor,
+    isSettingsOpen,
+    setSettingsOpen,
   } = useAppStore();
 
   // Enable keyboard shortcuts
@@ -122,6 +125,12 @@ export default function Home() {
         isOpen={isPerspectiveEditorOpen}
         perspectiveId={editingPerspectiveId}
         onClose={closePerspectiveEditor}
+      />
+
+      {/* Settings Panel */}
+      <SettingsPanel
+        isOpen={isSettingsOpen}
+        onClose={() => setSettingsOpen(false)}
       />
     </div>
   );

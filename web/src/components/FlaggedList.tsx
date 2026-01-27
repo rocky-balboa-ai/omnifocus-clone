@@ -1,14 +1,20 @@
 'use client';
 
+import { useState } from 'react';
 import { useAppStore } from '@/stores/app.store';
 import { ActionItem } from './ActionItem';
-import { Flag, Plus, Search } from 'lucide-react';
+import { Flag, Plus, Search, Eye, EyeOff } from 'lucide-react';
+import clsx from 'clsx';
 
 export function FlaggedList() {
-  const { actions, isLoading, setQuickEntryOpen, setSearchOpen } = useAppStore();
+  const { actions, isLoading, setQuickEntryOpen, setSearchOpen, showCompleted, setShowCompleted } = useAppStore();
 
-  // Filter to only flagged, active actions
-  const flaggedActions = actions.filter(a => a.flagged && a.status !== 'completed');
+  // Filter to only flagged actions (optionally including completed)
+  const flaggedActions = actions.filter(a =>
+    a.flagged && (showCompleted || a.status !== 'completed')
+  );
+
+  const completedCount = actions.filter(a => a.flagged && a.status === 'completed').length;
 
   if (isLoading) {
     return (
@@ -27,6 +33,23 @@ export function FlaggedList() {
             Flagged
           </h2>
         </div>
+
+        {/* Show/Hide Completed toggle */}
+        {completedCount > 0 && (
+          <button
+            onClick={() => setShowCompleted(!showCompleted)}
+            className={clsx(
+              'flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm',
+              showCompleted
+                ? 'bg-omnifocus-purple/20 text-omnifocus-purple'
+                : 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+            )}
+            title={showCompleted ? 'Hide completed' : 'Show completed'}
+          >
+            {showCompleted ? <Eye size={16} /> : <EyeOff size={16} />}
+            <span className="hidden md:inline">{completedCount}</span>
+          </button>
+        )}
 
         <button
           onClick={() => setSearchOpen(true)}

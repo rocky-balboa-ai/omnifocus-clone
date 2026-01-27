@@ -1,9 +1,9 @@
 'use client';
 
 import { useAppStore, Action } from '@/stores/app.store';
-import { Circle, CheckCircle2, Flag, Calendar, Clock } from 'lucide-react';
+import { Circle, CheckCircle2, Flag, Calendar, Clock, PauseCircle } from 'lucide-react';
 import clsx from 'clsx';
-import { format, isPast, isToday } from 'date-fns';
+import { format, isPast, isToday, isFuture } from 'date-fns';
 
 interface ActionItemProps {
   action: Action;
@@ -14,6 +14,7 @@ export function ActionItem({ action }: ActionItemProps) {
 
   const isSelected = selectedActionId === action.id;
   const isDueSoon = action.dueDate && (isToday(new Date(action.dueDate)) || isPast(new Date(action.dueDate)));
+  const isDeferred = action.deferDate && isFuture(new Date(action.deferDate));
 
   const handleComplete = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -46,17 +47,30 @@ export function ActionItem({ action }: ActionItemProps) {
           <span
             className={clsx(
               'text-sm',
-              action.status === 'completed' ? 'line-through text-gray-500' : 'text-white'
+              action.status === 'completed' ? 'line-through text-gray-500' : 'text-white',
+              isDeferred && 'text-gray-400'
             )}
           >
             {action.title}
           </span>
           {action.flagged && <Flag size={14} className="text-omnifocus-orange" />}
+          {isDeferred && (
+            <span className="flex items-center gap-1 text-xs text-omnifocus-orange" title={`Available ${format(new Date(action.deferDate!), 'MMM d')}`}>
+              <PauseCircle size={14} />
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
           {action.project && (
             <span className="truncate">{action.project.name}</span>
+          )}
+
+          {isDeferred && (
+            <span className="flex items-center gap-1 text-omnifocus-orange">
+              <PauseCircle size={12} />
+              {format(new Date(action.deferDate!), 'MMM d')}
+            </span>
           )}
 
           {action.dueDate && (

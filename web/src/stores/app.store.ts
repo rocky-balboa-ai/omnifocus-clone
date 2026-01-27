@@ -91,6 +91,7 @@ interface AppState {
   isQuickEntryOpen: boolean;
   isSearchOpen: boolean;
   isPerspectiveEditorOpen: boolean;
+  isSettingsOpen: boolean;
   showCompleted: boolean;
   isLoading: boolean;
   error: string | null;
@@ -111,6 +112,7 @@ interface AppState {
   bulkFlagActions: (flagged: boolean) => Promise<void>;
   openPerspectiveEditor: (id?: string | null) => void;
   closePerspectiveEditor: () => void;
+  setSettingsOpen: (open: boolean) => void;
 
   // API Actions
   fetchPerspectives: () => Promise<void>;
@@ -150,6 +152,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   isQuickEntryOpen: false,
   isSearchOpen: false,
   isPerspectiveEditorOpen: false,
+  isSettingsOpen: false,
   showCompleted: false,
   isLoading: false,
   error: null,
@@ -208,6 +211,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   openPerspectiveEditor: (id) => set({ isPerspectiveEditorOpen: true, editingPerspectiveId: id || null }),
   closePerspectiveEditor: () => set({ isPerspectiveEditorOpen: false, editingPerspectiveId: null }),
+  setSettingsOpen: (open) => set({ isSettingsOpen: open }),
 
   // API Actions
   fetchPerspectives: async () => {

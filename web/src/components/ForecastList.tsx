@@ -3,11 +3,14 @@
 import { useMemo } from 'react';
 import { useAppStore } from '@/stores/app.store';
 import { ActionItem } from './ActionItem';
-import { Calendar, Plus, Search } from 'lucide-react';
+import { Calendar, Plus, Search, Eye, EyeOff } from 'lucide-react';
 import { format, isToday, isTomorrow, isThisWeek, startOfDay, addDays, isBefore, isAfter } from 'date-fns';
+import clsx from 'clsx';
 
 export function ForecastList() {
-  const { actions, isLoading, setQuickEntryOpen, setSearchOpen } = useAppStore();
+  const { actions, isLoading, setQuickEntryOpen, setSearchOpen, showCompleted, setShowCompleted } = useAppStore();
+
+  const completedCount = actions.filter(a => a.dueDate && a.status === 'completed').length;
 
   // Group actions by date
   const groupedActions = useMemo(() => {
@@ -15,11 +18,13 @@ export function ForecastList() {
     const tomorrow = addDays(today, 1);
     const nextWeek = addDays(today, 7);
 
+    const shouldInclude = (a: typeof actions[0]) => showCompleted || a.status !== 'completed';
+
     const groups: { title: string; actions: typeof actions; color?: string }[] = [];
 
     // Overdue
     const overdue = actions.filter(
-      a => a.dueDate && isBefore(new Date(a.dueDate), today) && a.status !== 'completed'
+      a => a.dueDate && isBefore(new Date(a.dueDate), today) && shouldInclude(a)
     );
     if (overdue.length > 0) {
       groups.push({ title: 'Overdue', actions: overdue, color: 'text-red-400' });
@@ -27,7 +32,7 @@ export function ForecastList() {
 
     // Today
     const todayActions = actions.filter(
-      a => a.dueDate && isToday(new Date(a.dueDate)) && a.status !== 'completed'
+      a => a.dueDate && isToday(new Date(a.dueDate)) && shouldInclude(a)
     );
     if (todayActions.length > 0) {
       groups.push({ title: 'Today', actions: todayActions, color: 'text-omnifocus-orange' });
@@ -35,7 +40,7 @@ export function ForecastList() {
 
     // Tomorrow
     const tomorrowActions = actions.filter(
-      a => a.dueDate && isTomorrow(new Date(a.dueDate)) && a.status !== 'completed'
+      a => a.dueDate && isTomorrow(new Date(a.dueDate)) && shouldInclude(a)
     );
     if (tomorrowActions.length > 0) {
       groups.push({ title: 'Tomorrow', actions: tomorrowActions });
@@ -43,7 +48,7 @@ export function ForecastList() {
 
     // This week (excluding today and tomorrow)
     const thisWeekActions = actions.filter(a => {
-      if (!a.dueDate || a.status === 'completed') return false;
+      if (!a.dueDate || !shouldInclude(a)) return false;
       const dueDate = new Date(a.dueDate);
       return isAfter(dueDate, tomorrow) && isBefore(dueDate, nextWeek);
     });
@@ -53,7 +58,7 @@ export function ForecastList() {
 
     // Future (beyond this week)
     const futureActions = actions.filter(a => {
-      if (!a.dueDate || a.status === 'completed') return false;
+      if (!a.dueDate || !shouldInclude(a)) return false;
       return isAfter(new Date(a.dueDate), nextWeek);
     });
     if (futureActions.length > 0) {
@@ -62,14 +67,14 @@ export function ForecastList() {
 
     // No due date
     const noDueDate = actions.filter(
-      a => !a.dueDate && a.status !== 'completed'
+      a => !a.dueDate && shouldInclude(a)
     );
     if (noDueDate.length > 0) {
       groups.push({ title: 'No Due Date', actions: noDueDate, color: 'text-gray-500' });
     }
 
     return groups;
-  }, [actions]);
+  }, [actions, showCompleted]);
 
   if (isLoading) {
     return (
@@ -90,6 +95,23 @@ export function ForecastList() {
             Forecast
           </h2>
         </div>
+
+        {/* Show/Hide Completed toggle */}
+        {completedCount > 0 && (
+          <button
+            onClick={() => setShowCompleted(!showCompleted)}
+            className={clsx(
+              'flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm',
+              showCompleted
+                ? 'bg-omnifocus-purple/20 text-omnifocus-purple'
+                : 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+            )}
+            title={showCompleted ? 'Hide completed' : 'Show completed'}
+          >
+            {showCompleted ? <Eye size={16} /> : <EyeOff size={16} />}
+            <span className="hidden md:inline">{completedCount}</span>
+          </button>
+        )}
 
         {/* Search button */}
         <button

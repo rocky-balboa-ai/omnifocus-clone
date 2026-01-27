@@ -9,6 +9,7 @@ import {
   Flag,
   RefreshCw,
   Plus,
+  Settings,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -22,7 +23,7 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 export function Sidebar() {
-  const { perspectives, currentPerspective, setCurrentPerspective, setQuickEntryOpen, openPerspectiveEditor } = useAppStore();
+  const { perspectives, currentPerspective, setCurrentPerspective, setQuickEntryOpen, openPerspectiveEditor, setSettingsOpen } = useAppStore();
 
   const builtInPerspectives = perspectives.filter((p) => p.isBuiltIn);
   const customPerspectives = perspectives.filter((p) => !p.isBuiltIn);
@@ -91,13 +92,20 @@ export function Sidebar() {
         </div>
       </nav>
 
-      <div className="p-4 border-t border-omnifocus-border">
+      <div className="p-4 border-t border-omnifocus-border space-y-2">
         <button
           onClick={() => setQuickEntryOpen(true)}
           className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-omnifocus-surface text-gray-400 hover:text-white transition-colors"
         >
           <Plus size={18} />
           <span className="text-sm">New Action</span>
+        </button>
+        <button
+          onClick={() => setSettingsOpen(true)}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-gray-500 hover:text-white hover:bg-omnifocus-surface transition-colors"
+        >
+          <Settings size={18} />
+          <span className="text-sm">Settings</span>
         </button>
       </div>
     </aside>
