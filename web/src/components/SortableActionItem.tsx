@@ -254,9 +254,37 @@ export function SortableActionItem({
               <PauseCircle size={14} />
             </span>
           )}
-          {hasChildren && isCollapsed && (
-            <span className="text-xs text-gray-500 shrink-0">
-              ({action.children?.length || 0})
+          {hasChildren && (
+            <span className={clsx(
+              'flex items-center gap-1 text-xs shrink-0',
+              theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+            )}>
+              {(() => {
+                const total = action.children?.length || 0;
+                const completed = action.children?.filter(c => c.status === 'completed').length || 0;
+                const allDone = total > 0 && completed === total;
+                return (
+                  <>
+                    <span className={allDone ? 'text-green-500' : ''}>
+                      {completed}/{total}
+                    </span>
+                    {!isCollapsed && total > 0 && (
+                      <div className={clsx(
+                        'w-8 h-1 rounded-full overflow-hidden',
+                        theme === 'dark' ? 'bg-omnifocus-surface' : 'bg-gray-200'
+                      )}>
+                        <div
+                          className={clsx(
+                            'h-full rounded-full transition-all',
+                            allDone ? 'bg-green-500' : 'bg-omnifocus-purple'
+                          )}
+                          style={{ width: `${total > 0 ? (completed / total) * 100 : 0}%` }}
+                        />
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </span>
           )}
         </div>

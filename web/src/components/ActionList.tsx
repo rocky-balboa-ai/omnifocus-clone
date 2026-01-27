@@ -25,6 +25,7 @@ import { parseQuickAdd } from '@/lib/parseQuickAdd';
 
 type QuickFilter = 'all' | 'overdue' | 'today' | 'flagged' | 'upcoming';
 type SortOption = 'manual' | 'due-date' | 'name' | 'flagged' | 'created';
+type TimeFilter = 'all' | '5' | '15' | '30' | '60';
 import clsx from 'clsx';
 
 interface ActionWithDepth {
@@ -77,6 +78,8 @@ export function ActionList() {
   const [sortBy, setSortBy] = useState<SortOption>('manual');
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [showBulkProjectMenu, setShowBulkProjectMenu] = useState(false);
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
+  const [showTimeFilter, setShowTimeFilter] = useState(false);
 
   const selectionCount = selectedActionIds.size;
 
@@ -122,6 +125,12 @@ export function ActionList() {
           if (!a.dueDate || isBefore(new Date(a.dueDate), today)) return false;
           break;
       }
+    }
+
+    // Apply time filter
+    if (timeFilter !== 'all' && a.status === 'active') {
+      const maxMinutes = parseInt(timeFilter);
+      if (!a.estimatedMinutes || a.estimatedMinutes > maxMinutes) return false;
     }
 
     return true;
@@ -441,6 +450,65 @@ export function ActionList() {
         >
           <CheckSquare size={16} />
         </button>
+
+        {/* Time filter */}
+        <div className="relative hidden md:block">
+          <button
+            onClick={() => setShowTimeFilter(!showTimeFilter)}
+            className={clsx(
+              'flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm',
+              timeFilter !== 'all'
+                ? 'bg-omnifocus-purple/20 text-omnifocus-purple'
+                : theme === 'dark'
+                  ? 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+                  : 'bg-gray-100 text-gray-500 hover:text-gray-900 hover:bg-gray-200'
+            )}
+            title="Filter by time estimate"
+          >
+            <Timer size={16} />
+            {timeFilter !== 'all' && <span>≤{timeFilter}m</span>}
+          </button>
+          {showTimeFilter && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setShowTimeFilter(false)}
+              />
+              <div className={clsx(
+                'absolute right-0 top-full mt-1 py-1 rounded-lg shadow-lg border z-20 min-w-[140px]',
+                theme === 'dark'
+                  ? 'bg-omnifocus-surface border-omnifocus-border'
+                  : 'bg-white border-gray-200'
+              )}>
+                {[
+                  { value: 'all' as const, label: 'All Tasks' },
+                  { value: '5' as const, label: '≤ 5 minutes' },
+                  { value: '15' as const, label: '≤ 15 minutes' },
+                  { value: '30' as const, label: '≤ 30 minutes' },
+                  { value: '60' as const, label: '≤ 1 hour' },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      setTimeFilter(option.value);
+                      setShowTimeFilter(false);
+                    }}
+                    className={clsx(
+                      'w-full px-3 py-2 text-left text-sm transition-colors',
+                      timeFilter === option.value
+                        ? 'text-omnifocus-purple bg-omnifocus-purple/10'
+                        : theme === 'dark'
+                          ? 'text-gray-300 hover:bg-omnifocus-border'
+                          : 'text-gray-700 hover:bg-gray-100'
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Sort menu */}
         <div className="relative">
