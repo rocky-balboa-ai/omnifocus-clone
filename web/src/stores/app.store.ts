@@ -97,6 +97,7 @@ interface AppState {
   isLoading: boolean;
   error: string | null;
   theme: 'light' | 'dark';
+  themeMode: 'light' | 'dark' | 'auto';
   isFocusMode: boolean;
 
   // Actions
@@ -120,6 +121,7 @@ interface AppState {
   setSettingsOpen: (open: boolean) => void;
   setKeyboardHelpOpen: (open: boolean) => void;
   setTheme: (theme: 'light' | 'dark') => void;
+  setThemeMode: (mode: 'light' | 'dark' | 'auto') => void;
   toggleTheme: () => void;
   toggleFocusMode: () => void;
 
@@ -171,6 +173,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   isLoading: false,
   error: null,
   theme: 'dark',
+  themeMode: 'auto',
   isFocusMode: false,
 
   // UI Actions
@@ -252,6 +255,19 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (typeof window !== 'undefined') {
       document.documentElement.classList.toggle('dark', theme === 'dark');
       localStorage.setItem('omnifocus-theme', theme);
+    }
+  },
+
+  setThemeMode: (mode) => {
+    set({ themeMode: mode });
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('omnifocus-theme-mode', mode);
+      if (mode === 'auto') {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        get().setTheme(prefersDark ? 'dark' : 'light');
+      } else {
+        get().setTheme(mode);
+      }
     }
   },
 

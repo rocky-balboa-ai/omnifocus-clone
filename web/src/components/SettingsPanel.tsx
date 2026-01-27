@@ -7,6 +7,7 @@ import {
   Settings,
   Moon,
   Sun,
+  Monitor,
   Trash2,
   Clock,
   Bell,
@@ -23,7 +24,7 @@ interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
-  const { cleanupCompleted, theme, toggleTheme } = useAppStore();
+  const { cleanupCompleted, theme, themeMode, setThemeMode } = useAppStore();
   const [cleanupDays, setCleanupDays] = useState(7);
   const [isCleaningUp, setIsCleaningUp] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -130,34 +131,44 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
               'p-3 rounded-lg',
               theme === 'dark' ? 'bg-omnifocus-surface' : 'bg-omnifocus-light-surface'
             )}>
-              <div className="flex items-center justify-between">
+              <div className="space-y-3">
                 <div>
                   <span className={clsx('text-sm', theme === 'dark' ? 'text-gray-300' : 'text-gray-700')}>Theme</span>
                   <p className={clsx('text-xs mt-0.5', theme === 'dark' ? 'text-gray-500' : 'text-gray-500')}>
-                    {theme === 'dark' ? 'Dark mode is enabled' : 'Light mode is enabled'}
+                    {themeMode === 'auto'
+                      ? 'Following system preference'
+                      : `${theme === 'dark' ? 'Dark' : 'Light'} mode is enabled`}
                   </p>
                 </div>
-                <button
-                  onClick={toggleTheme}
-                  className={clsx(
-                    'flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium',
-                    theme === 'dark'
-                      ? 'bg-omnifocus-bg text-gray-300 hover:text-white'
-                      : 'bg-omnifocus-purple text-white'
-                  )}
-                >
-                  {theme === 'dark' ? (
-                    <>
-                      <Sun size={16} />
-                      <span>Light</span>
-                    </>
-                  ) : (
-                    <>
-                      <Moon size={16} />
-                      <span>Dark</span>
-                    </>
-                  )}
-                </button>
+                {/* Theme mode selector */}
+                <div className={clsx(
+                  'flex rounded-lg p-1',
+                  theme === 'dark' ? 'bg-omnifocus-bg' : 'bg-gray-100'
+                )}>
+                  {[
+                    { mode: 'light' as const, icon: Sun, label: 'Light' },
+                    { mode: 'dark' as const, icon: Moon, label: 'Dark' },
+                    { mode: 'auto' as const, icon: Monitor, label: 'Auto' },
+                  ].map(({ mode, icon: Icon, label }) => (
+                    <button
+                      key={mode}
+                      onClick={() => setThemeMode(mode)}
+                      className={clsx(
+                        'flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md transition-all text-sm font-medium',
+                        themeMode === mode
+                          ? theme === 'dark'
+                            ? 'bg-omnifocus-purple text-white shadow-sm'
+                            : 'bg-white text-omnifocus-purple shadow-sm'
+                          : theme === 'dark'
+                            ? 'text-gray-400 hover:text-gray-200'
+                            : 'text-gray-500 hover:text-gray-700'
+                      )}
+                    >
+                      <Icon size={16} />
+                      <span>{label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </section>
