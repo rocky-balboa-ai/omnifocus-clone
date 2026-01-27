@@ -51,27 +51,30 @@ describe('PerspectivesService', () => {
           title: 'First task',
           position: 0,
           status: 'active',
+          deferDate: null,
           projectId: 'seq-project',
           parentId: null,
-          project: { id: 'seq-project', type: 'sequential' },
+          project: { id: 'seq-project', type: 'sequential', status: 'active' },
         },
         {
           id: '2',
           title: 'Second task',
           position: 1,
           status: 'active',
+          deferDate: null,
           projectId: 'seq-project',
           parentId: null,
-          project: { id: 'seq-project', type: 'sequential' },
+          project: { id: 'seq-project', type: 'sequential', status: 'active' },
         },
         {
           id: '3',
           title: 'Third task',
           position: 2,
           status: 'active',
+          deferDate: null,
           projectId: 'seq-project',
           parentId: null,
-          project: { id: 'seq-project', type: 'sequential' },
+          project: { id: 'seq-project', type: 'sequential', status: 'active' },
         },
       ];
 
@@ -100,18 +103,20 @@ describe('PerspectivesService', () => {
           title: 'First task',
           position: 0,
           status: 'active',
+          deferDate: null,
           projectId: 'par-project',
           parentId: null,
-          project: { id: 'par-project', type: 'parallel' },
+          project: { id: 'par-project', type: 'parallel', status: 'active' },
         },
         {
           id: '2',
           title: 'Second task',
           position: 1,
           status: 'active',
+          deferDate: null,
           projectId: 'par-project',
           parentId: null,
-          project: { id: 'par-project', type: 'parallel' },
+          project: { id: 'par-project', type: 'parallel', status: 'active' },
         },
       ];
 
@@ -140,18 +145,20 @@ describe('PerspectivesService', () => {
           title: 'Seq First',
           position: 0,
           status: 'active',
+          deferDate: null,
           projectId: 'seq-project',
           parentId: null,
-          project: { id: 'seq-project', type: 'sequential' },
+          project: { id: 'seq-project', type: 'sequential', status: 'active' },
         },
         {
           id: '2',
           title: 'Seq Second',
           position: 1,
           status: 'active',
+          deferDate: null,
           projectId: 'seq-project',
           parentId: null,
-          project: { id: 'seq-project', type: 'sequential' },
+          project: { id: 'seq-project', type: 'sequential', status: 'active' },
         },
         // Parallel project - all should show
         {
@@ -159,18 +166,20 @@ describe('PerspectivesService', () => {
           title: 'Par First',
           position: 0,
           status: 'active',
+          deferDate: null,
           projectId: 'par-project',
           parentId: null,
-          project: { id: 'par-project', type: 'parallel' },
+          project: { id: 'par-project', type: 'parallel', status: 'active' },
         },
         {
           id: '4',
           title: 'Par Second',
           position: 1,
           status: 'active',
+          deferDate: null,
           projectId: 'par-project',
           parentId: null,
-          project: { id: 'par-project', type: 'parallel' },
+          project: { id: 'par-project', type: 'parallel', status: 'active' },
         },
       ];
 
@@ -187,6 +196,103 @@ describe('PerspectivesService', () => {
       expect(titles).not.toContain('Seq Second');
       expect(titles).toContain('Par First');
       expect(titles).toContain('Par Second');
+    });
+
+    it('should apply isAvailable filter for defer dates via Prisma query', async () => {
+      // This test verifies the applyFilterRule method sets up the correct
+      // Prisma query for defer date filtering. The actual filtering happens
+      // at the database level.
+      const mockPerspective = {
+        id: 'available',
+        name: 'Available',
+        filterRules: [{ field: 'isAvailable', operator: 'eq', value: true }],
+        sortRules: [],
+        isBuiltIn: true,
+      };
+
+      // Mock actions that would be returned by Prisma (already filtered)
+      const mockActions = [
+        {
+          id: '1',
+          title: 'Available task (no defer)',
+          position: 0,
+          status: 'active',
+          deferDate: null,
+          projectId: null,
+          parentId: null,
+          project: null,
+        },
+        {
+          id: '2',
+          title: 'Available task (past defer)',
+          position: 1,
+          status: 'active',
+          deferDate: new Date(Date.now() - 86400000), // yesterday
+          projectId: null,
+          parentId: null,
+          project: null,
+        },
+      ];
+
+      mockPrismaService.perspective.findUnique.mockResolvedValue(mockPerspective);
+      mockPrismaService.action.findMany.mockResolvedValue(mockActions);
+
+      const result = await service.getActions('available');
+
+      // Verify Prisma query was called with correct defer date filter
+      expect(mockPrismaService.action.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: expect.arrayContaining([
+              { deferDate: null },
+              expect.objectContaining({ deferDate: expect.objectContaining({ lte: expect.any(Date) }) }),
+            ]),
+          }),
+        })
+      );
+
+      expect(result).toHaveLength(2);
+    });
+
+    it('should filter out tasks from on-hold projects', async () => {
+      const mockPerspective = {
+        id: 'available',
+        name: 'Available',
+        filterRules: [{ field: 'isAvailable', operator: 'eq', value: true }],
+        sortRules: [],
+        isBuiltIn: true,
+      };
+
+      const mockActions = [
+        {
+          id: '1',
+          title: 'Available task (active project)',
+          position: 0,
+          status: 'active',
+          deferDate: null,
+          projectId: 'active-project',
+          parentId: null,
+          project: { id: 'active-project', type: 'parallel', status: 'active' },
+        },
+        {
+          id: '2',
+          title: 'Unavailable task (on hold project)',
+          position: 1,
+          status: 'active',
+          deferDate: null,
+          projectId: 'onhold-project',
+          parentId: null,
+          project: { id: 'onhold-project', type: 'parallel', status: 'on_hold' },
+        },
+      ];
+
+      mockPrismaService.perspective.findUnique.mockResolvedValue(mockPerspective);
+      mockPrismaService.action.findMany.mockResolvedValue(mockActions);
+
+      const result = await service.getActions('available');
+
+      expect(result).toHaveLength(1);
+      expect(result[0].title).toBe('Available task (active project)');
     });
 
     it('should show all inbox actions (no project)', async () => {

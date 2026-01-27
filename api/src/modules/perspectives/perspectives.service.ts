@@ -62,6 +62,13 @@ export class PerspectivesService implements OnModuleInit {
         position: 5,
         filterRules: [],
       },
+      {
+        name: 'Available',
+        icon: 'check-circle',
+        isBuiltIn: true,
+        position: 6,
+        filterRules: [{ field: 'isAvailable', operator: 'eq', value: true }],
+      },
     ];
 
     for (const perspective of builtIn) {
@@ -163,10 +170,19 @@ export class PerspectivesService implements OnModuleInit {
       };
     }>[],
   ) {
-    // Group actions by projectId
-    const projectActions = new Map<string | null, typeof actions>();
+    // Filter out tasks from on-hold or dropped projects
+    const availableActions = actions.filter(action => {
+      // Check project status (inbox tasks always available)
+      if (action.project && action.project.status !== 'active') {
+        return false;
+      }
+      return true;
+    });
 
-    for (const action of actions) {
+    // Group actions by projectId
+    const projectActions = new Map<string | null, typeof availableActions>();
+
+    for (const action of availableActions) {
       const key = action.projectId || null;
       if (!projectActions.has(key)) {
         projectActions.set(key, []);
@@ -250,6 +266,13 @@ export class PerspectivesService implements OnModuleInit {
         break;
       case 'tagId':
         where.tags = { some: { tagId: rule.value as string } };
+        break;
+      case 'isAvailable':
+        // Available filter: defer date must be null or in the past
+        where.OR = [
+          { deferDate: null },
+          { deferDate: { lte: new Date() } },
+        ];
         break;
     }
   }
