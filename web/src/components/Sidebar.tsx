@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useAppStore } from '@/stores/app.store';
 import {
   Inbox,
@@ -14,6 +15,7 @@ import {
   BarChart3,
 } from 'lucide-react';
 import clsx from 'clsx';
+import { startOfDay, isBefore, isToday } from 'date-fns';
 
 const themeClasses = {
   sidebar: {
@@ -56,10 +58,30 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 export function Sidebar() {
-  const { perspectives, currentPerspective, setCurrentPerspective, setQuickEntryOpen, openPerspectiveEditor, setSettingsOpen, theme } = useAppStore();
+  const { perspectives, currentPerspective, setCurrentPerspective, setQuickEntryOpen, openPerspectiveEditor, setSettingsOpen, theme, actions } = useAppStore();
 
   const builtInPerspectives = perspectives.filter((p) => p.isBuiltIn);
   const customPerspectives = perspectives.filter((p) => !p.isBuiltIn);
+
+  // Calculate counts for badges
+  const counts = useMemo(() => {
+    const today = startOfDay(new Date());
+    const activeActions = actions.filter(a => a.status === 'active');
+
+    return {
+      // Inbox: Actions without a project
+      inbox: activeActions.filter(a => !a.projectId).length,
+      // Today: Due today or overdue
+      today: activeActions.filter(a => {
+        if (!a.dueDate) return false;
+        return isToday(new Date(a.dueDate)) || isBefore(new Date(a.dueDate), today);
+      }).length,
+      // Flagged: Flagged actions
+      flagged: activeActions.filter(a => a.flagged).length,
+      // Forecast: Actions with due dates
+      forecast: activeActions.filter(a => a.dueDate).length,
+    };
+  }, [actions]);
 
   return (
     <aside className={clsx(
@@ -83,24 +105,56 @@ export function Sidebar() {
             )}
           >
             <Sun size={18} />
-            <span>Today</span>
+            <span className="flex-1 text-left">Today</span>
+            {counts.today > 0 && (
+              <span className={clsx(
+                'px-1.5 py-0.5 text-xs rounded-full font-medium',
+                currentPerspective === 'today'
+                  ? 'bg-white/20'
+                  : 'bg-omnifocus-orange text-white'
+              )}>
+                {counts.today}
+              </span>
+            )}
           </button>
 
-          {builtInPerspectives.map((perspective) => (
-            <button
-              key={perspective.id}
-              onClick={() => setCurrentPerspective(perspective.id)}
-              className={clsx(
-                'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
-                currentPerspective === perspective.id
-                  ? themeClasses.navItem.active
-                  : themeClasses.navItem.inactive[theme]
-              )}
-            >
-              {iconMap[perspective.icon || 'inbox']}
-              <span>{perspective.name}</span>
-            </button>
-          ))}
+          {builtInPerspectives.map((perspective) => {
+            // Map perspective to count
+            const count = perspective.id === 'inbox' ? counts.inbox
+              : perspective.id === 'flagged' ? counts.flagged
+              : perspective.id === 'forecast' ? counts.forecast
+              : 0;
+
+            return (
+              <button
+                key={perspective.id}
+                onClick={() => setCurrentPerspective(perspective.id)}
+                className={clsx(
+                  'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
+                  currentPerspective === perspective.id
+                    ? themeClasses.navItem.active
+                    : themeClasses.navItem.inactive[theme]
+                )}
+              >
+                {iconMap[perspective.icon || 'inbox']}
+                <span className="flex-1 text-left">{perspective.name}</span>
+                {count > 0 && (
+                  <span className={clsx(
+                    'px-1.5 py-0.5 text-xs rounded-full font-medium',
+                    currentPerspective === perspective.id
+                      ? 'bg-white/20'
+                      : perspective.id === 'flagged'
+                        ? 'bg-omnifocus-orange text-white'
+                        : theme === 'dark'
+                          ? 'bg-omnifocus-surface text-gray-400'
+                          : 'bg-gray-200 text-gray-600'
+                  )}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
 
           {/* Stats - special perspective */}
           <button
