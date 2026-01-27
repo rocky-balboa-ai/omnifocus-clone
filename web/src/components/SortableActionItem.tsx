@@ -110,6 +110,11 @@ export function SortableActionItem({
     await updateAction(action.id, { deferDate: date?.toISOString() || null } as any);
   };
 
+  const handleQuickEstimate = async (e: React.MouseEvent, minutes: number | null) => {
+    e.stopPropagation();
+    await updateAction(action.id, { estimatedMinutes: minutes } as any);
+  };
+
   const handleDuplicate = async (e: React.MouseEvent) => {
     e.stopPropagation();
     await createAction({
@@ -398,6 +403,28 @@ export function SortableActionItem({
           title="Duplicate action"
         >
           <Copy size={14} />
+        </button>
+
+        {/* Quick time estimates */}
+        <button
+          onClick={(e) => {
+            // Cycle through: 5 -> 15 -> 30 -> 60 -> null -> 5...
+            const estimates = [5, 15, 30, 60, null];
+            const currentIdx = estimates.indexOf(action.estimatedMinutes || null);
+            const nextIdx = (currentIdx + 1) % estimates.length;
+            handleQuickEstimate(e, estimates[nextIdx]);
+          }}
+          className={clsx(
+            'p-1 rounded transition-colors',
+            action.estimatedMinutes
+              ? 'text-blue-400'
+              : theme === 'dark'
+                ? 'hover:bg-omnifocus-border text-gray-500 hover:text-blue-400'
+                : 'hover:bg-blue-50 text-gray-400 hover:text-blue-500'
+          )}
+          title={action.estimatedMinutes ? `${action.estimatedMinutes}m (click to cycle)` : 'Add time estimate'}
+        >
+          <Clock size={14} />
         </button>
 
         {/* Indent/outdent */}
