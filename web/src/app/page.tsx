@@ -27,9 +27,11 @@ import { Scratchpad } from '@/components/Scratchpad';
 import { BatchActionsBar } from '@/components/BatchActionsBar';
 import { FocusModeOverlay } from '@/components/FocusModeOverlay';
 import { MorningBriefing } from '@/components/MorningBriefing';
+import { EndOfDaySummary } from '@/components/EndOfDaySummary';
 import { useAppStore } from '@/stores/app.store';
 import { useKeyboardShortcuts } from '@/lib/useKeyboardShortcuts';
 import { useThemeInit } from '@/lib/useThemeInit';
+import { useNotifications } from '@/lib/useNotifications';
 import clsx from 'clsx';
 
 export default function Home() {
@@ -67,6 +69,9 @@ export default function Home() {
 
   // Enable keyboard shortcuts
   useKeyboardShortcuts();
+
+  // Enable browser notifications
+  useNotifications();
 
   useEffect(() => {
     fetchPerspectives();
@@ -201,6 +206,9 @@ export default function Home() {
 
       {/* Morning Briefing */}
       <MorningBriefing />
+
+      {/* End of Day Summary */}
+      <EndOfDaySummary />
     </div>
   );
 }
