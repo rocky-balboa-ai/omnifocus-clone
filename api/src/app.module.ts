@@ -10,6 +10,7 @@ import { TagsModule } from './modules/tags/tags.module';
 import { FoldersModule } from './modules/folders/folders.module';
 import { PerspectivesModule } from './modules/perspectives/perspectives.module';
 import { AttachmentsModule } from './modules/attachments/attachments.module';
+import { ExportModule } from './modules/export/export.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { AttachmentsModule } from './modules/attachments/attachments.module';
     FoldersModule,
     PerspectivesModule,
     AttachmentsModule,
+    ExportModule,
   ],
 })
 export class AppModule {}

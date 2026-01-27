@@ -11,7 +11,10 @@ import {
   Clock,
   Bell,
   Keyboard,
+  Download,
+  Database,
 } from 'lucide-react';
+import { api } from '@/lib/api';
 import clsx from 'clsx';
 
 interface SettingsPanelProps {
@@ -23,6 +26,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const { cleanupCompleted, theme, toggleTheme } = useAppStore();
   const [cleanupDays, setCleanupDays] = useState(7);
   const [isCleaningUp, setIsCleaningUp] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleCleanup = async () => {
     if (!confirm(`Delete completed actions older than ${cleanupDays} days? This cannot be undone.`)) return;
@@ -36,6 +40,34 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       alert('Failed to clean up completed actions.');
     } finally {
       setIsCleaningUp(false);
+    }
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/export`, {
+        headers: {
+          'x-api-key': 'dev-api-key',
+        },
+      });
+
+      if (!response.ok) throw new Error('Export failed');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `omnifocus-export-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to export:', error);
+      alert('Failed to export data. Please try again.');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -181,10 +213,39 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
               'flex items-center gap-2 text-sm font-semibold mb-3',
               theme === 'dark' ? 'text-white' : 'text-gray-900'
             )}>
-              <Trash2 size={16} />
+              <Database size={16} />
               Data Management
             </h3>
             <div className="space-y-3">
+              {/* Export Data */}
+              <div className={clsx(
+                'p-3 rounded-lg',
+                theme === 'dark' ? 'bg-omnifocus-surface' : 'bg-omnifocus-light-surface'
+              )}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className={clsx('text-sm font-medium', theme === 'dark' ? 'text-gray-300' : 'text-gray-700')}>Export Data</span>
+                    <p className={clsx('text-xs mt-0.5', theme === 'dark' ? 'text-gray-500' : 'text-gray-500')}>
+                      Download all your data as JSON
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleExport}
+                    disabled={isExporting}
+                    className={clsx(
+                      'flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium disabled:opacity-50',
+                      theme === 'dark'
+                        ? 'bg-omnifocus-bg text-gray-300 hover:text-white'
+                        : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                    )}
+                  >
+                    <Download size={16} />
+                    {isExporting ? 'Exporting...' : 'Export'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Cleanup */}
               <div className={clsx(
                 'p-3 rounded-lg',
                 theme === 'dark' ? 'bg-omnifocus-surface' : 'bg-omnifocus-light-surface'
