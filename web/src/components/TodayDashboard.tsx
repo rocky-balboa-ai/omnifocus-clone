@@ -5,6 +5,8 @@ import { useAppStore } from '@/stores/app.store';
 import { ActionItem } from './ActionItem';
 import { StreakCounter } from './StreakCounter';
 import { DailyProgress } from './DailyProgress';
+import { SmartSuggestions } from './SmartSuggestions';
+import { WhatsNext } from './WhatsNext';
 import {
   Sun,
   AlertTriangle,
@@ -189,6 +191,12 @@ export function TodayDashboard() {
               {sections.completedToday.length}
             </p>
           </div>
+        </div>
+
+        {/* Smart Widgets Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          <SmartSuggestions />
+          <WhatsNext />
         </div>
 
         {/* Task Sections */}
