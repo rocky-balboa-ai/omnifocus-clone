@@ -1,0 +1,230 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// Auth
+// ============================================================================
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("users")
+}
+
+model ApiKey {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  lastUsed  DateTime?
+
+  @@map("api_keys")
+}
+
+// ============================================================================
+// Core GTD Entities
+// ============================================================================
+
+enum ItemStatus {
+  active
+  completed
+  dropped
+  on_hold
+}
+
+enum ProjectType {
+  sequential
+  parallel
+  single_actions
+}
+
+enum RepeatMode {
+  fixed
+  defer_another
+  due_again
+}
+
+model Folder {
+  id        String   @id @default(uuid())
+  name      String
+  parentId  String?
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parent   Folder?   @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children Folder[]  @relation("FolderHierarchy")
+  projects Project[]
+
+  @@map("folders")
+}
+
+model Project {
+  id        String      @id @default(uuid())
+  name      String
+  note      String?
+  status    ItemStatus  @default(active)
+  type      ProjectType @default(parallel)
+  flagged   Boolean     @default(false)
+
+  deferDate   DateTime?
+  dueDate     DateTime?
+  plannedDate DateTime?
+
+  completedAt DateTime?
+  droppedAt   DateTime?
+
+  // Review
+  reviewInterval  String?   // e.g., "1w", "2w", "1m"
+  lastReviewedAt  DateTime?
+  nextReviewAt    DateTime?
+
+  // Repeat
+  repeatMode      RepeatMode?
+  repeatInterval  String?    // e.g., "1d", "1w", "1m", "1y"
+  repeatEndDate   DateTime?
+  repeatEndCount  Int?
+
+  folderId  String?
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  folder  Folder?  @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  actions Action[]
+  tags    ProjectTag[]
+
+  @@map("projects")
+}
+
+model Action {
+  id        String     @id @default(uuid())
+  title     String
+  note      String?
+  status    ItemStatus @default(active)
+  flagged   Boolean    @default(false)
+
+  deferDate   DateTime?
+  dueDate     DateTime?
+  plannedDate DateTime?
+
+  completedAt DateTime?
+  droppedAt   DateTime?
+
+  estimatedMinutes Int?
+
+  // Repeat
+  repeatMode      RepeatMode?
+  repeatInterval  String?
+  repeatEndDate   DateTime?
+  repeatEndCount  Int?
+  repeatCount     Int       @default(0) // Track how many times repeated
+
+  // Hierarchy
+  projectId String?
+  parentId  String?   // For action groups
+  position  Int       @default(0)
+
+  // Inbox flag (no project = inbox)
+  isInbox   Boolean   @default(false)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  project     Project?     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent      Action?      @relation("ActionHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Action[]     @relation("ActionHierarchy")
+  tags        ActionTag[]
+  attachments Attachment[]
+
+  @@map("actions")
+}
+
+model Attachment {
+  id        String   @id @default(uuid())
+  filename  String
+  mimeType  String
+  size      Int
+  url       String   // Path or URL to the file
+  actionId  String
+  createdAt DateTime @default(now())
+
+  action Action @relation(fields: [actionId], references: [id], onDelete: Cascade)
+
+  @@map("attachments")
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  name      String
+  parentId  String?
+  position  Int      @default(0)
+
+  // Availability window
+  availableFrom  String?  // Time like "09:00"
+  availableUntil String?  // Time like "17:00"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parent   Tag?        @relation("TagHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children Tag[]       @relation("TagHierarchy")
+  actions  ActionTag[]
+  projects ProjectTag[]
+
+  @@map("tags")
+}
+
+model ActionTag {
+  actionId String
+  tagId    String
+
+  action Action @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([actionId, tagId])
+  @@map("action_tags")
+}
+
+model ProjectTag {
+  projectId String
+  tagId     String
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, tagId])
+  @@map("project_tags")
+}
+
+// ============================================================================
+// Perspectives
+// ============================================================================
+
+model Perspective {
+  id        String  @id @default(uuid())
+  name      String
+  icon      String?
+  isBuiltIn Boolean @default(false)
+  position  Int     @default(0)
+
+  // Filter and sort configuration stored as JSON
+  filterRules Json?
+  sortRules   Json?
+  groupBy     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("perspectives")
+}

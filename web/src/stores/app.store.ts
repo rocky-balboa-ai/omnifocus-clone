@@ -1,0 +1,315 @@
+import { create } from 'zustand';
+import { api } from '@/lib/api';
+
+export interface Attachment {
+  id: string;
+  filename: string;
+  mimeType: string;
+  size: number;
+  url: string;
+  createdAt: string;
+}
+
+export interface Action {
+  id: string;
+  title: string;
+  note?: string;
+  status: 'active' | 'completed' | 'dropped' | 'on_hold';
+  flagged: boolean;
+  deferDate?: string;
+  dueDate?: string;
+  plannedDate?: string;
+  completedAt?: string;
+  estimatedMinutes?: number;
+  projectId?: string;
+  parentId?: string;
+  position: number;
+  project?: Project;
+  tags: { tag: Tag }[];
+  children?: Action[];
+  attachments?: Attachment[];
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  note?: string;
+  status: 'active' | 'completed' | 'dropped' | 'on_hold';
+  type: 'sequential' | 'parallel' | 'single_actions';
+  flagged: boolean;
+  deferDate?: string;
+  dueDate?: string;
+  reviewInterval?: string;
+  nextReviewAt?: string;
+  folderId?: string;
+  actions?: Action[];
+  _count?: { actions: number };
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  parentId?: string;
+  children?: Tag[];
+  _count?: { actions: number; projects: number };
+}
+
+export interface Folder {
+  id: string;
+  name: string;
+  parentId?: string;
+  children?: Folder[];
+  projects?: Project[];
+}
+
+export interface Perspective {
+  id: string;
+  name: string;
+  icon?: string;
+  isBuiltIn: boolean;
+  filterRules?: any[];
+  sortRules?: any[];
+  groupBy?: string;
+}
+
+interface AppState {
+  // Data
+  actions: Action[];
+  projects: Project[];
+  tags: Tag[];
+  folders: Folder[];
+  perspectives: Perspective[];
+
+  // UI State
+  currentPerspective: string;
+  selectedActionId: string | null;
+  selectedProjectId: string | null;
+  editingPerspectiveId: string | null;
+  collapsedActionIds: Set<string>;
+  isQuickEntryOpen: boolean;
+  isSearchOpen: boolean;
+  isPerspectiveEditorOpen: boolean;
+  showCompleted: boolean;
+  isLoading: boolean;
+  error: string | null;
+
+  // Actions
+  setCurrentPerspective: (id: string) => void;
+  setSelectedAction: (id: string | null) => void;
+  setSelectedProject: (id: string | null) => void;
+  setQuickEntryOpen: (open: boolean) => void;
+  setSearchOpen: (open: boolean) => void;
+  setShowCompleted: (show: boolean) => void;
+  openPerspectiveEditor: (id?: string | null) => void;
+  closePerspectiveEditor: () => void;
+
+  // API Actions
+  fetchPerspectives: () => Promise<void>;
+  fetchActions: (perspectiveId: string) => Promise<void>;
+  fetchProjects: () => Promise<void>;
+  fetchTags: () => Promise<void>;
+  fetchFolders: () => Promise<void>;
+
+  createAction: (data: Partial<Action>) => Promise<Action>;
+  updateAction: (id: string, data: Partial<Action>) => Promise<Action>;
+  completeAction: (id: string) => Promise<void>;
+  deleteAction: (id: string) => Promise<void>;
+  reorderActions: (actionIds: string[]) => void;
+  toggleActionCollapsed: (id: string) => void;
+  indentAction: (id: string) => Promise<void>;
+  outdentAction: (id: string) => Promise<void>;
+
+  createProject: (data: Partial<Project>) => Promise<Project>;
+  updateProject: (id: string, data: Partial<Project>) => Promise<Project>;
+  cleanupCompleted: (olderThanDays?: number) => Promise<{ deleted: number }>;
+}
+
+export const useAppStore = create<AppState>((set, get) => ({
+  // Initial state
+  actions: [],
+  projects: [],
+  tags: [],
+  folders: [],
+  perspectives: [],
+  currentPerspective: 'inbox',
+  selectedActionId: null,
+  selectedProjectId: null,
+  editingPerspectiveId: null,
+  collapsedActionIds: new Set<string>(),
+  isQuickEntryOpen: false,
+  isSearchOpen: false,
+  isPerspectiveEditorOpen: false,
+  showCompleted: false,
+  isLoading: false,
+  error: null,
+
+  // UI Actions
+  setCurrentPerspective: (id) => set({ currentPerspective: id }),
+  setSelectedAction: (id) => set({ selectedActionId: id }),
+  setSelectedProject: (id) => set({ selectedProjectId: id }),
+  setQuickEntryOpen: (open) => set({ isQuickEntryOpen: open }),
+  setSearchOpen: (open) => set({ isSearchOpen: open }),
+  setShowCompleted: (show) => set({ showCompleted: show }),
+  openPerspectiveEditor: (id) => set({ isPerspectiveEditorOpen: true, editingPerspectiveId: id || null }),
+  closePerspectiveEditor: () => set({ isPerspectiveEditorOpen: false, editingPerspectiveId: null }),
+
+  // API Actions
+  fetchPerspectives: async () => {
+    try {
+      const perspectives = await api.get<Perspective[]>('/perspectives');
+      set({ perspectives });
+    } catch (error) {
+      set({ error: 'Failed to fetch perspectives' });
+    }
+  },
+
+  fetchActions: async (perspectiveId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const actions = await api.get<Action[]>(`/perspectives/${perspectiveId}/actions`);
+      set({ actions, isLoading: false });
+    } catch (error) {
+      set({ error: 'Failed to fetch actions', isLoading: false });
+    }
+  },
+
+  fetchProjects: async () => {
+    try {
+      const projects = await api.get<Project[]>('/projects');
+      set({ projects });
+    } catch (error) {
+      set({ error: 'Failed to fetch projects' });
+    }
+  },
+
+  fetchTags: async () => {
+    try {
+      const tags = await api.get<Tag[]>('/tags');
+      set({ tags });
+    } catch (error) {
+      set({ error: 'Failed to fetch tags' });
+    }
+  },
+
+  fetchFolders: async () => {
+    try {
+      const folders = await api.get<Folder[]>('/folders');
+      set({ folders });
+    } catch (error) {
+      set({ error: 'Failed to fetch folders' });
+    }
+  },
+
+  createAction: async (data) => {
+    const action = await api.post<Action>('/actions', data);
+    set((state) => ({ actions: [...state.actions, action] }));
+    return action;
+  },
+
+  updateAction: async (id, data) => {
+    const action = await api.patch<Action>(`/actions/${id}`, data);
+    set((state) => ({
+      actions: state.actions.map((a) => (a.id === id ? action : a)),
+    }));
+    return action;
+  },
+
+  completeAction: async (id) => {
+    await api.post(`/actions/${id}/complete`);
+    set((state) => ({
+      actions: state.actions.filter((a) => a.id !== id),
+    }));
+  },
+
+  deleteAction: async (id) => {
+    await api.delete(`/actions/${id}`);
+    set((state) => ({
+      actions: state.actions.filter((a) => a.id !== id),
+    }));
+  },
+
+  reorderActions: (actionIds) => {
+    set((state) => {
+      const actionMap = new Map(state.actions.map(a => [a.id, a]));
+      const reordered = actionIds
+        .map(id => actionMap.get(id))
+        .filter((a): a is Action => a !== undefined);
+
+      // Add any actions not in the reorder list at the end
+      const remainingActions = state.actions.filter(a => !actionIds.includes(a.id));
+
+      return { actions: [...reordered, ...remainingActions] };
+    });
+
+    // Persist to API (fire and forget)
+    api.post('/actions/reorder', { actionIds }).catch(console.error);
+  },
+
+  toggleActionCollapsed: (id) => {
+    set((state) => {
+      const newCollapsed = new Set(state.collapsedActionIds);
+      if (newCollapsed.has(id)) {
+        newCollapsed.delete(id);
+      } else {
+        newCollapsed.add(id);
+      }
+      return { collapsedActionIds: newCollapsed };
+    });
+  },
+
+  indentAction: async (id) => {
+    const { actions, updateAction } = get();
+    const actionIndex = actions.findIndex(a => a.id === id);
+    if (actionIndex <= 0) return; // Can't indent first item
+
+    // Find the action above this one (potential parent)
+    // Look for an action at the same level or above
+    const action = actions[actionIndex];
+    let potentialParentIndex = actionIndex - 1;
+
+    // Find a sibling (same parentId) above this action to become the parent
+    while (potentialParentIndex >= 0) {
+      const potentialParent = actions[potentialParentIndex];
+      if (potentialParent.parentId === action.parentId) {
+        // Found a sibling above - make it the parent
+        await updateAction(id, { parentId: potentialParent.id } as any);
+        return;
+      }
+      potentialParentIndex--;
+    }
+  },
+
+  outdentAction: async (id) => {
+    const { actions, updateAction } = get();
+    const action = actions.find(a => a.id === id);
+    if (!action?.parentId) return; // Already at root level
+
+    // Find the parent's parent
+    const parent = actions.find(a => a.id === action.parentId);
+    const newParentId = parent?.parentId || null;
+
+    await updateAction(id, { parentId: newParentId } as any);
+  },
+
+  createProject: async (data) => {
+    const project = await api.post<Project>('/projects', data);
+    set((state) => ({ projects: [...state.projects, project] }));
+    return project;
+  },
+
+  updateProject: async (id, data) => {
+    const project = await api.patch<Project>(`/projects/${id}`, data);
+    set((state) => ({
+      projects: state.projects.map((p) => (p.id === id ? project : p)),
+    }));
+    return project;
+  },
+
+  cleanupCompleted: async (olderThanDays = 7) => {
+    const result = await api.post<{ deleted: number }>('/actions/cleanup', { olderThanDays });
+    // Refresh actions to reflect the deleted items
+    const { currentPerspective, fetchActions } = get();
+    await fetchActions(currentPerspective);
+    return result;
+  },
+}));
