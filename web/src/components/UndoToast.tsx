@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAppStore } from '@/stores/app.store';
-import { Undo2, X } from 'lucide-react';
+import { useAppStore, Action } from '@/stores/app.store';
+import { Undo2, X, Check, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
 
 interface UndoItem {
@@ -10,20 +10,23 @@ interface UndoItem {
   actionId: string;
   title: string;
   timestamp: number;
+  type: 'completed' | 'deleted';
+  actionData?: Partial<Action>;
 }
 
 export function UndoToast() {
-  const { theme } = useAppStore();
+  const { theme, uncompleteAction, createAction } = useAppStore();
   const [undoItems, setUndoItems] = useState<UndoItem[]>([]);
 
-  // Listen for custom undo events
+  // Listen for completed actions
   useEffect(() => {
-    const handleUndoEvent = (event: CustomEvent<{ actionId: string; title: string }>) => {
+    const handleCompleted = (event: CustomEvent<{ actionId: string; title: string }>) => {
       const newItem: UndoItem = {
         id: Math.random().toString(36).substr(2, 9),
         actionId: event.detail.actionId,
         title: event.detail.title,
         timestamp: Date.now(),
+        type: 'completed',
       };
       setUndoItems(prev => [...prev, newItem]);
 
@@ -33,15 +36,45 @@ export function UndoToast() {
       }, 5000);
     };
 
-    window.addEventListener('action-completed' as any, handleUndoEvent);
-    return () => window.removeEventListener('action-completed' as any, handleUndoEvent);
+    window.addEventListener('action-completed' as any, handleCompleted);
+    return () => window.removeEventListener('action-completed' as any, handleCompleted);
   }, []);
 
-  const { uncompleteAction, fetchActions, currentPerspective } = useAppStore();
+  // Listen for deleted actions
+  useEffect(() => {
+    const handleDeleted = (event: CustomEvent<{ actionId: string; title: string; actionData: Partial<Action> }>) => {
+      const newItem: UndoItem = {
+        id: Math.random().toString(36).substr(2, 9),
+        actionId: event.detail.actionId,
+        title: event.detail.title,
+        timestamp: Date.now(),
+        type: 'deleted',
+        actionData: event.detail.actionData,
+      };
+      setUndoItems(prev => [...prev, newItem]);
+
+      // Auto-dismiss after 5 seconds
+      setTimeout(() => {
+        setUndoItems(prev => prev.filter(item => item.id !== newItem.id));
+      }, 5000);
+    };
+
+    window.addEventListener('action-deleted' as any, handleDeleted);
+    return () => window.removeEventListener('action-deleted' as any, handleDeleted);
+  }, []);
 
   const handleUndo = async (item: UndoItem) => {
     try {
-      await uncompleteAction(item.actionId);
+      if (item.type === 'completed') {
+        await uncompleteAction(item.actionId);
+      } else if (item.type === 'deleted' && item.actionData) {
+        // Recreate the action (without the id, timestamps, etc.)
+        const { id, completedAt, project, tags, children, attachments, ...restoreData } = item.actionData as any;
+        await createAction({
+          ...restoreData,
+          status: 'active',
+        });
+      }
     } catch (error) {
       console.error('Failed to undo:', error);
     }
@@ -68,9 +101,19 @@ export function UndoToast() {
               : 'bg-white border-gray-200'
           )}
         >
+          <div className={clsx(
+            'flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center',
+            item.type === 'completed' ? 'bg-green-500/20' : 'bg-red-500/20'
+          )}>
+            {item.type === 'completed' ? (
+              <Check size={14} className="text-green-500" />
+            ) : (
+              <Trash2 size={14} className="text-red-400" />
+            )}
+          </div>
           <div className="flex-1 min-w-0">
             <p className={clsx('text-sm truncate', theme === 'dark' ? 'text-white' : 'text-gray-900')}>
-              Completed: {item.title}
+              {item.type === 'completed' ? 'Completed' : 'Deleted'}: {item.title}
             </p>
           </div>
           <button

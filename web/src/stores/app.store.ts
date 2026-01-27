@@ -383,10 +383,22 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   deleteAction: async (id) => {
+    const { actions } = get();
+    const action = actions.find(a => a.id === id);
+    const actionTitle = action?.title || 'Action';
+    const actionData = action ? { ...action } : null;
+
     await api.delete(`/actions/${id}`);
     set((state) => ({
       actions: state.actions.filter((a) => a.id !== id),
     }));
+
+    // Dispatch undo event
+    if (typeof window !== 'undefined' && actionData) {
+      window.dispatchEvent(new CustomEvent('action-deleted', {
+        detail: { actionId: id, title: actionTitle, actionData }
+      }));
+    }
   },
 
   reorderActions: (actionIds) => {
