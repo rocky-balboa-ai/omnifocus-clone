@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAppStore } from '@/stores/app.store';
-import { Search, X, FolderKanban, Tags, CheckCircle2, Command } from 'lucide-react';
+import { api } from '@/lib/api';
+import { Search, X, FolderKanban, Tags, CheckCircle2, Command, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 
 interface SearchCommandProps {
@@ -22,8 +23,10 @@ export function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const searchAbortRef = useRef<AbortController | null>(null);
 
   // Focus input when modal opens
   useEffect(() => {
@@ -31,61 +34,131 @@ export function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
       setQuery('');
       setResults([]);
       setSelectedIndex(0);
+      setIsLoading(false);
       setTimeout(() => inputRef.current?.focus(), 10);
     }
   }, [isOpen]);
 
-  // Search logic
+  // Search logic with API call and debouncing
   useEffect(() => {
     if (!query.trim()) {
       setResults([]);
+      setIsLoading(false);
       return;
     }
 
-    const lowerQuery = query.toLowerCase();
-    const searchResults: SearchResult[] = [];
+    // Cancel previous request
+    if (searchAbortRef.current) {
+      searchAbortRef.current.abort();
+    }
 
-    // Search actions
-    actions
-      .filter(a => a.title.toLowerCase().includes(lowerQuery))
-      .slice(0, 5)
-      .forEach(a => {
-        searchResults.push({
-          id: a.id,
-          type: 'action',
-          title: a.title,
-          subtitle: a.project?.name,
+    const abortController = new AbortController();
+    searchAbortRef.current = abortController;
+
+    setIsLoading(true);
+
+    // Debounce API call
+    const timeoutId = setTimeout(async () => {
+      try {
+        // Try API search first
+        const apiResult = await api.get<{
+          actions: Array<{ id: string; title: string; project?: { name: string } }>;
+          projects: Array<{ id: string; name: string; _count?: { actions: number } }>;
+          tags: Array<{ id: string; name: string; _count?: { actions: number } }>;
+        }>(`/actions/search?q=${encodeURIComponent(query)}&limit=20`);
+
+        if (abortController.signal.aborted) return;
+
+        const searchResults: SearchResult[] = [];
+
+        // Add actions
+        apiResult.actions.slice(0, 8).forEach(a => {
+          searchResults.push({
+            id: a.id,
+            type: 'action',
+            title: a.title,
+            subtitle: a.project?.name,
+          });
         });
-      });
 
-    // Search projects
-    projects
-      .filter(p => p.name.toLowerCase().includes(lowerQuery))
-      .slice(0, 3)
-      .forEach(p => {
-        searchResults.push({
-          id: p.id,
-          type: 'project',
-          title: p.name,
-          subtitle: `${p._count?.actions || 0} actions`,
+        // Add projects
+        apiResult.projects.slice(0, 4).forEach(p => {
+          searchResults.push({
+            id: p.id,
+            type: 'project',
+            title: p.name,
+            subtitle: `${p._count?.actions || 0} actions`,
+          });
         });
-      });
 
-    // Search tags
-    tags
-      .filter(t => t.name.toLowerCase().includes(lowerQuery))
-      .slice(0, 3)
-      .forEach(t => {
-        searchResults.push({
-          id: t.id,
-          type: 'tag',
-          title: t.name,
-          subtitle: `${t._count?.actions || 0} actions`,
+        // Add tags
+        apiResult.tags.slice(0, 4).forEach(t => {
+          searchResults.push({
+            id: t.id,
+            type: 'tag',
+            title: t.name,
+            subtitle: `${t._count?.actions || 0} actions`,
+          });
         });
-      });
 
-    setResults(searchResults);
-    setSelectedIndex(0);
+        setResults(searchResults);
+        setSelectedIndex(0);
+      } catch {
+        // Fallback to client-side search if API fails
+        if (abortController.signal.aborted) return;
+
+        const lowerQuery = query.toLowerCase();
+        const searchResults: SearchResult[] = [];
+
+        actions
+          .filter(a => a.title.toLowerCase().includes(lowerQuery))
+          .slice(0, 5)
+          .forEach(a => {
+            searchResults.push({
+              id: a.id,
+              type: 'action',
+              title: a.title,
+              subtitle: a.project?.name,
+            });
+          });
+
+        projects
+          .filter(p => p.name.toLowerCase().includes(lowerQuery))
+          .slice(0, 3)
+          .forEach(p => {
+            searchResults.push({
+              id: p.id,
+              type: 'project',
+              title: p.name,
+              subtitle: `${p._count?.actions || 0} actions`,
+            });
+          });
+
+        tags
+          .filter(t => t.name.toLowerCase().includes(lowerQuery))
+          .slice(0, 3)
+          .forEach(t => {
+            searchResults.push({
+              id: t.id,
+              type: 'tag',
+              title: t.name,
+              subtitle: `${t._count?.actions || 0} actions`,
+            });
+          });
+
+        setResults(searchResults);
+        setSelectedIndex(0);
+      } finally {
+        if (!abortController.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    }, 150); // 150ms debounce
+
+    return () => {
+      clearTimeout(timeoutId);
+      abortController.abort();
+    };
   }, [query, actions, projects, tags]);
 
   // Scroll selected item into view
@@ -213,13 +286,20 @@ export function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
 
         {/* Results */}
         <div ref={listRef} className="max-h-80 overflow-y-auto">
-          {query && results.length === 0 && (
+          {isLoading && (
+            <div className="px-4 py-8 flex items-center justify-center text-gray-500">
+              <Loader2 size={20} className="animate-spin mr-2" />
+              Searching...
+            </div>
+          )}
+
+          {!isLoading && query && results.length === 0 && (
             <div className="px-4 py-8 text-center text-gray-500">
               No results found for &quot;{query}&quot;
             </div>
           )}
 
-          {results.map((result, index) => (
+          {!isLoading && results.map((result, index) => (
             <button
               key={`${result.type}-${result.id}`}
               onClick={() => handleSelect(result)}

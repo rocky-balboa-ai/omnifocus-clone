@@ -252,43 +252,98 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   bulkCompleteActions: async () => {
-    const { selectedActionIds, completeAction, clearActionSelection } = get();
-    for (const id of selectedActionIds) {
-      await completeAction(id);
+    const { selectedActionIds, clearActionSelection, fetchActions, currentPerspective } = get();
+    const actionIds = Array.from(selectedActionIds);
+    if (actionIds.length === 0) return;
+
+    try {
+      await api.post('/actions/bulk/complete', { actionIds });
+      await fetchActions(currentPerspective);
+      clearActionSelection();
+    } catch (e) {
+      // Fallback to individual completion
+      for (const id of actionIds) {
+        await api.post(`/actions/${id}/complete`);
+      }
+      await fetchActions(currentPerspective);
+      clearActionSelection();
     }
-    clearActionSelection();
   },
 
   bulkDeleteActions: async () => {
-    const { selectedActionIds, deleteAction, clearActionSelection } = get();
-    for (const id of selectedActionIds) {
-      await deleteAction(id);
+    const { selectedActionIds, clearActionSelection, fetchActions, currentPerspective } = get();
+    const actionIds = Array.from(selectedActionIds);
+    if (actionIds.length === 0) return;
+
+    try {
+      await api.post('/actions/bulk/delete', { actionIds });
+      await fetchActions(currentPerspective);
+      clearActionSelection();
+    } catch (e) {
+      // Fallback to individual deletion
+      for (const id of actionIds) {
+        await api.delete(`/actions/${id}`);
+      }
+      await fetchActions(currentPerspective);
+      clearActionSelection();
     }
-    clearActionSelection();
   },
 
   bulkFlagActions: async (flagged: boolean) => {
-    const { selectedActionIds, updateAction, clearActionSelection } = get();
-    for (const id of selectedActionIds) {
-      await updateAction(id, { flagged } as any);
+    const { selectedActionIds, clearActionSelection, fetchActions, currentPerspective } = get();
+    const actionIds = Array.from(selectedActionIds);
+    if (actionIds.length === 0) return;
+
+    try {
+      await api.post('/actions/bulk/update', { actionIds, update: { flagged } });
+      await fetchActions(currentPerspective);
+      clearActionSelection();
+    } catch (e) {
+      // Fallback to individual update
+      for (const id of actionIds) {
+        await api.patch(`/actions/${id}`, { flagged });
+      }
+      await fetchActions(currentPerspective);
+      clearActionSelection();
     }
-    clearActionSelection();
   },
 
   bulkSetDueDate: async (dueDate: string | null) => {
-    const { selectedActionIds, updateAction, clearActionSelection } = get();
-    for (const id of selectedActionIds) {
-      await updateAction(id, { dueDate } as any);
+    const { selectedActionIds, clearActionSelection, fetchActions, currentPerspective } = get();
+    const actionIds = Array.from(selectedActionIds);
+    if (actionIds.length === 0) return;
+
+    try {
+      await api.post('/actions/bulk/update', { actionIds, update: { dueDate } });
+      await fetchActions(currentPerspective);
+      clearActionSelection();
+    } catch (e) {
+      // Fallback to individual update
+      for (const id of actionIds) {
+        await api.patch(`/actions/${id}`, { dueDate });
+      }
+      await fetchActions(currentPerspective);
+      clearActionSelection();
     }
-    clearActionSelection();
   },
 
   bulkSetProject: async (projectId: string | null) => {
-    const { selectedActionIds, updateAction, clearActionSelection } = get();
-    for (const id of selectedActionIds) {
-      await updateAction(id, { projectId } as any);
+    const { selectedActionIds, clearActionSelection, fetchActions, currentPerspective } = get();
+    const actionIds = Array.from(selectedActionIds);
+    if (actionIds.length === 0) return;
+
+    try {
+      await api.post('/actions/bulk/move', { actionIds, projectId });
+      await fetchActions(currentPerspective);
+      clearActionSelection();
+    } catch (e) {
+      // Fallback to individual update
+      for (const id of actionIds) {
+        await api.patch(`/actions/${id}`, { projectId });
+      }
+      await fetchActions(currentPerspective);
+      clearActionSelection();
     }
-    clearActionSelection();
   },
 
   openPerspectiveEditor: (id) => set({ isPerspectiveEditorOpen: true, editingPerspectiveId: id || null }),
