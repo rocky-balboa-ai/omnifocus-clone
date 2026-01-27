@@ -58,7 +58,7 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 export function Sidebar() {
-  const { perspectives, currentPerspective, setCurrentPerspective, setQuickEntryOpen, openPerspectiveEditor, setSettingsOpen, theme, actions } = useAppStore();
+  const { perspectives, currentPerspective, setCurrentPerspective, setQuickEntryOpen, openPerspectiveEditor, setSettingsOpen, setWeeklyReviewOpen, theme, actions } = useAppStore();
 
   const builtInPerspectives = perspectives.filter((p) => p.isBuiltIn);
   const customPerspectives = perspectives.filter((p) => !p.isBuiltIn);
@@ -230,6 +230,16 @@ export function Sidebar() {
         >
           <Plus size={18} />
           <span className="text-sm">New Action</span>
+        </button>
+        <button
+          onClick={() => setWeeklyReviewOpen(true)}
+          className={clsx(
+            'w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors',
+            themeClasses.button[theme]
+          )}
+        >
+          <RefreshCw size={18} />
+          <span className="text-sm">Weekly Review</span>
         </button>
         <button
           onClick={() => setSettingsOpen(true)}

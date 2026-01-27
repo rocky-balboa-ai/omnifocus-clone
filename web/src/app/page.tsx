@@ -21,6 +21,7 @@ import { SettingsPanel } from '@/components/SettingsPanel';
 import { UndoToast } from '@/components/UndoToast';
 import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 import { FocusTimer } from '@/components/FocusTimer';
+import { WeeklyReviewFlow } from '@/components/WeeklyReviewFlow';
 import { useAppStore } from '@/stores/app.store';
 import { useKeyboardShortcuts } from '@/lib/useKeyboardShortcuts';
 import { useThemeInit } from '@/lib/useThemeInit';
@@ -50,6 +51,8 @@ export default function Home() {
     setKeyboardHelpOpen,
     isFocusTimerOpen,
     setFocusTimerOpen,
+    isWeeklyReviewOpen,
+    setWeeklyReviewOpen,
     theme,
     isFocusMode,
   } = useAppStore();
@@ -169,6 +172,12 @@ export default function Home() {
       <FocusTimer
         isOpen={isFocusTimerOpen}
         onClose={() => setFocusTimerOpen(false)}
+      />
+
+      {/* Weekly Review Flow */}
+      <WeeklyReviewFlow
+        isOpen={isWeeklyReviewOpen}
+        onClose={() => setWeeklyReviewOpen(false)}
       />
     </div>
   );
