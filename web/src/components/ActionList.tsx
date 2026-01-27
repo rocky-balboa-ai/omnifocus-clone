@@ -21,6 +21,7 @@ import { useAppStore, Action } from '@/stores/app.store';
 import { SortableActionItem } from './SortableActionItem';
 import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff, Inbox, CheckCircle2, Sparkles, CornerDownLeft, Maximize2, Minimize2, AlertTriangle, Calendar, Filter, Sun, CalendarDays, CalendarClock, ArrowUpDown } from 'lucide-react';
 import { isBefore, isToday, startOfDay, isFuture, addDays, nextMonday } from 'date-fns';
+import { parseQuickAdd } from '@/lib/parseQuickAdd';
 
 type QuickFilter = 'all' | 'overdue' | 'today' | 'flagged' | 'upcoming';
 type SortOption = 'manual' | 'due-date' | 'name' | 'flagged' | 'created';
@@ -60,6 +61,7 @@ export function ActionList() {
     bulkSetDueDate,
     theme,
     createAction,
+    projects,
     isFocusMode,
     toggleFocusMode,
   } = useAppStore();
@@ -265,9 +267,29 @@ export function ActionList() {
 
     setIsQuickAdding(true);
     try {
+      // Parse smart input for dates, flags, estimates
+      const parsed = parseQuickAdd(quickAddText);
+
+      // Find project by name if specified
+      let projectId: string | undefined;
+      if (parsed.projectName) {
+        const matchingProject = projects.find(
+          p => p.name.toLowerCase() === parsed.projectName!.toLowerCase() ||
+               p.name.toLowerCase().startsWith(parsed.projectName!.toLowerCase())
+        );
+        if (matchingProject) {
+          projectId = matchingProject.id;
+        }
+      }
+
       await createAction({
-        title: quickAddText.trim(),
+        title: parsed.title,
         status: 'active',
+        dueDate: parsed.dueDate,
+        deferDate: parsed.deferDate,
+        flagged: parsed.flagged,
+        estimatedMinutes: parsed.estimatedMinutes,
+        projectId,
       });
       setQuickAddText('');
     } catch (error) {
@@ -775,7 +797,7 @@ export function ActionList() {
                   handleQuickAdd();
                 }
               }}
-              placeholder="Quick add... (press Enter)"
+              placeholder="Quick add... try 'task tomorrow' or '~15m !flag'"
               disabled={isQuickAdding}
               className={clsx(
                 'flex-1 px-4 py-3 bg-transparent outline-none text-sm placeholder-gray-500',
