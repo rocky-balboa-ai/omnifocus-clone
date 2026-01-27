@@ -19,7 +19,7 @@ import {
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { useAppStore, Action } from '@/stores/app.store';
 import { SortableActionItem } from './SortableActionItem';
-import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff, Inbox, CheckCircle2, Sparkles } from 'lucide-react';
+import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff, Inbox, CheckCircle2, Sparkles, CornerDownLeft } from 'lucide-react';
 import clsx from 'clsx';
 
 interface ActionWithDepth {
@@ -54,11 +54,14 @@ export function ActionList() {
     bulkDeleteActions,
     bulkFlagActions,
     theme,
+    createAction,
   } = useAppStore();
 
   const [isCleaningUp, setIsCleaningUp] = useState(false);
   const [showDeferred, setShowDeferred] = useState(false);
   const [isSelectMode, setIsSelectMode] = useState(false);
+  const [quickAddText, setQuickAddText] = useState('');
+  const [isQuickAdding, setIsQuickAdding] = useState(false);
 
   const selectionCount = selectedActionIds.size;
 
@@ -162,6 +165,23 @@ export function ActionList() {
 
   const handleAddAction = () => {
     setQuickEntryOpen(true);
+  };
+
+  const handleQuickAdd = async () => {
+    if (!quickAddText.trim()) return;
+
+    setIsQuickAdding(true);
+    try {
+      await createAction({
+        title: quickAddText.trim(),
+        status: 'active',
+      });
+      setQuickAddText('');
+    } catch (error) {
+      console.error('Failed to create action:', error);
+    } finally {
+      setIsQuickAdding(false);
+    }
   };
 
   const handleCleanup = async () => {
@@ -380,6 +400,50 @@ export function ActionList() {
       )}
 
       <div className="flex-1 overflow-y-auto px-4 md:px-6 py-3 md:py-4">
+        {/* Inline Quick Add */}
+        <div className={clsx(
+          'mb-4 rounded-lg border transition-colors',
+          theme === 'dark'
+            ? 'bg-omnifocus-surface border-omnifocus-border focus-within:border-omnifocus-purple'
+            : 'bg-white border-gray-200 focus-within:border-omnifocus-purple'
+        )}>
+          <div className="flex items-center">
+            <input
+              type="text"
+              value={quickAddText}
+              onChange={(e) => setQuickAddText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleQuickAdd();
+                }
+              }}
+              placeholder="Quick add... (press Enter)"
+              disabled={isQuickAdding}
+              className={clsx(
+                'flex-1 px-4 py-3 bg-transparent outline-none text-sm placeholder-gray-500',
+                theme === 'dark' ? 'text-white' : 'text-gray-900'
+              )}
+            />
+            {quickAddText && (
+              <button
+                onClick={handleQuickAdd}
+                disabled={isQuickAdding}
+                className="px-3 py-2 mr-1 rounded-lg bg-omnifocus-purple text-white hover:bg-omnifocus-purple/90 transition-colors text-sm flex items-center gap-1 disabled:opacity-50"
+              >
+                {isQuickAdding ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <CornerDownLeft size={14} />
+                    <span className="hidden md:inline">Add</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+
         {flattenedActions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             {actions.length > 0 && !showCompleted ? (
