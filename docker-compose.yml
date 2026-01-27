@@ -37,6 +37,11 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     command: npm run start:dev
 
   web:
