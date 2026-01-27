@@ -31,7 +31,7 @@ interface TaskDetailPanelProps {
 }
 
 export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
-  const { actions, projects, tags, updateAction, deleteAction, completeAction } = useAppStore();
+  const { actions, projects, tags, updateAction, deleteAction, completeAction, theme } = useAppStore();
   const action = actions.find(a => a.id === actionId);
 
   const [title, setTitle] = useState('');
@@ -159,19 +159,30 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
 
       {/* Panel - slides up on mobile, side panel on desktop */}
       <div className={clsx(
-        'fixed z-50 bg-omnifocus-sidebar border-omnifocus-border overflow-hidden',
+        'fixed z-50 overflow-hidden',
         'flex flex-col',
+        theme === 'dark'
+          ? 'bg-omnifocus-sidebar border-omnifocus-border'
+          : 'bg-white border-gray-200',
         // Mobile: bottom sheet
         'inset-x-0 bottom-0 max-h-[90vh] rounded-t-2xl border-t',
         // Desktop: side panel
         'md:inset-y-0 md:right-0 md:left-auto md:w-[420px] md:max-h-none md:rounded-none md:border-l md:border-t-0'
       )}>
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-omnifocus-border">
+        <div className={clsx(
+          'flex items-center justify-between px-4 py-3 border-b',
+          theme === 'dark' ? 'border-omnifocus-border' : 'border-gray-200'
+        )}>
           <div className="flex items-center gap-2">
             <button
               onClick={handleComplete}
-              className="p-2 rounded-lg hover:bg-omnifocus-surface text-gray-400 hover:text-green-500 transition-colors"
+              className={clsx(
+                'p-2 rounded-lg transition-colors',
+                theme === 'dark'
+                  ? 'hover:bg-omnifocus-surface text-gray-400 hover:text-green-500'
+                  : 'hover:bg-gray-100 text-gray-500 hover:text-green-600'
+              )}
               title="Complete"
             >
               <Check size={20} />
@@ -179,8 +190,12 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
             <button
               onClick={() => { setFlagged(!flagged); markDirty(); }}
               className={clsx(
-                'p-2 rounded-lg hover:bg-omnifocus-surface transition-colors',
-                flagged ? 'text-omnifocus-orange' : 'text-gray-400 hover:text-omnifocus-orange'
+                'p-2 rounded-lg transition-colors',
+                flagged
+                  ? 'text-omnifocus-orange'
+                  : theme === 'dark'
+                    ? 'hover:bg-omnifocus-surface text-gray-400 hover:text-omnifocus-orange'
+                    : 'hover:bg-gray-100 text-gray-500 hover:text-omnifocus-orange'
               )}
               title="Flag"
             >
@@ -199,14 +214,24 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
             )}
             <button
               onClick={handleDelete}
-              className="p-2 rounded-lg hover:bg-omnifocus-surface text-gray-400 hover:text-red-500 transition-colors"
+              className={clsx(
+                'p-2 rounded-lg transition-colors',
+                theme === 'dark'
+                  ? 'hover:bg-omnifocus-surface text-gray-400 hover:text-red-500'
+                  : 'hover:bg-gray-100 text-gray-500 hover:text-red-600'
+              )}
               title="Delete"
             >
               <Trash2 size={20} />
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-omnifocus-surface text-gray-400 hover:text-white transition-colors"
+              className={clsx(
+                'p-2 rounded-lg transition-colors',
+                theme === 'dark'
+                  ? 'hover:bg-omnifocus-surface text-gray-400 hover:text-white'
+                  : 'hover:bg-gray-100 text-gray-500 hover:text-gray-900'
+              )}
             >
               <X size={20} />
             </button>
@@ -220,46 +245,65 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
             type="text"
             value={title}
             onChange={(e) => { setTitle(e.target.value); markDirty(); }}
-            className="w-full text-xl font-semibold bg-transparent border-none outline-none text-white placeholder-gray-500"
+            className={clsx(
+              'w-full text-xl font-semibold bg-transparent border-none outline-none placeholder-gray-500',
+              theme === 'dark' ? 'text-white' : 'text-gray-900'
+            )}
             placeholder="Action title"
           />
 
           {/* Note */}
           <div>
-            <label className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+            <label className={clsx('flex items-center gap-2 text-sm mb-2', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>
               <FileText size={16} />
               Notes
             </label>
             <textarea
               value={note}
               onChange={(e) => { setNote(e.target.value); markDirty(); }}
-              className="w-full h-24 px-3 py-2 rounded-lg bg-omnifocus-surface border border-omnifocus-border text-white placeholder-gray-500 resize-none"
+              className={clsx(
+                'w-full h-24 px-3 py-2 rounded-lg border placeholder-gray-500 resize-none',
+                theme === 'dark'
+                  ? 'bg-omnifocus-surface border-omnifocus-border text-white'
+                  : 'bg-gray-50 border-gray-200 text-gray-900'
+              )}
               placeholder="Add notes..."
             />
           </div>
 
           {/* Project */}
           <div>
-            <label className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+            <label className={clsx('flex items-center gap-2 text-sm mb-2', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>
               <FolderKanban size={16} />
               Project
             </label>
             <button
               onClick={() => setShowProjectPicker(!showProjectPicker)}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-omnifocus-surface border border-omnifocus-border text-left"
+              className={clsx(
+                'w-full flex items-center justify-between px-3 py-2 rounded-lg border text-left',
+                theme === 'dark'
+                  ? 'bg-omnifocus-surface border-omnifocus-border'
+                  : 'bg-gray-50 border-gray-200'
+              )}
             >
-              <span className={selectedProject ? 'text-white' : 'text-gray-500'}>
+              <span className={selectedProject ? (theme === 'dark' ? 'text-white' : 'text-gray-900') : 'text-gray-500'}>
                 {selectedProject?.name || 'No Project (Inbox)'}
               </span>
               <ChevronDown size={16} className="text-gray-400" />
             </button>
             {showProjectPicker && (
-              <div className="mt-2 rounded-lg bg-omnifocus-surface border border-omnifocus-border overflow-hidden">
+              <div className={clsx(
+                'mt-2 rounded-lg border overflow-hidden',
+                theme === 'dark'
+                  ? 'bg-omnifocus-surface border-omnifocus-border'
+                  : 'bg-white border-gray-200'
+              )}>
                 <button
                   onClick={() => { setProjectId(''); setShowProjectPicker(false); markDirty(); }}
                   className={clsx(
-                    'w-full px-3 py-2 text-left hover:bg-omnifocus-border transition-colors',
-                    !projectId ? 'text-omnifocus-purple' : 'text-gray-300'
+                    'w-full px-3 py-2 text-left transition-colors',
+                    theme === 'dark' ? 'hover:bg-omnifocus-border' : 'hover:bg-gray-100',
+                    !projectId ? 'text-omnifocus-purple' : (theme === 'dark' ? 'text-gray-300' : 'text-gray-700')
                   )}
                 >
                   No Project (Inbox)
@@ -269,8 +313,9 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
                     key={p.id}
                     onClick={() => { setProjectId(p.id); setShowProjectPicker(false); markDirty(); }}
                     className={clsx(
-                      'w-full px-3 py-2 text-left hover:bg-omnifocus-border transition-colors',
-                      projectId === p.id ? 'text-omnifocus-purple' : 'text-gray-300'
+                      'w-full px-3 py-2 text-left transition-colors',
+                      theme === 'dark' ? 'hover:bg-omnifocus-border' : 'hover:bg-gray-100',
+                      projectId === p.id ? 'text-omnifocus-purple' : (theme === 'dark' ? 'text-gray-300' : 'text-gray-700')
                     )}
                   >
                     {p.name}
@@ -282,13 +327,18 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
 
           {/* Tags */}
           <div>
-            <label className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+            <label className={clsx('flex items-center gap-2 text-sm mb-2', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>
               <Tags size={16} />
               Tags
             </label>
             <button
               onClick={() => setShowTagPicker(!showTagPicker)}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-omnifocus-surface border border-omnifocus-border text-left"
+              className={clsx(
+                'w-full flex items-center justify-between px-3 py-2 rounded-lg border text-left',
+                theme === 'dark'
+                  ? 'bg-omnifocus-surface border-omnifocus-border'
+                  : 'bg-gray-50 border-gray-200'
+              )}
             >
               <div className="flex flex-wrap gap-1">
                 {selectedTags.length > 0 ? (
@@ -307,7 +357,12 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
               <ChevronDown size={16} className="text-gray-400 shrink-0" />
             </button>
             {showTagPicker && (
-              <div className="mt-2 rounded-lg bg-omnifocus-surface border border-omnifocus-border overflow-hidden max-h-48 overflow-y-auto">
+              <div className={clsx(
+                'mt-2 rounded-lg border overflow-hidden max-h-48 overflow-y-auto',
+                theme === 'dark'
+                  ? 'bg-omnifocus-surface border-omnifocus-border'
+                  : 'bg-white border-gray-200'
+              )}>
                 {tags.map(tag => (
                   <button
                     key={tag.id}
@@ -320,8 +375,9 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
                       markDirty();
                     }}
                     className={clsx(
-                      'w-full px-3 py-2 text-left hover:bg-omnifocus-border transition-colors flex items-center justify-between',
-                      selectedTags.includes(tag.id) ? 'text-omnifocus-purple' : 'text-gray-300'
+                      'w-full px-3 py-2 text-left transition-colors flex items-center justify-between',
+                      theme === 'dark' ? 'hover:bg-omnifocus-border' : 'hover:bg-gray-100',
+                      selectedTags.includes(tag.id) ? 'text-omnifocus-purple' : (theme === 'dark' ? 'text-gray-300' : 'text-gray-700')
                     )}
                   >
                     {tag.name}
@@ -338,7 +394,7 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
           {/* Dates */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+              <label className={clsx('flex items-center gap-2 text-sm mb-2', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>
                 <Calendar size={16} />
                 Due Date
               </label>
@@ -346,11 +402,16 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
                 type="date"
                 value={dueDate}
                 onChange={(e) => { setDueDate(e.target.value); markDirty(); }}
-                className="w-full px-3 py-2 rounded-lg bg-omnifocus-surface border border-omnifocus-border text-white"
+                className={clsx(
+                  'w-full px-3 py-2 rounded-lg border',
+                  theme === 'dark'
+                    ? 'bg-omnifocus-surface border-omnifocus-border text-white'
+                    : 'bg-gray-50 border-gray-200 text-gray-900'
+                )}
               />
             </div>
             <div>
-              <label className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+              <label className={clsx('flex items-center gap-2 text-sm mb-2', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>
                 <Calendar size={16} />
                 Defer Until
               </label>
@@ -358,13 +419,18 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
                 type="date"
                 value={deferDate}
                 onChange={(e) => { setDeferDate(e.target.value); markDirty(); }}
-                className="w-full px-3 py-2 rounded-lg bg-omnifocus-surface border border-omnifocus-border text-white"
+                className={clsx(
+                  'w-full px-3 py-2 rounded-lg border',
+                  theme === 'dark'
+                    ? 'bg-omnifocus-surface border-omnifocus-border text-white'
+                    : 'bg-gray-50 border-gray-200 text-gray-900'
+                )}
               />
             </div>
           </div>
 
           <div>
-            <label className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+            <label className={clsx('flex items-center gap-2 text-sm mb-2', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>
               <Calendar size={16} />
               Planned Date
             </label>
@@ -372,13 +438,18 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
               type="date"
               value={plannedDate}
               onChange={(e) => { setPlannedDate(e.target.value); markDirty(); }}
-              className="w-full px-3 py-2 rounded-lg bg-omnifocus-surface border border-omnifocus-border text-white"
+              className={clsx(
+                'w-full px-3 py-2 rounded-lg border',
+                theme === 'dark'
+                  ? 'bg-omnifocus-surface border-omnifocus-border text-white'
+                  : 'bg-gray-50 border-gray-200 text-gray-900'
+              )}
             />
           </div>
 
           {/* Estimated Duration */}
           <div>
-            <label className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+            <label className={clsx('flex items-center gap-2 text-sm mb-2', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>
               <Clock size={16} />
               Estimated Duration
             </label>
@@ -392,7 +463,9 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
                     'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
                     estimatedMinutes === mins
                       ? 'bg-omnifocus-purple text-white'
-                      : 'bg-omnifocus-surface text-gray-300 hover:bg-omnifocus-border'
+                      : theme === 'dark'
+                        ? 'bg-omnifocus-surface text-gray-300 hover:bg-omnifocus-border'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   )}
                 >
                   {mins < 60 ? `${mins}m` : `${mins / 60}h`}
@@ -402,7 +475,12 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
                 type="number"
                 value={estimatedMinutes}
                 onChange={(e) => { setEstimatedMinutes(e.target.value ? parseInt(e.target.value) : ''); markDirty(); }}
-                className="w-20 px-3 py-1.5 rounded-full text-sm bg-omnifocus-surface border border-omnifocus-border text-white text-center"
+                className={clsx(
+                  'w-20 px-3 py-1.5 rounded-full text-sm border text-center',
+                  theme === 'dark'
+                    ? 'bg-omnifocus-surface border-omnifocus-border text-white'
+                    : 'bg-gray-50 border-gray-200 text-gray-900'
+                )}
                 placeholder="Custom"
                 min="0"
               />
@@ -411,7 +489,7 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
 
           {/* Repeat Settings */}
           <div>
-            <label className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+            <label className={clsx('flex items-center gap-2 text-sm mb-2', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>
               <Repeat size={16} />
               Repeat
             </label>
@@ -419,7 +497,12 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
               <select
                 value={repeatMode}
                 onChange={(e) => { setRepeatMode(e.target.value); markDirty(); }}
-                className="px-3 py-2 rounded-lg bg-omnifocus-surface border border-omnifocus-border text-white"
+                className={clsx(
+                  'px-3 py-2 rounded-lg border',
+                  theme === 'dark'
+                    ? 'bg-omnifocus-surface border-omnifocus-border text-white'
+                    : 'bg-gray-50 border-gray-200 text-gray-900'
+                )}
               >
                 <option value="">No Repeat</option>
                 <option value="fixed">Fixed Schedule</option>
@@ -430,7 +513,12 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
                 <select
                   value={repeatInterval}
                   onChange={(e) => { setRepeatInterval(e.target.value); markDirty(); }}
-                  className="px-3 py-2 rounded-lg bg-omnifocus-surface border border-omnifocus-border text-white"
+                  className={clsx(
+                    'px-3 py-2 rounded-lg border',
+                    theme === 'dark'
+                      ? 'bg-omnifocus-surface border-omnifocus-border text-white'
+                      : 'bg-gray-50 border-gray-200 text-gray-900'
+                  )}
                 >
                   <option value="1d">Daily</option>
                   <option value="1w">Weekly</option>
@@ -445,7 +533,7 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
 
           {/* Attachments */}
           <div>
-            <label className="flex items-center gap-2 text-sm text-gray-400 mb-2">
+            <label className={clsx('flex items-center gap-2 text-sm mb-2', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>
               <Paperclip size={16} />
               Attachments
             </label>
@@ -465,7 +553,9 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
                 'w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 border-dashed transition-colors',
                 isUploading
                   ? 'border-omnifocus-purple/50 bg-omnifocus-purple/10 cursor-not-allowed'
-                  : 'border-omnifocus-border hover:border-omnifocus-purple/50 hover:bg-omnifocus-surface'
+                  : theme === 'dark'
+                    ? 'border-omnifocus-border hover:border-omnifocus-purple/50 hover:bg-omnifocus-surface'
+                    : 'border-gray-300 hover:border-omnifocus-purple/50 hover:bg-gray-50'
               )}
             >
               {isUploading ? (
@@ -487,11 +577,19 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
                 {attachments.map((attachment) => (
                   <div
                     key={attachment.id}
-                    className="flex items-center gap-3 p-3 rounded-lg bg-omnifocus-surface border border-omnifocus-border group"
+                    className={clsx(
+                      'flex items-center gap-3 p-3 rounded-lg border group',
+                      theme === 'dark'
+                        ? 'bg-omnifocus-surface border-omnifocus-border'
+                        : 'bg-gray-50 border-gray-200'
+                    )}
                   >
                     {/* Icon or thumbnail */}
                     {isImageFile(attachment.mimeType) ? (
-                      <div className="w-10 h-10 rounded bg-omnifocus-border overflow-hidden shrink-0">
+                      <div className={clsx(
+                        'w-10 h-10 rounded overflow-hidden shrink-0',
+                        theme === 'dark' ? 'bg-omnifocus-border' : 'bg-gray-200'
+                      )}>
                         <img
                           src={api.getFileUrl(attachment.url)}
                           alt={attachment.filename}
@@ -499,14 +597,17 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
                         />
                       </div>
                     ) : (
-                      <div className="w-10 h-10 rounded bg-omnifocus-border flex items-center justify-center shrink-0">
+                      <div className={clsx(
+                        'w-10 h-10 rounded flex items-center justify-center shrink-0',
+                        theme === 'dark' ? 'bg-omnifocus-border' : 'bg-gray-200'
+                      )}>
                         <File size={20} className="text-gray-400" />
                       </div>
                     )}
 
                     {/* File info */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white truncate">{attachment.filename}</p>
+                      <p className={clsx('text-sm truncate', theme === 'dark' ? 'text-white' : 'text-gray-900')}>{attachment.filename}</p>
                       <p className="text-xs text-gray-500">{formatFileSize(attachment.size)}</p>
                     </div>
 
@@ -517,14 +618,24 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
                         download={attachment.filename}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-1.5 rounded hover:bg-omnifocus-border text-gray-400 hover:text-white transition-colors"
+                        className={clsx(
+                          'p-1.5 rounded transition-colors',
+                          theme === 'dark'
+                            ? 'hover:bg-omnifocus-border text-gray-400 hover:text-white'
+                            : 'hover:bg-gray-200 text-gray-500 hover:text-gray-900'
+                        )}
                         title="Download"
                       >
                         <Download size={16} />
                       </a>
                       <button
                         onClick={() => handleDeleteAttachment(attachment.id)}
-                        className="p-1.5 rounded hover:bg-omnifocus-border text-gray-400 hover:text-red-500 transition-colors"
+                        className={clsx(
+                          'p-1.5 rounded transition-colors',
+                          theme === 'dark'
+                            ? 'hover:bg-omnifocus-border text-gray-400 hover:text-red-500'
+                            : 'hover:bg-gray-200 text-gray-500 hover:text-red-600'
+                        )}
                         title="Delete"
                       >
                         <Trash2 size={16} />
