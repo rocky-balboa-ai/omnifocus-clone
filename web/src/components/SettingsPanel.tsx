@@ -14,6 +14,9 @@ import {
   Keyboard,
   Download,
   Database,
+  FileJson,
+  FileText,
+  Table2,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import clsx from 'clsx';
@@ -24,10 +27,11 @@ interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
-  const { cleanupCompleted, theme, themeMode, setThemeMode } = useAppStore();
+  const { cleanupCompleted, theme, themeMode, setThemeMode, actions, projects } = useAppStore();
   const [cleanupDays, setCleanupDays] = useState(7);
   const [isCleaningUp, setIsCleaningUp] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [exportFormat, setExportFormat] = useState<'json' | 'csv' | 'markdown'>('json');
 
   const handleCleanup = async () => {
     if (!confirm(`Delete completed actions older than ${cleanupDays} days? This cannot be undone.`)) return;
@@ -44,26 +48,125 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     }
   };
 
+  const downloadFile = (content: string, filename: string, mimeType: string) => {
+    const blob = new Blob([content], { type: mimeType });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const exportAsCSV = () => {
+    const headers = ['Title', 'Status', 'Flagged', 'Due Date', 'Defer Date', 'Project', 'Estimated Minutes', 'Notes'];
+    const rows = actions.map(action => {
+      const project = projects.find(p => p.id === action.projectId);
+      return [
+        `"${(action.title || '').replace(/"/g, '""')}"`,
+        action.status,
+        action.flagged ? 'Yes' : 'No',
+        action.dueDate ? action.dueDate.split('T')[0] : '',
+        action.deferDate ? action.deferDate.split('T')[0] : '',
+        project ? `"${project.name.replace(/"/g, '""')}"` : 'Inbox',
+        action.estimatedMinutes || '',
+        `"${(action.note || '').replace(/"/g, '""').replace(/\n/g, ' ')}"`,
+      ].join(',');
+    });
+
+    const csv = [headers.join(','), ...rows].join('\n');
+    downloadFile(csv, `omnifocus-export-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+  };
+
+  const exportAsMarkdown = () => {
+    const projectGroups = new Map<string, typeof actions>();
+    const inboxActions: typeof actions = [];
+
+    // Group actions by project
+    actions.forEach(action => {
+      if (action.projectId) {
+        const existing = projectGroups.get(action.projectId) || [];
+        projectGroups.set(action.projectId, [...existing, action]);
+      } else {
+        inboxActions.push(action);
+      }
+    });
+
+    let md = `# OmniFocus Export\n\n`;
+    md += `*Exported on ${new Date().toLocaleDateString()}*\n\n`;
+
+    // Inbox
+    if (inboxActions.length > 0) {
+      md += `## Inbox\n\n`;
+      inboxActions.forEach(action => {
+        const checkbox = action.status === 'completed' ? '[x]' : '[ ]';
+        const flag = action.flagged ? ' 🚩' : '';
+        const due = action.dueDate ? ` (due: ${action.dueDate.split('T')[0]})` : '';
+        md += `- ${checkbox} ${action.title}${flag}${due}\n`;
+        if (action.note) {
+          md += `  > ${action.note.replace(/\n/g, '\n  > ')}\n`;
+        }
+      });
+      md += '\n';
+    }
+
+    // Projects
+    projects.forEach(project => {
+      const projectActions = projectGroups.get(project.id) || [];
+      md += `## ${project.name}\n\n`;
+
+      if (project.note) {
+        md += `${project.note}\n\n`;
+      }
+
+      if (projectActions.length > 0) {
+        projectActions.forEach(action => {
+          const checkbox = action.status === 'completed' ? '[x]' : '[ ]';
+          const flag = action.flagged ? ' 🚩' : '';
+          const due = action.dueDate ? ` (due: ${action.dueDate.split('T')[0]})` : '';
+          md += `- ${checkbox} ${action.title}${flag}${due}\n`;
+          if (action.note) {
+            md += `  > ${action.note.replace(/\n/g, '\n  > ')}\n`;
+          }
+        });
+      } else {
+        md += `*No actions*\n`;
+      }
+      md += '\n';
+    });
+
+    downloadFile(md, `omnifocus-export-${new Date().toISOString().split('T')[0]}.md`, 'text/markdown');
+  };
+
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/export`, {
-        headers: {
-          'x-api-key': 'dev-api-key',
-        },
-      });
+      if (exportFormat === 'csv') {
+        exportAsCSV();
+      } else if (exportFormat === 'markdown') {
+        exportAsMarkdown();
+      } else {
+        // JSON export from API
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/export`, {
+          headers: {
+            'x-api-key': 'dev-api-key',
+          },
+        });
 
-      if (!response.ok) throw new Error('Export failed');
+        if (!response.ok) throw new Error('Export failed');
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `omnifocus-export-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `omnifocus-export-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }
     } catch (error) {
       console.error('Failed to export:', error);
       alert('Failed to export data. Please try again.');
@@ -234,25 +337,56 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                 'p-3 rounded-lg',
                 theme === 'dark' ? 'bg-omnifocus-surface' : 'bg-omnifocus-light-surface'
               )}>
-                <div className="flex items-center justify-between">
+                <div className="space-y-3">
                   <div>
                     <span className={clsx('text-sm font-medium', theme === 'dark' ? 'text-gray-300' : 'text-gray-700')}>Export Data</span>
                     <p className={clsx('text-xs mt-0.5', theme === 'dark' ? 'text-gray-500' : 'text-gray-500')}>
-                      Download all your data as JSON
+                      Download your data in various formats
                     </p>
                   </div>
+
+                  {/* Format selector */}
+                  <div className={clsx(
+                    'flex rounded-lg p-1',
+                    theme === 'dark' ? 'bg-omnifocus-bg' : 'bg-gray-100'
+                  )}>
+                    {[
+                      { format: 'json' as const, icon: FileJson, label: 'JSON' },
+                      { format: 'csv' as const, icon: Table2, label: 'CSV' },
+                      { format: 'markdown' as const, icon: FileText, label: 'Markdown' },
+                    ].map(({ format, icon: Icon, label }) => (
+                      <button
+                        key={format}
+                        onClick={() => setExportFormat(format)}
+                        className={clsx(
+                          'flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md transition-all text-xs font-medium',
+                          exportFormat === format
+                            ? theme === 'dark'
+                              ? 'bg-omnifocus-purple text-white shadow-sm'
+                              : 'bg-white text-omnifocus-purple shadow-sm'
+                            : theme === 'dark'
+                              ? 'text-gray-400 hover:text-gray-200'
+                              : 'text-gray-500 hover:text-gray-700'
+                        )}
+                      >
+                        <Icon size={14} />
+                        <span>{label}</span>
+                      </button>
+                    ))}
+                  </div>
+
                   <button
                     onClick={handleExport}
                     disabled={isExporting}
                     className={clsx(
-                      'flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium disabled:opacity-50',
+                      'w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium disabled:opacity-50',
                       theme === 'dark'
                         ? 'bg-omnifocus-bg text-gray-300 hover:text-white'
                         : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
                     )}
                   >
                     <Download size={16} />
-                    {isExporting ? 'Exporting...' : 'Export'}
+                    {isExporting ? 'Exporting...' : `Export as ${exportFormat.toUpperCase()}`}
                   </button>
                 </div>
               </div>
