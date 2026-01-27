@@ -138,15 +138,80 @@ export class PerspectivesService implements OnModuleInit {
       this.applyFilterRule(where, rule);
     }
 
-    return this.prisma.action.findMany({
+    const actions = await this.prisma.action.findMany({
       where,
       include: {
         tags: { include: { tag: true } },
         project: true,
         parent: true,
+        attachments: true,
       },
       orderBy: this.buildOrderBy(perspective.sortRules as any[], perspective.groupBy),
     });
+
+    // Apply sequential project filtering
+    return this.filterSequentialProjects(actions);
+  }
+
+  private filterSequentialProjects(
+    actions: Prisma.ActionGetPayload<{
+      include: {
+        tags: { include: { tag: true } };
+        project: true;
+        parent: true;
+        attachments: true;
+      };
+    }>[],
+  ) {
+    // Group actions by projectId
+    const projectActions = new Map<string | null, typeof actions>();
+
+    for (const action of actions) {
+      const key = action.projectId || null;
+      if (!projectActions.has(key)) {
+        projectActions.set(key, []);
+      }
+      projectActions.get(key)!.push(action);
+    }
+
+    // Filter based on project type
+    const result: typeof actions = [];
+
+    for (const [projectId, projectActionsList] of projectActions) {
+      // Sort by position within each project
+      projectActionsList.sort((a, b) => a.position - b.position);
+
+      if (!projectId) {
+        // No project (inbox) - show all
+        result.push(...projectActionsList);
+        continue;
+      }
+
+      // Check project type
+      const project = projectActionsList[0]?.project;
+      if (!project) {
+        result.push(...projectActionsList);
+        continue;
+      }
+
+      if (project.type === 'sequential') {
+        // For sequential projects, only show first incomplete action at each level
+        const rootActions = projectActionsList.filter(a => !a.parentId);
+        if (rootActions.length > 0) {
+          result.push(rootActions[0]);
+          // Also include any children of the first action if it has children
+          const firstActionChildren = projectActionsList.filter(a => a.parentId === rootActions[0].id);
+          if (firstActionChildren.length > 0) {
+            result.push(firstActionChildren[0]); // First child of sequential
+          }
+        }
+      } else {
+        // Parallel or single_actions - show all
+        result.push(...projectActionsList);
+      }
+    }
+
+    return result;
   }
 
   private applyFilterRule(where: Prisma.ActionWhereInput, rule: FilterRule) {

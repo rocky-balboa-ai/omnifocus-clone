@@ -19,7 +19,7 @@ import {
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { useAppStore, Action } from '@/stores/app.store';
 import { SortableActionItem } from './SortableActionItem';
-import { Plus, Search, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff } from 'lucide-react';
 import clsx from 'clsx';
 
 interface ActionWithDepth {
@@ -42,18 +42,53 @@ export function ActionList() {
     reorderActions,
     collapsedActionIds,
     cleanupCompleted,
+    filterTagId,
+    setFilterTagId,
+    fetchActions,
+    tags,
+    selectedActionIds,
+    toggleActionSelection,
+    clearActionSelection,
+    selectAllActions,
+    bulkCompleteActions,
+    bulkDeleteActions,
+    bulkFlagActions,
   } = useAppStore();
 
   const [isCleaningUp, setIsCleaningUp] = useState(false);
+  const [showDeferred, setShowDeferred] = useState(false);
+  const [isSelectMode, setIsSelectMode] = useState(false);
+
+  const selectionCount = selectedActionIds.size;
 
   const perspective = perspectives.find((p) => p.id === currentPerspective);
+  const filterTag = filterTagId ? tags.find((t) => t.id === filterTagId) : null;
+
+  const clearTagFilter = () => {
+    setFilterTagId(null);
+    fetchActions(currentPerspective);
+  };
+
+  const now = new Date();
+
+  // Helper to check if action is deferred (defer date is in the future)
+  const isDeferred = (action: Action): boolean => {
+    if (!action.deferDate) return false;
+    return new Date(action.deferDate) > now;
+  };
 
   // Filter out completed actions unless showCompleted is true
-  const filteredActions = showCompleted
-    ? actions
-    : actions.filter((a) => a.status !== 'completed');
+  // Filter out deferred actions unless showDeferred is true
+  const filteredActions = actions.filter((a) => {
+    // Filter completed
+    if (a.status === 'completed' && !showCompleted) return false;
+    // Filter deferred (only for active actions)
+    if (a.status === 'active' && isDeferred(a) && !showDeferred) return false;
+    return true;
+  });
 
   const completedCount = actions.filter((a) => a.status === 'completed').length;
+  const deferredCount = actions.filter((a) => a.status === 'active' && isDeferred(a)).length;
 
   // Build flattened tree with depth info
   const flattenedActions = useMemo(() => {
@@ -158,9 +193,37 @@ export function ActionList() {
   return (
     <div className="h-full flex flex-col">
       <header className="px-4 md:px-6 py-3 md:py-4 border-b border-omnifocus-border safe-area-top flex items-center justify-between gap-3">
-        <h2 className="text-xl md:text-2xl font-semibold text-white flex-1">
-          {perspective?.name || 'Inbox'}
-        </h2>
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <h2 className="text-xl md:text-2xl font-semibold text-white truncate">
+            {filterTag ? `Tag: ${filterTag.name}` : (perspective?.name || 'Inbox')}
+          </h2>
+          {filterTag && (
+            <button
+              onClick={clearTagFilter}
+              className="p-1 rounded-full bg-omnifocus-purple/20 text-omnifocus-purple hover:bg-omnifocus-purple/30 transition-colors shrink-0"
+              title="Clear tag filter"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        {/* Show/Hide Deferred toggle */}
+        {deferredCount > 0 && (
+          <button
+            onClick={() => setShowDeferred(!showDeferred)}
+            className={clsx(
+              'flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm',
+              showDeferred
+                ? 'bg-omnifocus-orange/20 text-omnifocus-orange'
+                : 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+            )}
+            title={showDeferred ? 'Hide deferred' : 'Show deferred'}
+          >
+            <Clock size={16} />
+            <span className="hidden md:inline">{deferredCount}</span>
+          </button>
+        )}
 
         {/* Show/Hide Completed toggle */}
         {completedCount > 0 && (
@@ -194,6 +257,23 @@ export function ActionList() {
           </>
         )}
 
+        {/* Select mode toggle */}
+        <button
+          onClick={() => {
+            setIsSelectMode(!isSelectMode);
+            if (isSelectMode) clearActionSelection();
+          }}
+          className={clsx(
+            'flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm',
+            isSelectMode
+              ? 'bg-omnifocus-purple/20 text-omnifocus-purple'
+              : 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+          )}
+          title={isSelectMode ? 'Exit select mode' : 'Select multiple'}
+        >
+          <CheckSquare size={16} />
+        </button>
+
         {/* Search button */}
         <button
           onClick={() => setSearchOpen(true)}
@@ -213,6 +293,65 @@ export function ActionList() {
           <span>New Action</span>
         </button>
       </header>
+
+      {/* Bulk action bar */}
+      {isSelectMode && selectionCount > 0 && (
+        <div className="px-4 md:px-6 py-2 bg-omnifocus-purple/10 border-b border-omnifocus-border flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                if (selectionCount === flattenedActions.length) {
+                  clearActionSelection();
+                } else {
+                  selectAllActions();
+                }
+              }}
+              className="flex items-center gap-2 text-sm text-gray-300 hover:text-white"
+            >
+              {selectionCount === flattenedActions.length ? (
+                <CheckSquare size={16} className="text-omnifocus-purple" />
+              ) : (
+                <Square size={16} />
+              )}
+              <span>{selectionCount} selected</span>
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => bulkCompleteActions()}
+              className="p-2 rounded-lg bg-omnifocus-surface text-gray-400 hover:text-green-500 hover:bg-omnifocus-border transition-colors"
+              title="Complete selected"
+            >
+              <CheckSquare size={18} />
+            </button>
+            <button
+              onClick={() => bulkFlagActions(true)}
+              className="p-2 rounded-lg bg-omnifocus-surface text-gray-400 hover:text-omnifocus-orange hover:bg-omnifocus-border transition-colors"
+              title="Flag selected"
+            >
+              <Flag size={18} />
+            </button>
+            <button
+              onClick={() => bulkFlagActions(false)}
+              className="p-2 rounded-lg bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border transition-colors"
+              title="Unflag selected"
+            >
+              <FlagOff size={18} />
+            </button>
+            <button
+              onClick={() => {
+                if (confirm(`Delete ${selectionCount} selected action${selectionCount > 1 ? 's' : ''}?`)) {
+                  bulkDeleteActions();
+                }
+              }}
+              className="p-2 rounded-lg bg-omnifocus-surface text-gray-400 hover:text-red-500 hover:bg-omnifocus-border transition-colors"
+              title="Delete selected"
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto px-4 md:px-6 py-3 md:py-4">
         {flattenedActions.length === 0 ? (
@@ -259,6 +398,9 @@ export function ActionList() {
                     depth={depth}
                     hasChildren={hasChildren}
                     isCollapsed={isCollapsed}
+                    isSelectMode={isSelectMode}
+                    isSelected={selectedActionIds.has(action.id)}
+                    onToggleSelect={() => toggleActionSelection(action.id)}
                   />
                 ))}
               </ul>

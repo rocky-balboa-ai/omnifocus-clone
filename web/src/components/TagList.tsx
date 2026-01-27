@@ -10,14 +10,17 @@ interface TagItemProps {
 }
 
 function TagItem({ tag, level = 0 }: TagItemProps) {
-  const { setCurrentPerspective } = useAppStore();
+  const { setFilterTagId, fetchActions, currentPerspective } = useAppStore();
+
+  const handleClick = () => {
+    setFilterTagId(tag.id);
+    fetchActions(currentPerspective);
+  };
 
   return (
     <>
       <li
-        onClick={() => {
-          // TODO: Filter actions by this tag
-        }}
+        onClick={handleClick}
         className={clsx(
           'group flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors',
           'hover:bg-omnifocus-surface border border-transparent'

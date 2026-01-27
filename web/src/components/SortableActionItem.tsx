@@ -14,15 +14,21 @@ import {
   ChevronDown,
   CornerDownRight,
   CornerUpLeft,
+  PauseCircle,
+  Square,
+  CheckSquare,
 } from 'lucide-react';
 import clsx from 'clsx';
-import { format, isPast, isToday } from 'date-fns';
+import { format, isPast, isToday, isFuture } from 'date-fns';
 
 interface SortableActionItemProps {
   action: Action;
   depth?: number;
   hasChildren?: boolean;
   isCollapsed?: boolean;
+  isSelectMode?: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
 }
 
 export function SortableActionItem({
@@ -30,6 +36,9 @@ export function SortableActionItem({
   depth = 0,
   hasChildren = false,
   isCollapsed = false,
+  isSelectMode = false,
+  isSelected = false,
+  onToggleSelect,
 }: SortableActionItemProps) {
   const {
     completeAction,
@@ -54,8 +63,9 @@ export function SortableActionItem({
     transition,
   };
 
-  const isSelected = selectedActionId === action.id;
+  const isHighlighted = selectedActionId === action.id;
   const isDueSoon = action.dueDate && (isToday(new Date(action.dueDate)) || isPast(new Date(action.dueDate)));
+  const isDeferred = action.deferDate && isFuture(new Date(action.deferDate));
 
   const handleComplete = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -84,10 +94,11 @@ export function SortableActionItem({
       onClick={() => setSelectedAction(action.id)}
       className={clsx(
         'group flex items-start gap-1 p-2 rounded-lg cursor-pointer transition-colors',
-        isSelected
+        isHighlighted
           ? 'bg-omnifocus-purple/20 border border-omnifocus-purple'
           : 'hover:bg-omnifocus-surface border border-transparent',
-        isDragging && 'opacity-50 shadow-lg bg-omnifocus-surface'
+        isDragging && 'opacity-50 shadow-lg bg-omnifocus-surface',
+        isSelected && isSelectMode && 'bg-omnifocus-purple/10'
       )}
     >
       {/* Indent spacer */}
@@ -98,15 +109,31 @@ export function SortableActionItem({
         />
       )}
 
-      {/* Drag handle */}
-      <button
-        {...attributes}
-        {...listeners}
-        className="mt-0.5 p-1 text-gray-600 hover:text-gray-400 cursor-grab active:cursor-grabbing touch-none shrink-0"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <GripVertical size={14} />
-      </button>
+      {/* Drag handle or selection checkbox */}
+      {isSelectMode ? (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSelect?.();
+          }}
+          className="mt-0.5 p-1 text-gray-500 hover:text-omnifocus-purple transition-colors shrink-0"
+        >
+          {isSelected ? (
+            <CheckSquare size={16} className="text-omnifocus-purple" />
+          ) : (
+            <Square size={16} />
+          )}
+        </button>
+      ) : (
+        <button
+          {...attributes}
+          {...listeners}
+          className="mt-0.5 p-1 text-gray-600 hover:text-gray-400 cursor-grab active:cursor-grabbing touch-none shrink-0"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <GripVertical size={14} />
+        </button>
+      )}
 
       {/* Collapse/expand toggle */}
       {hasChildren ? (
@@ -136,12 +163,18 @@ export function SortableActionItem({
           <span
             className={clsx(
               'text-sm',
-              action.status === 'completed' ? 'line-through text-gray-500' : 'text-white'
+              action.status === 'completed' ? 'line-through text-gray-500' : 'text-white',
+              isDeferred && 'text-gray-400'
             )}
           >
             {action.title}
           </span>
           {action.flagged && <Flag size={14} className="text-omnifocus-orange shrink-0" />}
+          {isDeferred && (
+            <span className="flex items-center gap-1 text-xs text-omnifocus-orange shrink-0" title={`Available ${format(new Date(action.deferDate!), 'MMM d')}`}>
+              <PauseCircle size={14} />
+            </span>
+          )}
           {hasChildren && isCollapsed && (
             <span className="text-xs text-gray-500 shrink-0">
               ({action.children?.length || 0})
@@ -152,6 +185,13 @@ export function SortableActionItem({
         <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
           {action.project && (
             <span className="truncate">{action.project.name}</span>
+          )}
+
+          {isDeferred && (
+            <span className="flex items-center gap-1 text-omnifocus-orange">
+              <PauseCircle size={12} />
+              {format(new Date(action.deferDate!), 'MMM d')}
+            </span>
           )}
 
           {action.dueDate && (

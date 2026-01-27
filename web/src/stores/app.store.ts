@@ -85,6 +85,8 @@ interface AppState {
   selectedActionId: string | null;
   selectedProjectId: string | null;
   editingPerspectiveId: string | null;
+  filterTagId: string | null;
+  selectedActionIds: Set<string>;
   collapsedActionIds: Set<string>;
   isQuickEntryOpen: boolean;
   isSearchOpen: boolean;
@@ -100,6 +102,13 @@ interface AppState {
   setQuickEntryOpen: (open: boolean) => void;
   setSearchOpen: (open: boolean) => void;
   setShowCompleted: (show: boolean) => void;
+  setFilterTagId: (tagId: string | null) => void;
+  toggleActionSelection: (id: string) => void;
+  clearActionSelection: () => void;
+  selectAllActions: () => void;
+  bulkCompleteActions: () => Promise<void>;
+  bulkDeleteActions: () => Promise<void>;
+  bulkFlagActions: (flagged: boolean) => Promise<void>;
   openPerspectiveEditor: (id?: string | null) => void;
   closePerspectiveEditor: () => void;
 
@@ -135,6 +144,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   selectedActionId: null,
   selectedProjectId: null,
   editingPerspectiveId: null,
+  filterTagId: null,
+  selectedActionIds: new Set<string>(),
   collapsedActionIds: new Set<string>(),
   isQuickEntryOpen: false,
   isSearchOpen: false,
@@ -150,6 +161,51 @@ export const useAppStore = create<AppState>((set, get) => ({
   setQuickEntryOpen: (open) => set({ isQuickEntryOpen: open }),
   setSearchOpen: (open) => set({ isSearchOpen: open }),
   setShowCompleted: (show) => set({ showCompleted: show }),
+  setFilterTagId: (tagId) => set({ filterTagId: tagId }),
+
+  toggleActionSelection: (id) => {
+    set((state) => {
+      const newSelected = new Set(state.selectedActionIds);
+      if (newSelected.has(id)) {
+        newSelected.delete(id);
+      } else {
+        newSelected.add(id);
+      }
+      return { selectedActionIds: newSelected };
+    });
+  },
+
+  clearActionSelection: () => set({ selectedActionIds: new Set<string>() }),
+
+  selectAllActions: () => {
+    const { actions } = get();
+    set({ selectedActionIds: new Set(actions.map(a => a.id)) });
+  },
+
+  bulkCompleteActions: async () => {
+    const { selectedActionIds, completeAction, clearActionSelection } = get();
+    for (const id of selectedActionIds) {
+      await completeAction(id);
+    }
+    clearActionSelection();
+  },
+
+  bulkDeleteActions: async () => {
+    const { selectedActionIds, deleteAction, clearActionSelection } = get();
+    for (const id of selectedActionIds) {
+      await deleteAction(id);
+    }
+    clearActionSelection();
+  },
+
+  bulkFlagActions: async (flagged: boolean) => {
+    const { selectedActionIds, updateAction, clearActionSelection } = get();
+    for (const id of selectedActionIds) {
+      await updateAction(id, { flagged } as any);
+    }
+    clearActionSelection();
+  },
+
   openPerspectiveEditor: (id) => set({ isPerspectiveEditorOpen: true, editingPerspectiveId: id || null }),
   closePerspectiveEditor: () => set({ isPerspectiveEditorOpen: false, editingPerspectiveId: null }),
 
@@ -166,7 +222,17 @@ export const useAppStore = create<AppState>((set, get) => ({
   fetchActions: async (perspectiveId) => {
     set({ isLoading: true, error: null });
     try {
-      const actions = await api.get<Action[]>(`/perspectives/${perspectiveId}/actions`);
+      const { filterTagId } = get();
+      let actions: Action[];
+
+      if (filterTagId) {
+        // Fetch actions filtered by tag
+        actions = await api.get<Action[]>(`/actions?tagId=${filterTagId}`);
+      } else {
+        // Fetch actions by perspective
+        actions = await api.get<Action[]>(`/perspectives/${perspectiveId}/actions`);
+      }
+
       set({ actions, isLoading: false });
     } catch (error) {
       set({ error: 'Failed to fetch actions', isLoading: false });

@@ -82,6 +82,8 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
       flagged,
       estimatedMinutes: estimatedMinutes ? Number(estimatedMinutes) : undefined,
       projectId: projectId || undefined,
+      repeatMode: repeatMode || undefined,
+      repeatInterval: repeatInterval || undefined,
     } as any);
     setIsDirty(false);
   };
