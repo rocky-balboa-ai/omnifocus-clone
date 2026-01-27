@@ -132,6 +132,7 @@ export * from './SettingsPanel';
 
 // Utility Components
 export * from './Confetti';
+export * from './ErrorBoundary';
 export * from './EnergyFilter';
 export * from './FloatingActionButton';
 export * from './NotificationCenter';

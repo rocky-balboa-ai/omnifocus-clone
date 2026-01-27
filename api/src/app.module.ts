@@ -11,6 +11,7 @@ import { FoldersModule } from './modules/folders/folders.module';
 import { PerspectivesModule } from './modules/perspectives/perspectives.module';
 import { AttachmentsModule } from './modules/attachments/attachments.module';
 import { ExportModule } from './modules/export/export.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ExportModule } from './modules/export/export.module';
     PerspectivesModule,
     AttachmentsModule,
     ExportModule,
+    HealthModule,
   ],
 })
 export class AppModule {}
