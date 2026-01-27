@@ -10,6 +10,8 @@ export function useKeyboardShortcuts() {
     setQuickEntryOpen,
     setSearchOpen,
     setKeyboardHelpOpen,
+    setFocusTimerOpen,
+    setWeeklyReviewOpen,
     setSelectedAction,
     completeAction,
     updateAction,
@@ -20,6 +22,8 @@ export function useKeyboardShortcuts() {
     isQuickEntryOpen,
     isSearchOpen,
     isKeyboardHelpOpen,
+    isFocusTimerOpen,
+    isWeeklyReviewOpen,
     toggleFocusMode,
   } = useAppStore();
 
@@ -50,6 +54,14 @@ export function useKeyboardShortcuts() {
         setKeyboardHelpOpen(false);
         return;
       }
+      if (isFocusTimerOpen) {
+        setFocusTimerOpen(false);
+        return;
+      }
+      if (isWeeklyReviewOpen) {
+        setWeeklyReviewOpen(false);
+        return;
+      }
       if (isSearchOpen) {
         setSearchOpen(false);
         return;
@@ -75,7 +87,7 @@ export function useKeyboardShortcuts() {
     if (isInputField) return;
 
     // Skip if modals are open
-    if (isQuickEntryOpen || isSearchOpen || isKeyboardHelpOpen) return;
+    if (isQuickEntryOpen || isSearchOpen || isKeyboardHelpOpen || isFocusTimerOpen || isWeeklyReviewOpen) return;
 
     switch (e.key.toLowerCase()) {
       case 'n':
@@ -185,12 +197,26 @@ export function useKeyboardShortcuts() {
           }
         }
         break;
+
+      case 'p':
+        // Open focus timer (pomodoro)
+        e.preventDefault();
+        setFocusTimerOpen(true);
+        break;
+
+      case 'r':
+        // Open weekly review
+        e.preventDefault();
+        setWeeklyReviewOpen(true);
+        break;
     }
   }, [
     selectedActionId,
     setQuickEntryOpen,
     setSearchOpen,
     setKeyboardHelpOpen,
+    setFocusTimerOpen,
+    setWeeklyReviewOpen,
     setSelectedAction,
     completeAction,
     updateAction,
@@ -201,6 +227,8 @@ export function useKeyboardShortcuts() {
     isQuickEntryOpen,
     isSearchOpen,
     isKeyboardHelpOpen,
+    isFocusTimerOpen,
+    isWeeklyReviewOpen,
     toggleFocusMode,
   ]);
 

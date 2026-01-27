@@ -31,6 +31,10 @@ const shortcuts = [
     { keys: ['Tab'], description: 'Indent (make subtask)' },
     { keys: ['Shift', 'Tab'], description: 'Outdent (move up level)' },
   ]},
+  { section: 'Tools', items: [
+    { keys: ['p'], description: 'Focus Timer (Pomodoro)' },
+    { keys: ['r'], description: 'Weekly Review' },
+  ]},
   { section: 'Global', items: [
     { keys: ['⌘', 'K'], description: 'Search' },
     { keys: ['⌘', '\\'], description: 'Toggle focus mode' },
