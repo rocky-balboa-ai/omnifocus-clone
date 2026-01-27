@@ -3,6 +3,7 @@
 import { useAppStore, Project } from '@/stores/app.store';
 import { FolderKanban, Flag, Calendar, ChevronRight, Plus, Layers, List, Eye, EyeOff, Search, X, CornerDownLeft, FolderPlus } from 'lucide-react';
 import { ProjectTemplates } from './ProjectTemplates';
+import { FolderTree } from './FolderTree';
 import clsx from 'clsx';
 import { format, isPast, isToday } from 'date-fns';
 import { useMemo, useState } from 'react';
@@ -98,7 +99,7 @@ function ProjectItem({ project }: ProjectItemProps) {
 }
 
 export function ProjectList() {
-  const { projects, isLoading, setQuickEntryOpen, setSearchOpen, showCompleted, setShowCompleted, theme, createProject } = useAppStore();
+  const { projects, isLoading, setQuickEntryOpen, setSearchOpen, showCompleted, setShowCompleted, theme, createProject, selectedFolderId, folders } = useAppStore();
   const [showNewProjectForm, setShowNewProjectForm] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
@@ -107,10 +108,23 @@ export function ProjectList() {
 
   const completedCount = projects.filter(p => p.status === 'completed').length;
 
-  // Filter projects based on showCompleted state
+  // Get selected folder name for breadcrumb
+  const selectedFolder = useMemo(() =>
+    folders.find(f => f.id === selectedFolderId),
+    [folders, selectedFolderId]
+  );
+
+  // Filter projects based on showCompleted state AND selected folder
   const filteredProjects = useMemo(() => {
-    return showCompleted ? projects : projects.filter(p => p.status === 'active');
-  }, [projects, showCompleted]);
+    let result = showCompleted ? projects : projects.filter(p => p.status === 'active');
+
+    // Filter by folder if one is selected
+    if (selectedFolderId) {
+      result = result.filter(p => p.folderId === selectedFolderId);
+    }
+
+    return result;
+  }, [projects, showCompleted, selectedFolderId]);
 
   const handleCreateProject = async () => {
     if (!newProjectName.trim()) return;
@@ -141,20 +155,30 @@ export function ProjectList() {
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <header className={clsx(
-        'px-4 md:px-6 py-3 md:py-4 border-b safe-area-top flex items-center justify-between gap-3',
+    <div className="h-full flex">
+      {/* Folder Tree Sidebar - hidden on mobile */}
+      <div className={clsx(
+        'hidden md:block w-56 border-r flex-shrink-0',
         theme === 'dark' ? 'border-omnifocus-border' : 'border-gray-200'
       )}>
-        <div className="flex items-center gap-3 flex-1">
-          <FolderKanban size={24} className="text-blue-400" />
-          <h2 className={clsx(
-            'text-xl md:text-2xl font-semibold',
-            theme === 'dark' ? 'text-white' : 'text-gray-900'
-          )}>
-            Projects
-          </h2>
-        </div>
+        <FolderTree />
+      </div>
+
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className={clsx(
+          'px-4 md:px-6 py-3 md:py-4 border-b safe-area-top flex items-center justify-between gap-3',
+          theme === 'dark' ? 'border-omnifocus-border' : 'border-gray-200'
+        )}>
+          <div className="flex items-center gap-3 flex-1">
+            <FolderKanban size={24} className="text-blue-400" />
+            <h2 className={clsx(
+              'text-xl md:text-2xl font-semibold',
+              theme === 'dark' ? 'text-white' : 'text-gray-900'
+            )}>
+              {selectedFolder ? selectedFolder.name : 'All Projects'}
+            </h2>
+          </div>
 
         {/* Show/Hide Completed toggle */}
         {completedCount > 0 && (
@@ -303,27 +327,32 @@ export function ProjectList() {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-3 md:py-4">
-        {filteredProjects.length === 0 ? (
-          <div className="text-center py-12">
-            <FolderKanban size={48} className={clsx('mx-auto mb-4', theme === 'dark' ? 'text-gray-600' : 'text-gray-300')} />
-            <p className="text-gray-500">No projects yet</p>
-            <p className={clsx('text-sm mt-1', theme === 'dark' ? 'text-gray-600' : 'text-gray-400')}>Create a project to organize your actions</p>
-          </div>
-        ) : (
-          <ul className="space-y-2">
-            {filteredProjects.map((project) => (
-              <ProjectItem key={project.id} project={project} />
-            ))}
-          </ul>
-        )}
-      </div>
+        <div className="flex-1 overflow-y-auto px-4 md:px-6 py-3 md:py-4">
+          {filteredProjects.length === 0 ? (
+            <div className="text-center py-12">
+              <FolderKanban size={48} className={clsx('mx-auto mb-4', theme === 'dark' ? 'text-gray-600' : 'text-gray-300')} />
+              <p className="text-gray-500">
+                {selectedFolder ? `No projects in "${selectedFolder.name}"` : 'No projects yet'}
+              </p>
+              <p className={clsx('text-sm mt-1', theme === 'dark' ? 'text-gray-600' : 'text-gray-400')}>
+                {selectedFolder ? 'Create a project in this folder' : 'Create a project to organize your actions'}
+              </p>
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {filteredProjects.map((project) => (
+                <ProjectItem key={project.id} project={project} />
+              ))}
+            </ul>
+          )}
+        </div>
 
-      {/* Project Templates Modal */}
-      <ProjectTemplates
-        isOpen={showTemplates}
-        onClose={() => setShowTemplates(false)}
-      />
+        {/* Project Templates Modal */}
+        <ProjectTemplates
+          isOpen={showTemplates}
+          onClose={() => setShowTemplates(false)}
+        />
+      </div>
     </div>
   );
 }

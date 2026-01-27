@@ -107,6 +107,7 @@ interface AppState {
   currentPerspective: string;
   selectedActionId: string | null;
   selectedProjectId: string | null;
+  selectedFolderId: string | null;
   editingPerspectiveId: string | null;
   filterTagId: string | null;
   selectedActionIds: Set<string>;
@@ -132,6 +133,7 @@ interface AppState {
   setCurrentPerspective: (id: string) => void;
   setSelectedAction: (id: string | null) => void;
   setSelectedProject: (id: string | null) => void;
+  setSelectedFolderId: (id: string | null) => void;
   setQuickEntryOpen: (open: boolean) => void;
   setSearchOpen: (open: boolean) => void;
   setCommandPaletteOpen: (open: boolean) => void;
@@ -201,6 +203,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   currentPerspective: 'inbox',
   selectedActionId: null,
   selectedProjectId: null,
+  selectedFolderId: null,
   editingPerspectiveId: null,
   filterTagId: null,
   selectedActionIds: new Set<string>(),
@@ -226,6 +229,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setCurrentPerspective: (id) => set({ currentPerspective: id }),
   setSelectedAction: (id) => set({ selectedActionId: id }),
   setSelectedProject: (id) => set({ selectedProjectId: id }),
+  setSelectedFolderId: (id) => set({ selectedFolderId: id }),
   setQuickEntryOpen: (open) => set({ isQuickEntryOpen: open }),
   setSearchOpen: (open) => set({ isSearchOpen: open }),
   setCommandPaletteOpen: (open) => set({ isCommandPaletteOpen: open }),
