@@ -1,7 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { useAppStore, Tag } from '@/stores/app.store';
-import { Tags as TagsIcon, ChevronRight, Plus, Search } from 'lucide-react';
+import { Tags as TagsIcon, ChevronRight, Plus, Search, X, CornerDownLeft, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
 
 interface TagItemProps {
@@ -10,11 +11,27 @@ interface TagItemProps {
 }
 
 function TagItem({ tag, level = 0 }: TagItemProps) {
-  const { setFilterTagId, fetchActions, currentPerspective, theme } = useAppStore();
+  const { setFilterTagId, fetchActions, currentPerspective, theme, deleteTag } = useAppStore();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleClick = () => {
     setFilterTagId(tag.id);
     fetchActions(currentPerspective);
+  };
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm(`Delete tag "${tag.name}"? Actions with this tag will not be deleted.`)) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteTag(tag.id);
+    } catch (error) {
+      console.error('Failed to delete tag:', error);
+      alert('Failed to delete tag.');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -39,6 +56,19 @@ function TagItem({ tag, level = 0 }: TagItemProps) {
           </p>
         </div>
 
+        <button
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className={clsx(
+            'p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity',
+            theme === 'dark'
+              ? 'hover:bg-red-500/20 text-gray-500 hover:text-red-400'
+              : 'hover:bg-red-50 text-gray-400 hover:text-red-500'
+          )}
+        >
+          <Trash2 size={14} />
+        </button>
+
         <ChevronRight size={16} className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} />
       </li>
 
@@ -55,10 +85,29 @@ function TagItem({ tag, level = 0 }: TagItemProps) {
 }
 
 export function TagList() {
-  const { tags, isLoading, theme, setQuickEntryOpen, setSearchOpen } = useAppStore();
+  const { tags, isLoading, theme, setQuickEntryOpen, setSearchOpen, createTag } = useAppStore();
+  const [showNewTagForm, setShowNewTagForm] = useState(false);
+  const [newTagName, setNewTagName] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
 
   // Get top-level tags (no parent)
   const topLevelTags = tags.filter(t => !t.parentId);
+
+  const handleCreateTag = async () => {
+    if (!newTagName.trim()) return;
+
+    setIsCreating(true);
+    try {
+      await createTag({ name: newTagName.trim() });
+      setNewTagName('');
+      setShowNewTagForm(false);
+    } catch (error) {
+      console.error('Failed to create tag:', error);
+      alert('Failed to create tag.');
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -102,17 +151,81 @@ export function TagList() {
         </button>
 
         <button
+          onClick={() => setShowNewTagForm(true)}
           className={clsx(
             'hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm',
             theme === 'dark'
-              ? 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
-              : 'bg-gray-100 text-gray-500 hover:text-gray-900 hover:bg-gray-200'
+              ? 'bg-omnifocus-purple text-white hover:bg-omnifocus-purple/90'
+              : 'bg-omnifocus-purple text-white hover:bg-omnifocus-purple/90'
           )}
         >
           <Plus size={16} />
           <span>New Tag</span>
         </button>
       </header>
+
+      {/* New Tag Form */}
+      {showNewTagForm && (
+        <div className={clsx(
+          'mx-4 md:mx-6 mt-3 p-3 rounded-lg border',
+          theme === 'dark'
+            ? 'bg-omnifocus-surface border-omnifocus-border'
+            : 'bg-white border-gray-200'
+        )}>
+          <div className="flex items-center gap-2">
+            <div
+              className="w-4 h-4 rounded-full shrink-0 bg-green-500"
+            />
+            <input
+              type="text"
+              value={newTagName}
+              onChange={(e) => setNewTagName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleCreateTag();
+                } else if (e.key === 'Escape') {
+                  setShowNewTagForm(false);
+                  setNewTagName('');
+                }
+              }}
+              placeholder="Tag name..."
+              autoFocus
+              className={clsx(
+                'flex-1 bg-transparent outline-none text-sm',
+                theme === 'dark' ? 'text-white placeholder-gray-500' : 'text-gray-900 placeholder-gray-400'
+              )}
+            />
+            <button
+              onClick={handleCreateTag}
+              disabled={isCreating || !newTagName.trim()}
+              className="px-3 py-1.5 rounded bg-omnifocus-purple text-white text-sm flex items-center gap-1 hover:bg-omnifocus-purple/90 disabled:opacity-50"
+            >
+              {isCreating ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  <CornerDownLeft size={14} />
+                  <span>Add</span>
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => {
+                setShowNewTagForm(false);
+                setNewTagName('');
+              }}
+              className={clsx(
+                'p-1.5 rounded transition-colors',
+                theme === 'dark'
+                  ? 'hover:bg-omnifocus-border text-gray-400 hover:text-white'
+                  : 'hover:bg-gray-100 text-gray-400 hover:text-gray-600'
+              )}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto px-4 md:px-6 py-3 md:py-4">
         {topLevelTags.length === 0 ? (

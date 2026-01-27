@@ -138,6 +138,9 @@ interface AppState {
   createProject: (data: Partial<Project>) => Promise<Project>;
   updateProject: (id: string, data: Partial<Project>) => Promise<Project>;
   cleanupCompleted: (olderThanDays?: number) => Promise<{ deleted: number }>;
+
+  createTag: (data: Partial<Tag>) => Promise<Tag>;
+  deleteTag: (id: string) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -406,5 +409,18 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { currentPerspective, fetchActions } = get();
     await fetchActions(currentPerspective);
     return result;
+  },
+
+  createTag: async (data) => {
+    const tag = await api.post<Tag>('/tags', data);
+    set((state) => ({ tags: [...state.tags, tag] }));
+    return tag;
+  },
+
+  deleteTag: async (id) => {
+    await api.delete(`/tags/${id}`);
+    set((state) => ({
+      tags: state.tags.filter((t) => t.id !== id),
+    }));
   },
 }));
