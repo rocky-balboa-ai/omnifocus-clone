@@ -20,6 +20,7 @@ import { PerspectiveEditor } from '@/components/PerspectiveEditor';
 import { SettingsPanel } from '@/components/SettingsPanel';
 import { UndoToast } from '@/components/UndoToast';
 import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
+import { FocusTimer } from '@/components/FocusTimer';
 import { useAppStore } from '@/stores/app.store';
 import { useKeyboardShortcuts } from '@/lib/useKeyboardShortcuts';
 import { useThemeInit } from '@/lib/useThemeInit';
@@ -47,6 +48,8 @@ export default function Home() {
     setSettingsOpen,
     isKeyboardHelpOpen,
     setKeyboardHelpOpen,
+    isFocusTimerOpen,
+    setFocusTimerOpen,
     theme,
     isFocusMode,
   } = useAppStore();
@@ -160,6 +163,12 @@ export default function Home() {
       <KeyboardShortcutsHelp
         isOpen={isKeyboardHelpOpen}
         onClose={() => setKeyboardHelpOpen(false)}
+      />
+
+      {/* Focus Timer */}
+      <FocusTimer
+        isOpen={isFocusTimerOpen}
+        onClose={() => setFocusTimerOpen(false)}
       />
     </div>
   );

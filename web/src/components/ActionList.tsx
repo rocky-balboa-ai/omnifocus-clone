@@ -19,7 +19,7 @@ import {
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { useAppStore, Action } from '@/stores/app.store';
 import { SortableActionItem } from './SortableActionItem';
-import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff, Inbox, CheckCircle2, Sparkles, CornerDownLeft, Maximize2, Minimize2, AlertTriangle, Calendar, Filter, Sun, CalendarDays, CalendarClock, ArrowUpDown, FolderKanban } from 'lucide-react';
+import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff, Inbox, CheckCircle2, Sparkles, CornerDownLeft, Maximize2, Minimize2, AlertTriangle, Calendar, Filter, Sun, CalendarDays, CalendarClock, ArrowUpDown, FolderKanban, Timer } from 'lucide-react';
 import { isBefore, isToday, startOfDay, isFuture, addDays, nextMonday } from 'date-fns';
 import { parseQuickAdd } from '@/lib/parseQuickAdd';
 
@@ -65,6 +65,7 @@ export function ActionList() {
     projects,
     isFocusMode,
     toggleFocusMode,
+    setFocusTimerOpen,
   } = useAppStore();
 
   const [isCleaningUp, setIsCleaningUp] = useState(false);
@@ -498,6 +499,20 @@ export function ActionList() {
             </>
           )}
         </div>
+
+        {/* Focus Timer button */}
+        <button
+          onClick={() => setFocusTimerOpen(true)}
+          className={clsx(
+            'hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm',
+            theme === 'dark'
+              ? 'bg-omnifocus-surface text-gray-400 hover:text-omnifocus-purple hover:bg-omnifocus-border'
+              : 'bg-omnifocus-light-surface text-gray-500 hover:text-omnifocus-purple hover:bg-gray-200'
+          )}
+          title="Focus Timer"
+        >
+          <Timer size={16} />
+        </button>
 
         {/* Focus mode toggle */}
         <button

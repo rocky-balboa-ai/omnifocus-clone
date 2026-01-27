@@ -93,6 +93,7 @@ interface AppState {
   isPerspectiveEditorOpen: boolean;
   isSettingsOpen: boolean;
   isKeyboardHelpOpen: boolean;
+  isFocusTimerOpen: boolean;
   showCompleted: boolean;
   isLoading: boolean;
   error: string | null;
@@ -120,6 +121,7 @@ interface AppState {
   closePerspectiveEditor: () => void;
   setSettingsOpen: (open: boolean) => void;
   setKeyboardHelpOpen: (open: boolean) => void;
+  setFocusTimerOpen: (open: boolean) => void;
   setTheme: (theme: 'light' | 'dark') => void;
   setThemeMode: (mode: 'light' | 'dark' | 'auto') => void;
   toggleTheme: () => void;
@@ -169,6 +171,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   isPerspectiveEditorOpen: false,
   isSettingsOpen: false,
   isKeyboardHelpOpen: false,
+  isFocusTimerOpen: false,
   showCompleted: false,
   isLoading: false,
   error: null,
@@ -248,6 +251,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   closePerspectiveEditor: () => set({ isPerspectiveEditorOpen: false, editingPerspectiveId: null }),
   setSettingsOpen: (open) => set({ isSettingsOpen: open }),
   setKeyboardHelpOpen: (open) => set({ isKeyboardHelpOpen: open }),
+  setFocusTimerOpen: (open) => set({ isFocusTimerOpen: open }),
 
   setTheme: (theme) => {
     set({ theme });
