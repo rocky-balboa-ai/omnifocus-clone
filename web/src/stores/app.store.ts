@@ -10,6 +10,15 @@ export interface Attachment {
   createdAt: string;
 }
 
+export interface RecurrenceRule {
+  frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  interval: number; // e.g., every 2 weeks
+  daysOfWeek?: number[]; // 0-6 for weekly (0 = Sunday)
+  dayOfMonth?: number; // 1-31 for monthly
+  endDate?: string;
+  count?: number; // number of occurrences
+}
+
 export interface Action {
   id: string;
   title: string;
@@ -28,6 +37,7 @@ export interface Action {
   tags: { tag: Tag }[];
   children?: Action[];
   attachments?: Attachment[];
+  recurrence?: RecurrenceRule;
 }
 
 export interface Project {
