@@ -1,7 +1,8 @@
 'use client';
 
 import { useAppStore, Project } from '@/stores/app.store';
-import { FolderKanban, Flag, Calendar, ChevronRight, Plus, Layers, List, Eye, EyeOff, Search, X, CornerDownLeft } from 'lucide-react';
+import { FolderKanban, Flag, Calendar, ChevronRight, Plus, Layers, List, Eye, EyeOff, Search, X, CornerDownLeft, FolderPlus } from 'lucide-react';
+import { ProjectTemplates } from './ProjectTemplates';
 import clsx from 'clsx';
 import { format, isPast, isToday } from 'date-fns';
 import { useMemo, useState } from 'react';
@@ -99,6 +100,7 @@ function ProjectItem({ project }: ProjectItemProps) {
 export function ProjectList() {
   const { projects, isLoading, setQuickEntryOpen, setSearchOpen, showCompleted, setShowCompleted, theme, createProject } = useAppStore();
   const [showNewProjectForm, setShowNewProjectForm] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectType, setNewProjectType] = useState<'parallel' | 'sequential' | 'single_actions'>('parallel');
   const [isCreating, setIsCreating] = useState(false);
@@ -188,6 +190,20 @@ export function ProjectList() {
             'hidden md:inline px-1.5 py-0.5 text-xs rounded',
             theme === 'dark' ? 'bg-omnifocus-bg' : 'bg-white border border-gray-200'
           )}>⌘K</kbd>
+        </button>
+
+        <button
+          onClick={() => setShowTemplates(true)}
+          className={clsx(
+            'hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm',
+            theme === 'dark'
+              ? 'bg-omnifocus-surface text-gray-300 hover:bg-omnifocus-border'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          )}
+          title="Create from template"
+        >
+          <FolderPlus size={16} />
+          <span className="hidden lg:inline">Templates</span>
         </button>
 
         <button
@@ -302,6 +318,12 @@ export function ProjectList() {
           </ul>
         )}
       </div>
+
+      {/* Project Templates Modal */}
+      <ProjectTemplates
+        isOpen={showTemplates}
+        onClose={() => setShowTemplates(false)}
+      />
     </div>
   );
 }

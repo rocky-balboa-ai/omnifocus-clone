@@ -1,14 +1,16 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useAppStore } from '@/stores/app.store';
 import { ActionItem } from './ActionItem';
-import { Calendar, Plus, Search, Eye, EyeOff } from 'lucide-react';
+import { CalendarView } from './CalendarView';
+import { Calendar, Plus, Search, Eye, EyeOff, List, CalendarDays } from 'lucide-react';
 import { format, isToday, isTomorrow, isThisWeek, startOfDay, addDays, isBefore, isAfter } from 'date-fns';
 import clsx from 'clsx';
 
 export function ForecastList() {
   const { actions, isLoading, setQuickEntryOpen, setSearchOpen, showCompleted, setShowCompleted, theme } = useAppStore();
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
 
   const completedCount = actions.filter(a => a.dueDate && a.status === 'completed').length;
 
@@ -102,8 +104,43 @@ export function ForecastList() {
           </h2>
         </div>
 
+        {/* View mode toggle */}
+        <div className={clsx(
+          'flex items-center rounded-lg overflow-hidden',
+          theme === 'dark' ? 'bg-omnifocus-surface' : 'bg-gray-100'
+        )}>
+          <button
+            onClick={() => setViewMode('list')}
+            className={clsx(
+              'p-2 transition-colors',
+              viewMode === 'list'
+                ? 'bg-omnifocus-purple text-white'
+                : theme === 'dark'
+                  ? 'text-gray-400 hover:text-white'
+                  : 'text-gray-500 hover:text-gray-900'
+            )}
+            title="List view"
+          >
+            <List size={16} />
+          </button>
+          <button
+            onClick={() => setViewMode('calendar')}
+            className={clsx(
+              'p-2 transition-colors',
+              viewMode === 'calendar'
+                ? 'bg-omnifocus-purple text-white'
+                : theme === 'dark'
+                  ? 'text-gray-400 hover:text-white'
+                  : 'text-gray-500 hover:text-gray-900'
+            )}
+            title="Calendar view"
+          >
+            <CalendarDays size={16} />
+          </button>
+        </div>
+
         {/* Show/Hide Completed toggle */}
-        {completedCount > 0 && (
+        {completedCount > 0 && viewMode === 'list' && (
           <button
             onClick={() => setShowCompleted(!showCompleted)}
             className={clsx(
@@ -148,7 +185,9 @@ export function ForecastList() {
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 md:px-6 py-3 md:py-4">
-        {groupedActions.length === 0 ? (
+        {viewMode === 'calendar' ? (
+          <CalendarView />
+        ) : groupedActions.length === 0 ? (
           <div className="text-center py-12">
             <Calendar size={48} className="mx-auto text-gray-600 mb-4" />
             <p className="text-gray-500">No scheduled actions</p>
