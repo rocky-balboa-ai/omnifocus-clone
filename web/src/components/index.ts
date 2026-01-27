@@ -13,6 +13,7 @@ export * from './Card';
 export * from './Checklist';
 export * from './CollapsibleSection';
 export * from './ContextMenu';
+export * from './Divider';
 export * from './Drawer';
 export * from './Dropdown';
 export * from './EmptyState';
@@ -22,6 +23,7 @@ export * from './Modal';
 export * from './Popover';
 export * from './ProgressRing';
 export * from './Skeleton';
+export * from './Stepper';
 export * from './Switch';
 export * from './Tabs';
 export * from './ThemeToggle';
@@ -29,6 +31,7 @@ export * from './Toast';
 export * from './Tooltip';
 
 // Picker Components
+export * from './DateRangePicker';
 export * from './DeferDatePicker';
 export * from './DurationPicker';
 export * from './PriorityIndicator';
