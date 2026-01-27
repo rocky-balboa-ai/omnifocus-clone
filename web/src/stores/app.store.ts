@@ -96,6 +96,7 @@ interface AppState {
   isLoading: boolean;
   error: string | null;
   theme: 'light' | 'dark';
+  isFocusMode: boolean;
 
   // Actions
   setCurrentPerspective: (id: string) => void;
@@ -116,6 +117,7 @@ interface AppState {
   setSettingsOpen: (open: boolean) => void;
   setTheme: (theme: 'light' | 'dark') => void;
   toggleTheme: () => void;
+  toggleFocusMode: () => void;
 
   // API Actions
   fetchPerspectives: () => Promise<void>;
@@ -160,6 +162,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   isLoading: false,
   error: null,
   theme: 'dark',
+  isFocusMode: false,
 
   // UI Actions
   setCurrentPerspective: (id) => set({ currentPerspective: id }),
@@ -229,6 +232,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   toggleTheme: () => {
     const { theme, setTheme } = get();
     setTheme(theme === 'dark' ? 'light' : 'dark');
+  },
+
+  toggleFocusMode: () => {
+    set((state) => ({ isFocusMode: !state.isFocusMode }));
   },
 
   // API Actions

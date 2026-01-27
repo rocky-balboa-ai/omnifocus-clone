@@ -16,6 +16,7 @@ export function useKeyboardShortcuts() {
     actions,
     isQuickEntryOpen,
     isSearchOpen,
+    toggleFocusMode,
   } = useAppStore();
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -29,6 +30,13 @@ export function useKeyboardShortcuts() {
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
       e.preventDefault();
       setSearchOpen(true);
+      return;
+    }
+
+    // Cmd/Ctrl + \: Toggle focus mode
+    if ((e.metaKey || e.ctrlKey) && e.key === '\\') {
+      e.preventDefault();
+      toggleFocusMode();
       return;
     }
 
@@ -137,6 +145,7 @@ export function useKeyboardShortcuts() {
     actions,
     isQuickEntryOpen,
     isSearchOpen,
+    toggleFocusMode,
   ]);
 
   useEffect(() => {

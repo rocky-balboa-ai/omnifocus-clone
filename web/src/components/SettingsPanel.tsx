@@ -179,6 +179,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                 { label: 'Flag/unflag', keys: ['F'] },
                 { label: 'Navigate up/down', keys: ['J', 'K'] },
                 { label: 'Indent/outdent', keys: ['Tab', '⇧Tab'] },
+                { label: 'Focus mode', keys: ['⌘\\'] },
                 { label: 'Close modal', keys: ['Esc'] },
               ].map(({ label, keys }) => (
                 <div

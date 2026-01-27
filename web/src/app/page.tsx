@@ -42,6 +42,7 @@ export default function Home() {
     isSettingsOpen,
     setSettingsOpen,
     theme,
+    isFocusMode,
   } = useAppStore();
 
   // Initialize theme from localStorage/system preference
@@ -79,8 +80,8 @@ export default function Home() {
       'flex h-screen',
       theme === 'dark' ? 'bg-omnifocus-bg' : 'bg-omnifocus-light-bg'
     )}>
-      {/* Desktop sidebar - hidden on mobile */}
-      <Sidebar />
+      {/* Desktop sidebar - hidden on mobile and in focus mode */}
+      {!isFocusMode && <Sidebar />}
 
       {/* Main content - full width on mobile */}
       <main className="flex-1 overflow-hidden pb-16 md:pb-0">

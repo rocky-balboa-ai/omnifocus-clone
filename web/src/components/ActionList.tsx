@@ -19,7 +19,7 @@ import {
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { useAppStore, Action } from '@/stores/app.store';
 import { SortableActionItem } from './SortableActionItem';
-import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff, Inbox, CheckCircle2, Sparkles, CornerDownLeft } from 'lucide-react';
+import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff, Inbox, CheckCircle2, Sparkles, CornerDownLeft, Maximize2, Minimize2 } from 'lucide-react';
 import clsx from 'clsx';
 
 interface ActionWithDepth {
@@ -55,6 +55,8 @@ export function ActionList() {
     bulkFlagActions,
     theme,
     createAction,
+    isFocusMode,
+    toggleFocusMode,
   } = useAppStore();
 
   const [isCleaningUp, setIsCleaningUp] = useState(false);
@@ -310,6 +312,22 @@ export function ActionList() {
           title={isSelectMode ? 'Exit select mode' : 'Select multiple'}
         >
           <CheckSquare size={16} />
+        </button>
+
+        {/* Focus mode toggle */}
+        <button
+          onClick={toggleFocusMode}
+          className={clsx(
+            'hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm',
+            isFocusMode
+              ? 'bg-omnifocus-purple/20 text-omnifocus-purple'
+              : theme === 'dark'
+                ? 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+                : 'bg-omnifocus-light-surface text-gray-500 hover:text-gray-900 hover:bg-gray-200'
+          )}
+          title={isFocusMode ? 'Exit focus mode (⌘\\)' : 'Focus mode (⌘\\)'}
+        >
+          {isFocusMode ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
         </button>
 
         {/* Search button */}
