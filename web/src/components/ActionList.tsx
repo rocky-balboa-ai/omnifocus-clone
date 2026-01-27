@@ -19,7 +19,7 @@ import {
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { useAppStore, Action } from '@/stores/app.store';
 import { SortableActionItem } from './SortableActionItem';
-import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff } from 'lucide-react';
+import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff, Inbox, CheckCircle2, Sparkles } from 'lucide-react';
 import clsx from 'clsx';
 
 interface ActionWithDepth {
@@ -53,6 +53,7 @@ export function ActionList() {
     bulkCompleteActions,
     bulkDeleteActions,
     bulkFlagActions,
+    theme,
   } = useAppStore();
 
   const [isCleaningUp, setIsCleaningUp] = useState(false);
@@ -192,9 +193,15 @@ export function ActionList() {
 
   return (
     <div className="h-full flex flex-col">
-      <header className="px-4 md:px-6 py-3 md:py-4 border-b border-omnifocus-border safe-area-top flex items-center justify-between gap-3">
+      <header className={clsx(
+        'px-4 md:px-6 py-3 md:py-4 border-b safe-area-top flex items-center justify-between gap-3',
+        theme === 'dark' ? 'border-omnifocus-border' : 'border-omnifocus-light-border'
+      )}>
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <h2 className="text-xl md:text-2xl font-semibold text-white truncate">
+          <h2 className={clsx(
+            'text-xl md:text-2xl font-semibold truncate',
+            theme === 'dark' ? 'text-white' : 'text-gray-900'
+          )}>
             {filterTag ? `Tag: ${filterTag.name}` : (perspective?.name || 'Inbox')}
           </h2>
           {filterTag && (
@@ -216,7 +223,9 @@ export function ActionList() {
               'flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm',
               showDeferred
                 ? 'bg-omnifocus-orange/20 text-omnifocus-orange'
-                : 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+                : theme === 'dark'
+                  ? 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+                  : 'bg-omnifocus-light-surface text-gray-500 hover:text-gray-900 hover:bg-gray-200'
             )}
             title={showDeferred ? 'Hide deferred' : 'Show deferred'}
           >
@@ -234,7 +243,9 @@ export function ActionList() {
                 'flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm',
                 showCompleted
                   ? 'bg-omnifocus-purple/20 text-omnifocus-purple'
-                  : 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+                  : theme === 'dark'
+                    ? 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+                    : 'bg-omnifocus-light-surface text-gray-500 hover:text-gray-900 hover:bg-gray-200'
               )}
               title={showCompleted ? 'Hide completed' : 'Show completed'}
             >
@@ -247,7 +258,12 @@ export function ActionList() {
               <button
                 onClick={handleCleanup}
                 disabled={isCleaningUp}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-omnifocus-surface text-gray-400 hover:text-red-400 hover:bg-omnifocus-border transition-colors text-sm disabled:opacity-50"
+                className={clsx(
+                  'flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm disabled:opacity-50',
+                  theme === 'dark'
+                    ? 'bg-omnifocus-surface text-gray-400 hover:text-red-400 hover:bg-omnifocus-border'
+                    : 'bg-omnifocus-light-surface text-gray-500 hover:text-red-500 hover:bg-gray-200'
+                )}
                 title="Clean up old completed actions"
               >
                 <Trash2 size={16} />
@@ -267,7 +283,9 @@ export function ActionList() {
             'flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm',
             isSelectMode
               ? 'bg-omnifocus-purple/20 text-omnifocus-purple'
-              : 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+              : theme === 'dark'
+                ? 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+                : 'bg-omnifocus-light-surface text-gray-500 hover:text-gray-900 hover:bg-gray-200'
           )}
           title={isSelectMode ? 'Exit select mode' : 'Select multiple'}
         >
@@ -277,11 +295,19 @@ export function ActionList() {
         {/* Search button */}
         <button
           onClick={() => setSearchOpen(true)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border transition-colors text-sm"
+          className={clsx(
+            'flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm',
+            theme === 'dark'
+              ? 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+              : 'bg-omnifocus-light-surface text-gray-500 hover:text-gray-900 hover:bg-gray-200'
+          )}
         >
           <Search size={16} />
           <span className="hidden md:inline">Search</span>
-          <kbd className="hidden md:inline px-1.5 py-0.5 text-xs bg-omnifocus-bg rounded">⌘K</kbd>
+          <kbd className={clsx(
+            'hidden md:inline px-1.5 py-0.5 text-xs rounded',
+            theme === 'dark' ? 'bg-omnifocus-bg' : 'bg-white border border-gray-200'
+          )}>⌘K</kbd>
         </button>
 
         {/* Desktop only: Add Action button */}
@@ -355,28 +381,72 @@ export function ActionList() {
 
       <div className="flex-1 overflow-y-auto px-4 md:px-6 py-3 md:py-4">
         {flattenedActions.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">
-              {actions.length > 0 && !showCompleted
-                ? 'All actions completed!'
-                : 'No actions in this view'}
-            </p>
+          <div className="flex flex-col items-center justify-center py-16">
             {actions.length > 0 && !showCompleted ? (
-              <button
-                onClick={() => setShowCompleted(true)}
-                className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-omnifocus-surface text-gray-300 hover:bg-omnifocus-border transition-colors"
-              >
-                <Eye size={18} />
-                <span>Show {completedCount} completed</span>
-              </button>
+              // All actions completed state
+              <>
+                <div className={clsx(
+                  'w-16 h-16 rounded-full flex items-center justify-center mb-4',
+                  theme === 'dark' ? 'bg-green-500/10' : 'bg-green-50'
+                )}>
+                  <CheckCircle2 size={32} className="text-green-500" />
+                </div>
+                <h3 className={clsx(
+                  'text-lg font-semibold mb-1',
+                  theme === 'dark' ? 'text-white' : 'text-gray-900'
+                )}>
+                  All caught up!
+                </h3>
+                <p className={clsx(
+                  'text-sm mb-6 text-center max-w-xs',
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                )}>
+                  You&apos;ve completed all actions in this view. Great work!
+                </p>
+                <button
+                  onClick={() => setShowCompleted(true)}
+                  className={clsx(
+                    'inline-flex items-center gap-2 px-4 py-2 rounded-lg transition-colors',
+                    theme === 'dark'
+                      ? 'bg-omnifocus-surface text-gray-300 hover:bg-omnifocus-border'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  )}
+                >
+                  <Eye size={18} />
+                  <span>Show {completedCount} completed</span>
+                </button>
+              </>
             ) : (
-              <button
-                onClick={handleAddAction}
-                className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-omnifocus-purple text-white hover:bg-omnifocus-purple/90 transition-colors"
-              >
-                <Plus size={18} />
-                <span>Add Action</span>
-              </button>
+              // No actions state
+              <>
+                <div className={clsx(
+                  'w-16 h-16 rounded-full flex items-center justify-center mb-4',
+                  theme === 'dark' ? 'bg-omnifocus-purple/10' : 'bg-purple-50'
+                )}>
+                  <Inbox size={32} className="text-omnifocus-purple" />
+                </div>
+                <h3 className={clsx(
+                  'text-lg font-semibold mb-1',
+                  theme === 'dark' ? 'text-white' : 'text-gray-900'
+                )}>
+                  {filterTag ? `No actions with "${filterTag.name}"` : 'No actions yet'}
+                </h3>
+                <p className={clsx(
+                  'text-sm mb-6 text-center max-w-xs',
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                )}>
+                  {filterTag
+                    ? 'Try a different tag or add actions with this tag'
+                    : 'Capture your tasks, ideas, and next actions to get started'}
+                </p>
+                <button
+                  onClick={handleAddAction}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-omnifocus-purple text-white hover:bg-omnifocus-purple/90 transition-colors font-medium"
+                >
+                  <Sparkles size={18} />
+                  <span>Add Your First Action</span>
+                </button>
+              </>
             )}
           </div>
         ) : (
