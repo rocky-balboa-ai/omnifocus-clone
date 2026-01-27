@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { useAppStore, Action } from '@/stores/app.store';
+import { ActionContextMenu } from './ActionContextMenu';
 import { Circle, CheckCircle2, Flag, Calendar, Clock, PauseCircle } from 'lucide-react';
 import clsx from 'clsx';
 import { format, isPast, isToday, isFuture } from 'date-fns';
@@ -11,6 +13,7 @@ interface ActionItemProps {
 
 export function ActionItem({ action }: ActionItemProps) {
   const { completeAction, setSelectedAction, selectedActionId, theme } = useAppStore();
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   const isSelected = selectedActionId === action.id;
   const isDueSoon = action.dueDate && (isToday(new Date(action.dueDate)) || isPast(new Date(action.dueDate)));
@@ -21,9 +24,17 @@ export function ActionItem({ action }: ActionItemProps) {
     await completeAction(action.id);
   };
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({ x: e.clientX, y: e.clientY });
+  };
+
   return (
+    <>
     <li
       onClick={() => setSelectedAction(action.id)}
+      onContextMenu={handleContextMenu}
       className={clsx(
         'group flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors',
         isSelected
@@ -122,5 +133,14 @@ export function ActionItem({ action }: ActionItemProps) {
         </div>
       </div>
     </li>
+
+    {contextMenu && (
+      <ActionContextMenu
+        action={action}
+        position={contextMenu}
+        onClose={() => setContextMenu(null)}
+      />
+    )}
+    </>
   );
 }

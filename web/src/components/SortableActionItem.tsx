@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useAppStore, Action } from '@/stores/app.store';
+import { ActionContextMenu } from './ActionContextMenu';
 import {
   Circle,
   CheckCircle2,
@@ -67,6 +68,7 @@ export function SortableActionItem({
   const [showProjectMenu, setShowProjectMenu] = useState(false);
   const [showTagMenu, setShowTagMenu] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   const {
     attributes,
@@ -145,6 +147,12 @@ export function SortableActionItem({
 
   const activeProjects = projects.filter(p => p.status === 'active');
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({ x: e.clientX, y: e.clientY });
+  };
+
   const handleDuplicate = async (e: React.MouseEvent) => {
     e.stopPropagation();
     await createAction({
@@ -160,10 +168,12 @@ export function SortableActionItem({
   };
 
   return (
+    <>
     <li
       ref={setNodeRef}
       style={style}
       onClick={() => setSelectedAction(action.id)}
+      onContextMenu={handleContextMenu}
       className={clsx(
         'group flex items-start gap-1 p-2 rounded-lg cursor-pointer transition-colors',
         isHighlighted
@@ -655,5 +665,14 @@ export function SortableActionItem({
         </button>
       </div>
     </li>
+
+    {contextMenu && (
+      <ActionContextMenu
+        action={action}
+        position={contextMenu}
+        onClose={() => setContextMenu(null)}
+      />
+    )}
+    </>
   );
 }
