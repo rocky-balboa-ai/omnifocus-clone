@@ -11,6 +11,7 @@ import {
   Plus,
   Settings,
   Sun,
+  BarChart3,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -100,6 +101,20 @@ export function Sidebar() {
               <span>{perspective.name}</span>
             </button>
           ))}
+
+          {/* Stats - special perspective */}
+          <button
+            onClick={() => setCurrentPerspective('stats')}
+            className={clsx(
+              'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
+              currentPerspective === 'stats'
+                ? themeClasses.navItem.active
+                : themeClasses.navItem.inactive[theme]
+            )}
+          >
+            <BarChart3 size={18} />
+            <span>Statistics</span>
+          </button>
         </div>
 
         <div className="mt-6">
