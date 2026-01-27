@@ -113,6 +113,7 @@ interface AppState {
   bulkCompleteActions: () => Promise<void>;
   bulkDeleteActions: () => Promise<void>;
   bulkFlagActions: (flagged: boolean) => Promise<void>;
+  bulkSetDueDate: (dueDate: string | null) => Promise<void>;
   openPerspectiveEditor: (id?: string | null) => void;
   closePerspectiveEditor: () => void;
   setSettingsOpen: (open: boolean) => void;
@@ -219,6 +220,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { selectedActionIds, updateAction, clearActionSelection } = get();
     for (const id of selectedActionIds) {
       await updateAction(id, { flagged } as any);
+    }
+    clearActionSelection();
+  },
+
+  bulkSetDueDate: async (dueDate: string | null) => {
+    const { selectedActionIds, updateAction, clearActionSelection } = get();
+    for (const id of selectedActionIds) {
+      await updateAction(id, { dueDate } as any);
     }
     clearActionSelection();
   },

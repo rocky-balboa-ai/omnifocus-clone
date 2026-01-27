@@ -19,8 +19,8 @@ import {
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { useAppStore, Action } from '@/stores/app.store';
 import { SortableActionItem } from './SortableActionItem';
-import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff, Inbox, CheckCircle2, Sparkles, CornerDownLeft, Maximize2, Minimize2, AlertTriangle, Calendar, Filter } from 'lucide-react';
-import { isBefore, isToday, startOfDay, isFuture } from 'date-fns';
+import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff, Inbox, CheckCircle2, Sparkles, CornerDownLeft, Maximize2, Minimize2, AlertTriangle, Calendar, Filter, Sun, CalendarDays, CalendarClock } from 'lucide-react';
+import { isBefore, isToday, startOfDay, isFuture, addDays, nextMonday } from 'date-fns';
 
 type QuickFilter = 'all' | 'overdue' | 'today' | 'flagged' | 'upcoming';
 import clsx from 'clsx';
@@ -56,6 +56,7 @@ export function ActionList() {
     bulkCompleteActions,
     bulkDeleteActions,
     bulkFlagActions,
+    bulkSetDueDate,
     theme,
     createAction,
     isFocusMode,
@@ -548,6 +549,69 @@ export function ActionList() {
             >
               <FlagOff size={18} />
             </button>
+
+            {/* Separator */}
+            <div className={clsx(
+              'w-px h-6',
+              theme === 'dark' ? 'bg-omnifocus-border' : 'bg-gray-200'
+            )} />
+
+            {/* Due date buttons */}
+            <button
+              onClick={() => bulkSetDueDate(startOfDay(new Date()).toISOString())}
+              className={clsx(
+                'p-2 rounded-lg transition-colors',
+                theme === 'dark'
+                  ? 'bg-omnifocus-surface text-gray-400 hover:text-omnifocus-orange hover:bg-omnifocus-border'
+                  : 'bg-white text-gray-400 hover:text-omnifocus-orange hover:bg-gray-100'
+              )}
+              title="Due today"
+            >
+              <Sun size={18} />
+            </button>
+            <button
+              onClick={() => bulkSetDueDate(addDays(startOfDay(new Date()), 1).toISOString())}
+              className={clsx(
+                'p-2 rounded-lg transition-colors',
+                theme === 'dark'
+                  ? 'bg-omnifocus-surface text-gray-400 hover:text-blue-400 hover:bg-omnifocus-border'
+                  : 'bg-white text-gray-400 hover:text-blue-500 hover:bg-gray-100'
+              )}
+              title="Due tomorrow"
+            >
+              <CalendarDays size={18} />
+            </button>
+            <button
+              onClick={() => bulkSetDueDate(nextMonday(startOfDay(new Date())).toISOString())}
+              className={clsx(
+                'p-2 rounded-lg transition-colors',
+                theme === 'dark'
+                  ? 'bg-omnifocus-surface text-gray-400 hover:text-purple-400 hover:bg-omnifocus-border'
+                  : 'bg-white text-gray-400 hover:text-purple-500 hover:bg-gray-100'
+              )}
+              title="Due next week"
+            >
+              <CalendarClock size={18} />
+            </button>
+            <button
+              onClick={() => bulkSetDueDate(null)}
+              className={clsx(
+                'p-2 rounded-lg transition-colors',
+                theme === 'dark'
+                  ? 'bg-omnifocus-surface text-gray-400 hover:text-gray-300 hover:bg-omnifocus-border'
+                  : 'bg-white text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+              )}
+              title="Clear due date"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Separator */}
+            <div className={clsx(
+              'w-px h-6',
+              theme === 'dark' ? 'bg-omnifocus-border' : 'bg-gray-200'
+            )} />
+
             <button
               onClick={() => {
                 if (confirm(`Delete ${selectionCount} selected action${selectionCount > 1 ? 's' : ''}?`)) {
