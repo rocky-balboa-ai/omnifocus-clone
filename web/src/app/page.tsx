@@ -22,6 +22,7 @@ import { UndoToast } from '@/components/UndoToast';
 import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 import { FocusTimer } from '@/components/FocusTimer';
 import { WeeklyReviewFlow } from '@/components/WeeklyReviewFlow';
+import { KeyboardHintBar } from '@/components/KeyboardHintBar';
 import { useAppStore } from '@/stores/app.store';
 import { useKeyboardShortcuts } from '@/lib/useKeyboardShortcuts';
 import { useThemeInit } from '@/lib/useThemeInit';
@@ -96,24 +97,29 @@ export default function Home() {
       {!isFocusMode && <Sidebar />}
 
       {/* Main content - full width on mobile */}
-      <main className="flex-1 overflow-hidden pb-16 md:pb-0">
-        {currentPerspective === 'projects' ? (
-          <ProjectList />
-        ) : currentPerspective === 'tags' ? (
-          <TagList />
-        ) : currentPerspective === 'forecast' ? (
-          <ForecastList />
-        ) : currentPerspective === 'flagged' ? (
-          <FlaggedList />
-        ) : currentPerspective === 'review' ? (
-          <ReviewList />
-        ) : currentPerspective === 'today' ? (
-          <TodayDashboard />
-        ) : currentPerspective === 'stats' ? (
-          <StatsDashboard />
-        ) : (
-          <ActionList />
-        )}
+      <main className="flex-1 overflow-hidden pb-16 md:pb-0 flex flex-col">
+        <div className="flex-1 overflow-hidden">
+          {currentPerspective === 'projects' ? (
+            <ProjectList />
+          ) : currentPerspective === 'tags' ? (
+            <TagList />
+          ) : currentPerspective === 'forecast' ? (
+            <ForecastList />
+          ) : currentPerspective === 'flagged' ? (
+            <FlaggedList />
+          ) : currentPerspective === 'review' ? (
+            <ReviewList />
+          ) : currentPerspective === 'today' ? (
+            <TodayDashboard />
+          ) : currentPerspective === 'stats' ? (
+            <StatsDashboard />
+          ) : (
+            <ActionList />
+          )}
+        </div>
+
+        {/* Keyboard hints - desktop only */}
+        <KeyboardHintBar />
       </main>
 
       {/* Mobile only: Bottom navigation */}
