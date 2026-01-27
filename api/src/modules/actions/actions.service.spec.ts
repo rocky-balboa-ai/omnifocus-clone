@@ -13,6 +13,7 @@ describe('ActionsService', () => {
       findUnique: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      count: jest.fn(),
     },
     actionTag: {
       deleteMany: jest.fn(),
@@ -77,6 +78,7 @@ describe('ActionsService', () => {
     it('should return actions filtered by inbox', async () => {
       const actions = [{ id: '1', title: 'Inbox Action', isInbox: true }];
       mockPrismaService.action.findMany.mockResolvedValue(actions);
+      mockPrismaService.action.count.mockResolvedValue(1);
 
       const result = await service.findAll({ inbox: true });
 
@@ -91,6 +93,7 @@ describe('ActionsService', () => {
     it('should return actions filtered by flagged', async () => {
       const actions = [{ id: '1', title: 'Flagged Action', flagged: true }];
       mockPrismaService.action.findMany.mockResolvedValue(actions);
+      mockPrismaService.action.count.mockResolvedValue(1);
 
       const result = await service.findAll({ flagged: true });
 
