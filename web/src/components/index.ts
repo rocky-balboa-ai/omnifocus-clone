@@ -96,6 +96,7 @@ export * from './TagColorPicker';
 export * from './TagInput';
 
 // Timer & Focus Components
+export * from './CountdownTimer';
 export * from './FocusModeOverlay';
 export * from './FocusSessionHistory';
 export * from './FocusTimer';
@@ -113,8 +114,10 @@ export * from './RecentlyCompleted';
 export * from './WhatsNext';
 
 // Input Components
+export * from './FileUpload';
 export * from './NaturalLanguageInput';
 export * from './MarkdownPreview';
+export * from './Slider';
 
 // Settings & Help Components
 export * from './DataManager';
