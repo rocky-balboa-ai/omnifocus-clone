@@ -105,6 +105,11 @@ export function SortableActionItem({
     await updateAction(action.id, { flagged: !action.flagged } as any);
   };
 
+  const handleQuickDefer = async (e: React.MouseEvent, date: Date | null) => {
+    e.stopPropagation();
+    await updateAction(action.id, { deferDate: date?.toISOString() || null } as any);
+  };
+
   const handleDuplicate = async (e: React.MouseEvent) => {
     e.stopPropagation();
     await createAction({
@@ -351,6 +356,35 @@ export function SortableActionItem({
         >
           <Flag size={14} />
         </button>
+
+        {/* Defer toggle */}
+        {isDeferred ? (
+          <button
+            onClick={(e) => handleQuickDefer(e, null)}
+            className={clsx(
+              'p-1 rounded transition-colors text-omnifocus-orange',
+              theme === 'dark'
+                ? 'hover:bg-omnifocus-border hover:text-red-400'
+                : 'hover:bg-red-50 hover:text-red-500'
+            )}
+            title="Remove defer date"
+          >
+            <PauseCircle size={14} />
+          </button>
+        ) : (
+          <button
+            onClick={(e) => handleQuickDefer(e, addDays(startOfDay(new Date()), 1))}
+            className={clsx(
+              'p-1 rounded transition-colors',
+              theme === 'dark'
+                ? 'hover:bg-omnifocus-border text-gray-500 hover:text-omnifocus-orange'
+                : 'hover:bg-orange-50 text-gray-400 hover:text-omnifocus-orange'
+            )}
+            title="Defer until tomorrow"
+          >
+            <PauseCircle size={14} />
+          </button>
+        )}
 
         {/* Duplicate */}
         <button
