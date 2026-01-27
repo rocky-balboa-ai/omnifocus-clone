@@ -61,6 +61,7 @@ export function SortableActionItem({
   } = useAppStore();
 
   const [showProjectMenu, setShowProjectMenu] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   const {
     attributes,
@@ -82,7 +83,18 @@ export function SortableActionItem({
 
   const handleComplete = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    await completeAction(action.id);
+    if (action.status === 'completed') {
+      // If already completed, just toggle back
+      await completeAction(action.id);
+      return;
+    }
+    // Start completion animation
+    setIsCompleting(true);
+    // Wait for animation
+    setTimeout(async () => {
+      await completeAction(action.id);
+      setIsCompleting(false);
+    }, 300);
   };
 
   const handleToggleCollapse = (e: React.MouseEvent) => {
@@ -155,7 +167,8 @@ export function SortableActionItem({
             ? 'hover:bg-omnifocus-surface border border-transparent'
             : 'hover:bg-gray-100 border border-transparent',
         isDragging && (theme === 'dark' ? 'opacity-50 shadow-lg bg-omnifocus-surface' : 'opacity-50 shadow-lg bg-gray-100'),
-        isSelected && isSelectMode && 'bg-omnifocus-purple/10'
+        isSelected && isSelectMode && 'bg-omnifocus-purple/10',
+        isCompleting && 'animate-complete-item'
       )}
     >
       {/* Indent spacer */}
@@ -210,6 +223,8 @@ export function SortableActionItem({
       >
         {action.status === 'completed' ? (
           <CheckCircle2 size={18} className="text-green-500" />
+        ) : isCompleting ? (
+          <CheckCircle2 size={18} className="text-green-500 animate-complete-check" />
         ) : (
           <Circle size={18} />
         )}
