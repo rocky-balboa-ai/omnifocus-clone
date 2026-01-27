@@ -20,7 +20,7 @@ interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
-  const { cleanupCompleted } = useAppStore();
+  const { cleanupCompleted, theme, toggleTheme } = useAppStore();
   const [cleanupDays, setCleanupDays] = useState(7);
   const [isCleaningUp, setIsCleaningUp] = useState(false);
 
@@ -51,22 +51,33 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
       {/* Panel */}
       <div className={clsx(
-        'fixed z-50 bg-omnifocus-sidebar border-omnifocus-border overflow-hidden',
+        'fixed z-50 overflow-hidden',
         'flex flex-col',
+        theme === 'dark'
+          ? 'bg-omnifocus-sidebar border-omnifocus-border'
+          : 'bg-omnifocus-light-sidebar border-omnifocus-light-border',
         // Mobile: bottom sheet
         'inset-x-0 bottom-0 max-h-[85vh] rounded-t-2xl border-t',
         // Desktop: side panel
         'md:inset-y-0 md:right-0 md:left-auto md:w-[400px] md:max-h-none md:rounded-none md:border-l md:border-t-0'
       )}>
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-omnifocus-border">
+        <div className={clsx(
+          'flex items-center justify-between px-4 py-3 border-b',
+          theme === 'dark' ? 'border-omnifocus-border' : 'border-omnifocus-light-border'
+        )}>
           <div className="flex items-center gap-2">
-            <Settings size={20} className="text-gray-400" />
-            <h2 className="text-lg font-semibold text-white">Settings</h2>
+            <Settings size={20} className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} />
+            <h2 className={clsx('text-lg font-semibold', theme === 'dark' ? 'text-white' : 'text-gray-900')}>Settings</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-omnifocus-surface text-gray-400 hover:text-white transition-colors"
+            className={clsx(
+              'p-2 rounded-lg transition-colors',
+              theme === 'dark'
+                ? 'hover:bg-omnifocus-surface text-gray-400 hover:text-white'
+                : 'hover:bg-omnifocus-light-surface text-gray-500 hover:text-gray-900'
+            )}
           >
             <X size={20} />
           </button>
@@ -74,66 +85,123 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          {/* Appearance */}
+          <section>
+            <h3 className={clsx(
+              'flex items-center gap-2 text-sm font-semibold mb-3',
+              theme === 'dark' ? 'text-white' : 'text-gray-900'
+            )}>
+              {theme === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
+              Appearance
+            </h3>
+            <div className={clsx(
+              'p-3 rounded-lg',
+              theme === 'dark' ? 'bg-omnifocus-surface' : 'bg-omnifocus-light-surface'
+            )}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className={clsx('text-sm', theme === 'dark' ? 'text-gray-300' : 'text-gray-700')}>Theme</span>
+                  <p className={clsx('text-xs mt-0.5', theme === 'dark' ? 'text-gray-500' : 'text-gray-500')}>
+                    {theme === 'dark' ? 'Dark mode is enabled' : 'Light mode is enabled'}
+                  </p>
+                </div>
+                <button
+                  onClick={toggleTheme}
+                  className={clsx(
+                    'flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium',
+                    theme === 'dark'
+                      ? 'bg-omnifocus-bg text-gray-300 hover:text-white'
+                      : 'bg-omnifocus-purple text-white'
+                  )}
+                >
+                  {theme === 'dark' ? (
+                    <>
+                      <Sun size={16} />
+                      <span>Light</span>
+                    </>
+                  ) : (
+                    <>
+                      <Moon size={16} />
+                      <span>Dark</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </section>
+
           {/* Keyboard Shortcuts */}
           <section>
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-white mb-3">
+            <h3 className={clsx(
+              'flex items-center gap-2 text-sm font-semibold mb-3',
+              theme === 'dark' ? 'text-white' : 'text-gray-900'
+            )}>
               <Keyboard size={16} />
               Keyboard Shortcuts
             </h3>
             <div className="space-y-2 text-sm">
-              <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-omnifocus-surface">
-                <span className="text-gray-300">New action</span>
-                <kbd className="px-2 py-1 bg-omnifocus-bg rounded text-gray-400">N</kbd>
-              </div>
-              <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-omnifocus-surface">
-                <span className="text-gray-300">Search</span>
-                <kbd className="px-2 py-1 bg-omnifocus-bg rounded text-gray-400">⌘K</kbd>
-              </div>
-              <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-omnifocus-surface">
-                <span className="text-gray-300">Complete selected</span>
-                <kbd className="px-2 py-1 bg-omnifocus-bg rounded text-gray-400">Space</kbd>
-              </div>
-              <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-omnifocus-surface">
-                <span className="text-gray-300">Flag/unflag</span>
-                <kbd className="px-2 py-1 bg-omnifocus-bg rounded text-gray-400">F</kbd>
-              </div>
-              <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-omnifocus-surface">
-                <span className="text-gray-300">Navigate up/down</span>
-                <div className="flex gap-1">
-                  <kbd className="px-2 py-1 bg-omnifocus-bg rounded text-gray-400">J</kbd>
-                  <kbd className="px-2 py-1 bg-omnifocus-bg rounded text-gray-400">K</kbd>
+              {[
+                { label: 'New action', keys: ['N'] },
+                { label: 'Search', keys: ['⌘K'] },
+                { label: 'Complete selected', keys: ['Space'] },
+                { label: 'Flag/unflag', keys: ['F'] },
+                { label: 'Navigate up/down', keys: ['J', 'K'] },
+                { label: 'Indent/outdent', keys: ['Tab', '⇧Tab'] },
+                { label: 'Close modal', keys: ['Esc'] },
+              ].map(({ label, keys }) => (
+                <div
+                  key={label}
+                  className={clsx(
+                    'flex items-center justify-between py-2 px-3 rounded-lg',
+                    theme === 'dark' ? 'bg-omnifocus-surface' : 'bg-omnifocus-light-surface'
+                  )}
+                >
+                  <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>{label}</span>
+                  <div className="flex gap-1">
+                    {keys.map(key => (
+                      <kbd
+                        key={key}
+                        className={clsx(
+                          'px-2 py-1 rounded',
+                          theme === 'dark' ? 'bg-omnifocus-bg text-gray-400' : 'bg-white text-gray-500 border border-gray-200'
+                        )}
+                      >
+                        {key}
+                      </kbd>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-omnifocus-surface">
-                <span className="text-gray-300">Indent/outdent</span>
-                <div className="flex gap-1">
-                  <kbd className="px-2 py-1 bg-omnifocus-bg rounded text-gray-400">Tab</kbd>
-                  <kbd className="px-2 py-1 bg-omnifocus-bg rounded text-gray-400">⇧Tab</kbd>
-                </div>
-              </div>
-              <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-omnifocus-surface">
-                <span className="text-gray-300">Close modal</span>
-                <kbd className="px-2 py-1 bg-omnifocus-bg rounded text-gray-400">Esc</kbd>
-              </div>
+              ))}
             </div>
           </section>
 
           {/* Data Management */}
           <section>
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-white mb-3">
+            <h3 className={clsx(
+              'flex items-center gap-2 text-sm font-semibold mb-3',
+              theme === 'dark' ? 'text-white' : 'text-gray-900'
+            )}>
               <Trash2 size={16} />
               Data Management
             </h3>
             <div className="space-y-3">
-              <div className="p-3 rounded-lg bg-omnifocus-surface">
-                <label className="text-sm text-gray-300 block mb-2">
+              <div className={clsx(
+                'p-3 rounded-lg',
+                theme === 'dark' ? 'bg-omnifocus-surface' : 'bg-omnifocus-light-surface'
+              )}>
+                <label className={clsx('text-sm block mb-2', theme === 'dark' ? 'text-gray-300' : 'text-gray-700')}>
                   Clean up completed actions older than:
                 </label>
                 <div className="flex items-center gap-3">
                   <select
                     value={cleanupDays}
                     onChange={(e) => setCleanupDays(Number(e.target.value))}
-                    className="flex-1 px-3 py-2 rounded-lg bg-omnifocus-bg border border-omnifocus-border text-white text-sm"
+                    className={clsx(
+                      'flex-1 px-3 py-2 rounded-lg border text-sm',
+                      theme === 'dark'
+                        ? 'bg-omnifocus-bg border-omnifocus-border text-white'
+                        : 'bg-white border-gray-200 text-gray-900'
+                    )}
                   >
                     <option value={1}>1 day</option>
                     <option value={7}>7 days</option>
@@ -154,9 +222,12 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           </section>
 
           {/* About */}
-          <section className="pt-4 border-t border-omnifocus-border">
-            <div className="text-center text-sm text-gray-500">
-              <p className="font-semibold text-gray-400">OmniFocus Clone</p>
+          <section className={clsx(
+            'pt-4 border-t',
+            theme === 'dark' ? 'border-omnifocus-border' : 'border-omnifocus-light-border'
+          )}>
+            <div className={clsx('text-center text-sm', theme === 'dark' ? 'text-gray-500' : 'text-gray-500')}>
+              <p className={clsx('font-semibold', theme === 'dark' ? 'text-gray-400' : 'text-gray-600')}>OmniFocus Clone</p>
               <p className="mt-1">A GTD-focused task manager</p>
               <p className="mt-2 text-xs">Built with Next.js, NestJS, and Prisma</p>
             </div>

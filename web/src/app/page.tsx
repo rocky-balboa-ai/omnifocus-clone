@@ -18,6 +18,8 @@ import { PerspectiveEditor } from '@/components/PerspectiveEditor';
 import { SettingsPanel } from '@/components/SettingsPanel';
 import { useAppStore } from '@/stores/app.store';
 import { useKeyboardShortcuts } from '@/lib/useKeyboardShortcuts';
+import { useThemeInit } from '@/lib/useThemeInit';
+import clsx from 'clsx';
 
 export default function Home() {
   const {
@@ -39,7 +41,11 @@ export default function Home() {
     closePerspectiveEditor,
     isSettingsOpen,
     setSettingsOpen,
+    theme,
   } = useAppStore();
+
+  // Initialize theme from localStorage/system preference
+  useThemeInit();
 
   // Enable keyboard shortcuts
   useKeyboardShortcuts();
@@ -69,7 +75,10 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen bg-omnifocus-bg">
+    <div className={clsx(
+      'flex h-screen',
+      theme === 'dark' ? 'bg-omnifocus-bg' : 'bg-omnifocus-light-bg'
+    )}>
       {/* Desktop sidebar - hidden on mobile */}
       <Sidebar />
 

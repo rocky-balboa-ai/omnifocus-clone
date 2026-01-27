@@ -95,6 +95,7 @@ interface AppState {
   showCompleted: boolean;
   isLoading: boolean;
   error: string | null;
+  theme: 'light' | 'dark';
 
   // Actions
   setCurrentPerspective: (id: string) => void;
@@ -113,6 +114,8 @@ interface AppState {
   openPerspectiveEditor: (id?: string | null) => void;
   closePerspectiveEditor: () => void;
   setSettingsOpen: (open: boolean) => void;
+  setTheme: (theme: 'light' | 'dark') => void;
+  toggleTheme: () => void;
 
   // API Actions
   fetchPerspectives: () => Promise<void>;
@@ -156,6 +159,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   showCompleted: false,
   isLoading: false,
   error: null,
+  theme: 'dark',
 
   // UI Actions
   setCurrentPerspective: (id) => set({ currentPerspective: id }),
@@ -212,6 +216,20 @@ export const useAppStore = create<AppState>((set, get) => ({
   openPerspectiveEditor: (id) => set({ isPerspectiveEditorOpen: true, editingPerspectiveId: id || null }),
   closePerspectiveEditor: () => set({ isPerspectiveEditorOpen: false, editingPerspectiveId: null }),
   setSettingsOpen: (open) => set({ isSettingsOpen: open }),
+
+  setTheme: (theme) => {
+    set({ theme });
+    // Update document class and localStorage
+    if (typeof window !== 'undefined') {
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+      localStorage.setItem('omnifocus-theme', theme);
+    }
+  },
+
+  toggleTheme: () => {
+    const { theme, setTheme } = get();
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  },
 
   // API Actions
   fetchPerspectives: async () => {
