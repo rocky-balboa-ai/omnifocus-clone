@@ -2,20 +2,24 @@
 
 import { useEffect, useCallback } from 'react';
 import { useAppStore } from '@/stores/app.store';
+import { startOfDay, addDays, nextMonday } from 'date-fns';
 
 export function useKeyboardShortcuts() {
   const {
     selectedActionId,
     setQuickEntryOpen,
     setSearchOpen,
+    setKeyboardHelpOpen,
     setSelectedAction,
     completeAction,
     updateAction,
+    deleteAction,
     indentAction,
     outdentAction,
     actions,
     isQuickEntryOpen,
     isSearchOpen,
+    isKeyboardHelpOpen,
     toggleFocusMode,
   } = useAppStore();
 
@@ -42,6 +46,10 @@ export function useKeyboardShortcuts() {
 
     // Escape: Close modals
     if (e.key === 'Escape') {
+      if (isKeyboardHelpOpen) {
+        setKeyboardHelpOpen(false);
+        return;
+      }
       if (isSearchOpen) {
         setSearchOpen(false);
         return;
@@ -56,11 +64,18 @@ export function useKeyboardShortcuts() {
       }
     }
 
+    // ?: Toggle keyboard shortcuts help (Shift+/)
+    if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+      e.preventDefault();
+      setKeyboardHelpOpen(!isKeyboardHelpOpen);
+      return;
+    }
+
     // Skip other shortcuts if in input field
     if (isInputField) return;
 
     // Skip if modals are open
-    if (isQuickEntryOpen || isSearchOpen) return;
+    if (isQuickEntryOpen || isSearchOpen || isKeyboardHelpOpen) return;
 
     switch (e.key.toLowerCase()) {
       case 'n':
@@ -102,6 +117,7 @@ export function useKeyboardShortcuts() {
         break;
 
       case 'j':
+      case 'arrowdown':
         // Move selection down
         e.preventDefault();
         if (actions.length > 0) {
@@ -112,12 +128,49 @@ export function useKeyboardShortcuts() {
         break;
 
       case 'k':
+      case 'arrowup':
         // Move selection up
         e.preventDefault();
         if (actions.length > 0) {
           const currentIndex = actions.findIndex(a => a.id === selectedActionId);
           const prevIndex = currentIndex > 0 ? currentIndex - 1 : actions.length - 1;
           setSelectedAction(actions[prevIndex].id);
+        }
+        break;
+
+      case 'd':
+        // Set due date to today
+        if (selectedActionId) {
+          e.preventDefault();
+          updateAction(selectedActionId, { dueDate: startOfDay(new Date()).toISOString() });
+        }
+        break;
+
+      case 't':
+        // Set due date to tomorrow
+        if (selectedActionId) {
+          e.preventDefault();
+          updateAction(selectedActionId, { dueDate: addDays(startOfDay(new Date()), 1).toISOString() });
+        }
+        break;
+
+      case 'w':
+        // Set due date to next week (Monday)
+        if (selectedActionId) {
+          e.preventDefault();
+          updateAction(selectedActionId, { dueDate: nextMonday(startOfDay(new Date())).toISOString() });
+        }
+        break;
+
+      case 'backspace':
+      case 'delete':
+        // Delete selected action (with confirmation)
+        if (selectedActionId && !e.metaKey && !e.ctrlKey) {
+          e.preventDefault();
+          if (confirm('Delete this action?')) {
+            deleteAction(selectedActionId);
+            setSelectedAction(null);
+          }
         }
         break;
 
@@ -137,14 +190,17 @@ export function useKeyboardShortcuts() {
     selectedActionId,
     setQuickEntryOpen,
     setSearchOpen,
+    setKeyboardHelpOpen,
     setSelectedAction,
     completeAction,
     updateAction,
+    deleteAction,
     indentAction,
     outdentAction,
     actions,
     isQuickEntryOpen,
     isSearchOpen,
+    isKeyboardHelpOpen,
     toggleFocusMode,
   ]);
 

@@ -19,6 +19,7 @@ import { ProjectDetailPanel } from '@/components/ProjectDetailPanel';
 import { PerspectiveEditor } from '@/components/PerspectiveEditor';
 import { SettingsPanel } from '@/components/SettingsPanel';
 import { UndoToast } from '@/components/UndoToast';
+import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 import { useAppStore } from '@/stores/app.store';
 import { useKeyboardShortcuts } from '@/lib/useKeyboardShortcuts';
 import { useThemeInit } from '@/lib/useThemeInit';
@@ -44,6 +45,8 @@ export default function Home() {
     closePerspectiveEditor,
     isSettingsOpen,
     setSettingsOpen,
+    isKeyboardHelpOpen,
+    setKeyboardHelpOpen,
     theme,
     isFocusMode,
   } = useAppStore();
@@ -152,6 +155,12 @@ export default function Home() {
 
       {/* Undo Toast */}
       <UndoToast />
+
+      {/* Keyboard Shortcuts Help */}
+      <KeyboardShortcutsHelp
+        isOpen={isKeyboardHelpOpen}
+        onClose={() => setKeyboardHelpOpen(false)}
+      />
     </div>
   );
 }
