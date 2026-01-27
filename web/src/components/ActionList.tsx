@@ -19,7 +19,10 @@ import {
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { useAppStore, Action } from '@/stores/app.store';
 import { SortableActionItem } from './SortableActionItem';
-import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff, Inbox, CheckCircle2, Sparkles, CornerDownLeft, Maximize2, Minimize2 } from 'lucide-react';
+import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff, Inbox, CheckCircle2, Sparkles, CornerDownLeft, Maximize2, Minimize2, AlertTriangle, Calendar, Filter } from 'lucide-react';
+import { isBefore, isToday, startOfDay, isFuture } from 'date-fns';
+
+type QuickFilter = 'all' | 'overdue' | 'today' | 'flagged' | 'upcoming';
 import clsx from 'clsx';
 
 interface ActionWithDepth {
@@ -64,6 +67,7 @@ export function ActionList() {
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [quickAddText, setQuickAddText] = useState('');
   const [isQuickAdding, setIsQuickAdding] = useState(false);
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
 
   const selectionCount = selectedActionIds.size;
 
@@ -76,6 +80,7 @@ export function ActionList() {
   };
 
   const now = new Date();
+  const today = startOfDay(new Date());
 
   // Helper to check if action is deferred (defer date is in the future)
   const isDeferred = (action: Action): boolean => {
@@ -85,13 +90,44 @@ export function ActionList() {
 
   // Filter out completed actions unless showCompleted is true
   // Filter out deferred actions unless showDeferred is true
+  // Apply quick filter
   const filteredActions = actions.filter((a) => {
     // Filter completed
     if (a.status === 'completed' && !showCompleted) return false;
     // Filter deferred (only for active actions)
     if (a.status === 'active' && isDeferred(a) && !showDeferred) return false;
+
+    // Apply quick filter
+    if (quickFilter !== 'all' && a.status === 'active') {
+      switch (quickFilter) {
+        case 'overdue':
+          if (!a.dueDate || !isBefore(new Date(a.dueDate), today)) return false;
+          break;
+        case 'today':
+          if (!a.dueDate || !isToday(new Date(a.dueDate))) return false;
+          break;
+        case 'flagged':
+          if (!a.flagged) return false;
+          break;
+        case 'upcoming':
+          if (!a.dueDate || isBefore(new Date(a.dueDate), today)) return false;
+          break;
+      }
+    }
+
     return true;
   });
+
+  // Calculate filter counts
+  const filterCounts = useMemo(() => {
+    const activeActions = actions.filter(a => a.status === 'active' && (!isDeferred(a) || showDeferred));
+    return {
+      overdue: activeActions.filter(a => a.dueDate && isBefore(new Date(a.dueDate), today)).length,
+      today: activeActions.filter(a => a.dueDate && isToday(new Date(a.dueDate))).length,
+      flagged: activeActions.filter(a => a.flagged).length,
+      upcoming: activeActions.filter(a => a.dueDate && !isBefore(new Date(a.dueDate), today)).length,
+    };
+  }, [actions, showDeferred, today]);
 
   const completedCount = actions.filter((a) => a.status === 'completed').length;
   const deferredCount = actions.filter((a) => a.status === 'active' && isDeferred(a)).length;
@@ -357,6 +393,93 @@ export function ActionList() {
           <span>New Action</span>
         </button>
       </header>
+
+      {/* Quick Filter Bar */}
+      {(filterCounts.overdue > 0 || filterCounts.today > 0 || filterCounts.flagged > 0) && (
+        <div className={clsx(
+          'px-4 md:px-6 py-2 border-b flex items-center gap-2 overflow-x-auto',
+          theme === 'dark' ? 'border-omnifocus-border' : 'border-gray-200'
+        )}>
+          <Filter size={14} className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} />
+          <button
+            onClick={() => setQuickFilter('all')}
+            className={clsx(
+              'px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap',
+              quickFilter === 'all'
+                ? 'bg-omnifocus-purple text-white'
+                : theme === 'dark'
+                  ? 'bg-omnifocus-surface text-gray-400 hover:text-white'
+                  : 'bg-gray-100 text-gray-500 hover:text-gray-900'
+            )}
+          >
+            All
+          </button>
+          {filterCounts.overdue > 0 && (
+            <button
+              onClick={() => setQuickFilter(quickFilter === 'overdue' ? 'all' : 'overdue')}
+              className={clsx(
+                'px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1',
+                quickFilter === 'overdue'
+                  ? 'bg-red-500 text-white'
+                  : theme === 'dark'
+                    ? 'bg-omnifocus-surface text-red-400 hover:bg-red-500/20'
+                    : 'bg-red-50 text-red-600 hover:bg-red-100'
+              )}
+            >
+              <AlertTriangle size={12} />
+              Overdue ({filterCounts.overdue})
+            </button>
+          )}
+          {filterCounts.today > 0 && (
+            <button
+              onClick={() => setQuickFilter(quickFilter === 'today' ? 'all' : 'today')}
+              className={clsx(
+                'px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1',
+                quickFilter === 'today'
+                  ? 'bg-omnifocus-orange text-white'
+                  : theme === 'dark'
+                    ? 'bg-omnifocus-surface text-omnifocus-orange hover:bg-omnifocus-orange/20'
+                    : 'bg-orange-50 text-orange-600 hover:bg-orange-100'
+              )}
+            >
+              <Calendar size={12} />
+              Today ({filterCounts.today})
+            </button>
+          )}
+          {filterCounts.flagged > 0 && (
+            <button
+              onClick={() => setQuickFilter(quickFilter === 'flagged' ? 'all' : 'flagged')}
+              className={clsx(
+                'px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1',
+                quickFilter === 'flagged'
+                  ? 'bg-omnifocus-orange text-white'
+                  : theme === 'dark'
+                    ? 'bg-omnifocus-surface text-omnifocus-orange hover:bg-omnifocus-orange/20'
+                    : 'bg-orange-50 text-orange-600 hover:bg-orange-100'
+              )}
+            >
+              <Flag size={12} />
+              Flagged ({filterCounts.flagged})
+            </button>
+          )}
+          {filterCounts.upcoming > 0 && (
+            <button
+              onClick={() => setQuickFilter(quickFilter === 'upcoming' ? 'all' : 'upcoming')}
+              className={clsx(
+                'px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap flex items-center gap-1',
+                quickFilter === 'upcoming'
+                  ? 'bg-blue-500 text-white'
+                  : theme === 'dark'
+                    ? 'bg-omnifocus-surface text-blue-400 hover:bg-blue-500/20'
+                    : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+              )}
+            >
+              <Calendar size={12} />
+              Upcoming ({filterCounts.upcoming})
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Bulk action bar */}
       {isSelectMode && selectionCount > 0 && (
