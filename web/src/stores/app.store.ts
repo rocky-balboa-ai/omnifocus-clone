@@ -103,6 +103,10 @@ interface AppState {
   perspectives: Perspective[];
   templates: ActionTemplate[];
 
+  // Auth State
+  isAuthenticated: boolean;
+  currentUser: { id: string; username: string } | null;
+
   // UI State
   currentPerspective: string;
   selectedActionId: string | null;
@@ -130,6 +134,11 @@ interface AppState {
   isFocusMode: boolean;
 
   // Actions
+  // Auth Actions
+  setAuthenticated: (isAuthenticated: boolean, user?: { id: string; username: string } | null) => void;
+  logout: () => void;
+  checkAuth: () => void;
+
   setCurrentPerspective: (id: string) => void;
   setSelectedAction: (id: string | null) => void;
   setSelectedProject: (id: string | null) => void;
@@ -192,6 +201,9 @@ interface AppState {
 
 export const useAppStore = create<AppState>((set, get) => ({
   // Initial state
+  isAuthenticated: false,
+  currentUser: null,
+
   actions: [],
   projects: [],
   tags: [],
@@ -224,6 +236,19 @@ export const useAppStore = create<AppState>((set, get) => ({
   theme: 'dark',
   themeMode: 'auto',
   isFocusMode: false,
+
+  // Auth Actions
+  setAuthenticated: (isAuthenticated, user = null) => set({ isAuthenticated, currentUser: user }),
+  logout: () => {
+    localStorage.removeItem('authToken');
+    set({ isAuthenticated: false, currentUser: null });
+  },
+  checkAuth: () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+    if (token) {
+      set({ isAuthenticated: true });
+    }
+  },
 
   // UI Actions
   setCurrentPerspective: (id) => set({ currentPerspective: id }),

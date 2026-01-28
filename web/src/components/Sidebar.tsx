@@ -13,6 +13,7 @@ import {
   Settings,
   Sun,
   BarChart3,
+  LogOut,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { startOfDay, isBefore, isToday } from 'date-fns';
@@ -59,7 +60,7 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 export function Sidebar() {
-  const { perspectives, currentPerspective, setCurrentPerspective, setQuickEntryOpen, openPerspectiveEditor, setSettingsOpen, setWeeklyReviewOpen, theme, actions } = useAppStore();
+  const { perspectives, currentPerspective, setCurrentPerspective, setQuickEntryOpen, openPerspectiveEditor, setSettingsOpen, setWeeklyReviewOpen, theme, actions, logout } = useAppStore();
 
   const builtInPerspectives = perspectives.filter((p) => p.isBuiltIn);
   const customPerspectives = perspectives.filter((p) => !p.isBuiltIn);
@@ -256,6 +257,16 @@ export function Sidebar() {
         >
           <Settings size={18} />
           <span className="text-sm">Settings</span>
+        </button>
+        <button
+          onClick={logout}
+          className={clsx(
+            'w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors',
+            'text-red-400 hover:bg-red-500/10'
+          )}
+        >
+          <LogOut size={18} />
+          <span className="text-sm">Sign out</span>
         </button>
       </div>
     </aside>

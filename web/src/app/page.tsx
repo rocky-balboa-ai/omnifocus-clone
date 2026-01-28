@@ -36,6 +36,7 @@ import { CommandPalette } from '@/components/CommandPalette';
 import { ToastProvider } from '@/components/Toast';
 import { ConfettiProvider } from '@/components/Confetti';
 import { KeyboardShortcutHints, useKeyboardShortcutsModal } from '@/components/KeyboardShortcutHints';
+import { LoginForm } from '@/components/LoginForm';
 import { useAppStore } from '@/stores/app.store';
 import { useKeyboardShortcuts } from '@/lib/useKeyboardShortcuts';
 import { useThemeInit } from '@/lib/useThemeInit';
@@ -44,6 +45,9 @@ import clsx from 'clsx';
 
 export default function Home() {
   const {
+    isAuthenticated,
+    setAuthenticated,
+    checkAuth,
     currentPerspective,
     fetchPerspectives,
     fetchActions,
@@ -78,6 +82,11 @@ export default function Home() {
     isFocusMode,
   } = useAppStore();
 
+  // Check auth status on mount
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
   // Initialize theme from localStorage/system preference
   useThemeInit();
 
@@ -88,10 +97,12 @@ export default function Home() {
   useNotifications();
 
   useEffect(() => {
-    fetchPerspectives();
-    fetchProjects();
-    fetchTags();
-  }, [fetchPerspectives, fetchProjects, fetchTags]);
+    if (isAuthenticated) {
+      fetchPerspectives();
+      fetchProjects();
+      fetchTags();
+    }
+  }, [isAuthenticated, fetchPerspectives, fetchProjects, fetchTags]);
 
   useEffect(() => {
     if (currentPerspective) {
@@ -113,6 +124,15 @@ export default function Home() {
 
   // Keyboard shortcuts modal
   const keyboardShortcutsModal = useKeyboardShortcutsModal();
+
+  const handleLoginSuccess = () => {
+    setAuthenticated(true);
+  };
+
+  // Show login form if not authenticated
+  if (!isAuthenticated) {
+    return <LoginForm onSuccess={handleLoginSuccess} />;
+  }
 
   return (
     <ToastProvider>
