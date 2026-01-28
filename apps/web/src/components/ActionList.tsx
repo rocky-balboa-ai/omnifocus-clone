@@ -29,6 +29,7 @@ type QuickFilter = 'all' | 'overdue' | 'today' | 'flagged' | 'upcoming';
 type SortOption = 'manual' | 'due-date' | 'name' | 'flagged' | 'created';
 type TimeFilter = 'all' | '5' | '15' | '30' | '60';
 import clsx from 'clsx';
+import { ExportMenu } from './ExportMenu';
 
 interface ActionWithDepth {
   action: Action;
@@ -655,6 +656,9 @@ export function ActionList() {
             theme === 'dark' ? 'bg-omnifocus-bg' : 'bg-white border border-gray-200'
           )}>⌘K</kbd>
         </button>
+
+        {/* Export menu */}
+        <ExportMenu />
 
         {/* Desktop only: Add Action button */}
         <button
