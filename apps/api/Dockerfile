@@ -10,7 +10,7 @@ RUN apk add --no-cache openssl openssl-dev libc6-compat
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Copy prisma schema and generate client
 COPY prisma ./prisma/
