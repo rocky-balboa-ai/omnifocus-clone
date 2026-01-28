@@ -19,6 +19,7 @@ import { ProjectDetailPanel } from '@/components/ProjectDetailPanel';
 import { PerspectiveEditor } from '@/components/PerspectiveEditor';
 import { SettingsPanel } from '@/components/SettingsPanel';
 import { UndoToast } from '@/components/UndoToast';
+import { NotificationService, NotificationPrompt } from '@/components/NotificationService';
 import { KeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp';
 import { FocusTimer } from '@/components/FocusTimer';
 import { WeeklyReviewFlow } from '@/components/WeeklyReviewFlow';
@@ -237,6 +238,10 @@ export default function Home() {
 
       {/* Undo Toast */}
       <UndoToast />
+
+      {/* Notification Service (background) */}
+      <NotificationService />
+      <NotificationPrompt />
 
       {/* Keyboard Shortcuts Help */}
       <KeyboardShortcutsHelp
