@@ -2,6 +2,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl openssl-dev libc6-compat
+
 # Install dependencies
 COPY package*.json ./
 RUN npm install
@@ -13,6 +16,10 @@ RUN npx prisma generate
 # Copy source code
 COPY . .
 
+# Build NestJS app
+RUN npm run build
+
 EXPOSE 3000
 
-CMD ["npm", "run", "start:dev"]
+# Run production build
+CMD ["npm", "run", "start:prod"]
