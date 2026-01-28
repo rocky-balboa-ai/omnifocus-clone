@@ -54,6 +54,7 @@ export interface Project {
   reviewInterval?: string;
   nextReviewAt?: string;
   folderId?: string;
+  updatedAt: string;
   actions?: Action[];
   _count?: { actions: number; completedActions?: number };
 }

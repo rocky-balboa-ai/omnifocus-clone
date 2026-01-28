@@ -4,6 +4,7 @@ import { useAppStore, Project } from '@/stores/app.store';
 import { FolderKanban, Flag, Calendar, ChevronRight, Plus, Layers, List, Eye, EyeOff, Search, X, CornerDownLeft, FolderPlus, Focus } from 'lucide-react';
 import { ProjectTemplates } from './ProjectTemplates';
 import { FolderTree } from './FolderTree';
+import { StalledIndicator } from './StalledIndicator';
 import clsx from 'clsx';
 import { format, isPast, isToday } from 'date-fns';
 import { useMemo, useState } from 'react';
@@ -56,6 +57,7 @@ function ProjectItem({ project }: ProjectItemProps) {
             {project.name}
           </span>
           {project.flagged && <Flag size={14} className="text-omnifocus-orange" />}
+          <StalledIndicator project={project} />
         </div>
 
         <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
