@@ -22,6 +22,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { addDays, startOfDay } from 'date-fns';
+import { toLocalDateString } from '@/lib/dateUtils';
 import clsx from 'clsx';
 
 interface ActionContextMenuProps {
@@ -104,13 +105,13 @@ export function ActionContextMenu({ action, position, onClose }: ActionContextMe
   };
 
   const handleSetDueToday = async () => {
-    await updateAction(action.id, { dueDate: today.toISOString() });
+    await updateAction(action.id, { dueDate: toLocalDateString(today) });
     fetchActions(currentPerspective);
     onClose();
   };
 
   const handleSetDueTomorrow = async () => {
-    await updateAction(action.id, { dueDate: tomorrow.toISOString() });
+    await updateAction(action.id, { dueDate: toLocalDateString(tomorrow) });
     fetchActions(currentPerspective);
     onClose();
   };

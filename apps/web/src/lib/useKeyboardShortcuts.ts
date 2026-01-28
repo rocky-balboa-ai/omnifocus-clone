@@ -3,6 +3,7 @@
 import { useEffect, useCallback } from 'react';
 import { useAppStore } from '@/stores/app.store';
 import { startOfDay, addDays, nextMonday } from 'date-fns';
+import { toLocalDateString } from './dateUtils';
 
 export function useKeyboardShortcuts() {
   const {
@@ -198,7 +199,7 @@ export function useKeyboardShortcuts() {
         // Set due date to today
         if (selectedActionId) {
           e.preventDefault();
-          updateAction(selectedActionId, { dueDate: startOfDay(new Date()).toISOString() });
+          updateAction(selectedActionId, { dueDate: toLocalDateString(startOfDay(new Date())) });
         }
         break;
 
@@ -206,7 +207,7 @@ export function useKeyboardShortcuts() {
         // Set due date to tomorrow
         if (selectedActionId) {
           e.preventDefault();
-          updateAction(selectedActionId, { dueDate: addDays(startOfDay(new Date()), 1).toISOString() });
+          updateAction(selectedActionId, { dueDate: toLocalDateString(addDays(startOfDay(new Date()), 1)) });
         }
         break;
 
@@ -214,7 +215,7 @@ export function useKeyboardShortcuts() {
         // Set due date to next week (Monday)
         if (selectedActionId) {
           e.preventDefault();
-          updateAction(selectedActionId, { dueDate: nextMonday(startOfDay(new Date())).toISOString() });
+          updateAction(selectedActionId, { dueDate: toLocalDateString(nextMonday(startOfDay(new Date()))) });
         }
         break;
 

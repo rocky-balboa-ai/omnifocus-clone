@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { format, isPast, isToday, isFuture, addDays, startOfDay, nextMonday } from 'date-fns';
+import { toLocalDateString } from '@/lib/dateUtils';
 
 interface SortableActionItemProps {
   action: Action;
@@ -122,7 +123,7 @@ export function SortableActionItem({
 
   const handleQuickDate = async (e: React.MouseEvent, date: Date | null) => {
     e.stopPropagation();
-    await updateAction(action.id, { dueDate: date?.toISOString() || null } as any);
+    await updateAction(action.id, { dueDate: date ? toLocalDateString(date) : null } as any);
   };
 
   const handleToggleFlag = async (e: React.MouseEvent) => {
@@ -132,7 +133,7 @@ export function SortableActionItem({
 
   const handleQuickDefer = async (e: React.MouseEvent, date: Date | null) => {
     e.stopPropagation();
-    await updateAction(action.id, { deferDate: date?.toISOString() || null } as any);
+    await updateAction(action.id, { deferDate: date ? toLocalDateString(date) : null } as any);
   };
 
   const handleQuickEstimate = async (e: React.MouseEvent, minutes: number | null) => {

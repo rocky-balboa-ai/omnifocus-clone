@@ -1,4 +1,5 @@
 import { addDays, nextMonday, nextTuesday, nextWednesday, nextThursday, nextFriday, nextSaturday, nextSunday, startOfDay, addWeeks, addMonths, endOfWeek, endOfMonth, isMonday, isTuesday, isWednesday, isThursday, isFriday, isSaturday, isSunday } from 'date-fns';
+import { toLocalDateString } from './dateUtils';
 
 interface ParsedAction {
   title: string;
@@ -115,13 +116,13 @@ export function parseQuickAdd(input: string): ParsedAction {
   if (deferMatch) {
     const deferStr = deferMatch[1].toLowerCase().replace(/\s+/g, '');
     if (deferStr === 'today') {
-      result.deferDate = today.toISOString();
+      result.deferDate = toLocalDateString(today);
     } else if (deferStr === 'tomorrow') {
-      result.deferDate = addDays(today, 1).toISOString();
+      result.deferDate = toLocalDateString(addDays(today, 1));
     } else if (deferStr === 'nextweek') {
-      result.deferDate = nextMonday(today).toISOString();
+      result.deferDate = toLocalDateString(nextMonday(today));
     } else if (DAY_PARSERS[deferStr]) {
-      result.deferDate = parseRelativeDay(deferStr, today).toISOString();
+      result.deferDate = toLocalDateString(parseRelativeDay(deferStr, today));
     }
     text = text.replace(/(?:@)?defer\s+(?:today|tomorrow|next\s*week|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)/i, '').trim();
   }
@@ -131,24 +132,24 @@ export function parseQuickAdd(input: string): ParsedAction {
 
   // "today" at end
   if (/\s(?:!)?today$/i.test(text) || text.toLowerCase() === 'today') {
-    result.dueDate = today.toISOString();
+    result.dueDate = toLocalDateString(today);
     text = text.replace(/\s?(?:!)?today$/i, '').trim();
   }
   // "tomorrow" at end
   else if (/\s(?:!)?tomorrow$/i.test(text) || text.toLowerCase() === 'tomorrow') {
-    result.dueDate = addDays(today, 1).toISOString();
+    result.dueDate = toLocalDateString(addDays(today, 1));
     text = text.replace(/\s?(?:!)?tomorrow$/i, '').trim();
   }
   // "next week" at end
   else if (/\s(?:!)?next\s*week$/i.test(text)) {
-    result.dueDate = nextMonday(today).toISOString();
+    result.dueDate = toLocalDateString(nextMonday(today));
     text = text.replace(/\s(?:!)?next\s*week$/i, '').trim();
   }
   // "next monday/tuesday/etc" at end
   else if (new RegExp(`\\snext\\s+(${dayNames})$`, 'i').test(text)) {
     const match = text.match(new RegExp(`\\snext\\s+(${dayNames})$`, 'i'));
     if (match) {
-      result.dueDate = parseRelativeDay(match[1], today).toISOString();
+      result.dueDate = toLocalDateString(parseRelativeDay(match[1], today));
       text = text.replace(new RegExp(`\\snext\\s+(?:${dayNames})$`, 'i'), '').trim();
     }
   }
@@ -156,25 +157,25 @@ export function parseQuickAdd(input: string): ParsedAction {
   else if (new RegExp(`\\s(?:on\\s+)?(${dayNames})$`, 'i').test(text)) {
     const match = text.match(new RegExp(`\\s(?:on\\s+)?(${dayNames})$`, 'i'));
     if (match) {
-      result.dueDate = parseRelativeDay(match[1], today).toISOString();
+      result.dueDate = toLocalDateString(parseRelativeDay(match[1], today));
       text = text.replace(new RegExp(`\\s(?:on\\s+)?(?:${dayNames})$`, 'i'), '').trim();
     }
   }
   // "end of week" at end
   else if (/\s(?:end\s*of\s*week|eow)$/i.test(text)) {
-    result.dueDate = endOfWeek(today, { weekStartsOn: 1 }).toISOString();
+    result.dueDate = toLocalDateString(endOfWeek(today, { weekStartsOn: 1 }));
     text = text.replace(/\s(?:end\s*of\s*week|eow)$/i, '').trim();
   }
   // "end of month" at end
   else if (/\s(?:end\s*of\s*month|eom)$/i.test(text)) {
-    result.dueDate = endOfMonth(today).toISOString();
+    result.dueDate = toLocalDateString(endOfMonth(today));
     text = text.replace(/\s(?:end\s*of\s*month|eom)$/i, '').trim();
   }
   // "in X days"
   else if (/\sin\s+(\d+)\s*days?$/i.test(text)) {
     const match = text.match(/\sin\s+(\d+)\s*days?$/i);
     if (match) {
-      result.dueDate = addDays(today, parseInt(match[1])).toISOString();
+      result.dueDate = toLocalDateString(addDays(today, parseInt(match[1])));
       text = text.replace(/\sin\s+\d+\s*days?$/i, '').trim();
     }
   }
@@ -182,7 +183,7 @@ export function parseQuickAdd(input: string): ParsedAction {
   else if (/\sin\s+(\d+)\s*weeks?$/i.test(text)) {
     const match = text.match(/\sin\s+(\d+)\s*weeks?$/i);
     if (match) {
-      result.dueDate = addWeeks(today, parseInt(match[1])).toISOString();
+      result.dueDate = toLocalDateString(addWeeks(today, parseInt(match[1])));
       text = text.replace(/\sin\s+\d+\s*weeks?$/i, '').trim();
     }
   }
@@ -190,7 +191,7 @@ export function parseQuickAdd(input: string): ParsedAction {
   else if (/\sin\s+(\d+)\s*months?$/i.test(text)) {
     const match = text.match(/\sin\s+(\d+)\s*months?$/i);
     if (match) {
-      result.dueDate = addMonths(today, parseInt(match[1])).toISOString();
+      result.dueDate = toLocalDateString(addMonths(today, parseInt(match[1])));
       text = text.replace(/\sin\s+\d+\s*months?$/i, '').trim();
     }
   }

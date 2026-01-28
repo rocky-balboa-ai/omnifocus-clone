@@ -19,6 +19,7 @@ import {
   isBefore,
   isToday,
 } from 'date-fns';
+import { toLocalDateString } from '@/lib/dateUtils';
 import clsx from 'clsx';
 
 const PRESETS = [
@@ -66,7 +67,7 @@ export function DeferDatePicker({ value, onChange, className }: DeferDatePickerP
   }, [isOpen]);
 
   const handlePresetSelect = (date: Date) => {
-    onChange(date.toISOString());
+    onChange(toLocalDateString(date));
     setIsOpen(false);
   };
 
@@ -78,7 +79,7 @@ export function DeferDatePicker({ value, onChange, className }: DeferDatePickerP
   const handleCustomSubmit = () => {
     if (customDate) {
       const date = new Date(customDate);
-      onChange(startOfDay(date).toISOString());
+      onChange(toLocalDateString(startOfDay(date)));
       setCustomDate('');
       setShowCustom(false);
       setIsOpen(false);

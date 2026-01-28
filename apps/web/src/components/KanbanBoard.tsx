@@ -11,7 +11,8 @@ import {
   CheckCircle2,
   Circle,
 } from 'lucide-react';
-import { format, isToday, isPast } from 'date-fns';
+import { format, isToday, isPast, addDays, startOfDay } from 'date-fns';
+import { toLocalDateString } from '@/lib/dateUtils';
 import clsx from 'clsx';
 
 type KanbanColumn = {
@@ -109,7 +110,7 @@ export function KanbanBoard({
         break;
       case 'deferred':
         updates.status = 'active';
-        updates.deferDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        updates.deferDate = toLocalDateString(addDays(startOfDay(new Date()), 7));
         break;
       case 'in-progress':
         updates.status = 'active';

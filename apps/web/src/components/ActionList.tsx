@@ -23,6 +23,7 @@ import { useAppStore, Action } from '@/stores/app.store';
 import { SortableActionItem } from './SortableActionItem';
 import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff, Inbox, CheckCircle2, Sparkles, CornerDownLeft, Maximize2, Minimize2, AlertTriangle, Calendar, Filter, Sun, CalendarDays, CalendarClock, ArrowUpDown, FolderKanban, Timer, FileText } from 'lucide-react';
 import { isBefore, isToday, startOfDay, isFuture, addDays, nextMonday } from 'date-fns';
+import { toLocalDateString } from '@/lib/dateUtils';
 import { parseQuickAdd } from '@/lib/parseQuickAdd';
 
 type QuickFilter = 'all' | 'overdue' | 'today' | 'flagged' | 'upcoming';
@@ -849,7 +850,7 @@ export function ActionList() {
 
             {/* Due date buttons */}
             <button
-              onClick={() => bulkSetDueDate(startOfDay(new Date()).toISOString())}
+              onClick={() => bulkSetDueDate(toLocalDateString(startOfDay(new Date())))}
               className={clsx(
                 'p-2 rounded-lg transition-colors',
                 theme === 'dark'
@@ -861,7 +862,7 @@ export function ActionList() {
               <Sun size={18} />
             </button>
             <button
-              onClick={() => bulkSetDueDate(addDays(startOfDay(new Date()), 1).toISOString())}
+              onClick={() => bulkSetDueDate(toLocalDateString(addDays(startOfDay(new Date()), 1)))}
               className={clsx(
                 'p-2 rounded-lg transition-colors',
                 theme === 'dark'
@@ -873,7 +874,7 @@ export function ActionList() {
               <CalendarDays size={18} />
             </button>
             <button
-              onClick={() => bulkSetDueDate(nextMonday(startOfDay(new Date())).toISOString())}
+              onClick={() => bulkSetDueDate(toLocalDateString(nextMonday(startOfDay(new Date()))))}
               className={clsx(
                 'p-2 rounded-lg transition-colors',
                 theme === 'dark'

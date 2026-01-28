@@ -20,6 +20,8 @@ import {
   Users,
 } from 'lucide-react';
 import clsx from 'clsx';
+import { toLocalDateString } from '@/lib/dateUtils';
+import { addDays, startOfDay } from 'date-fns';
 
 interface ProjectTemplateAction {
   title: string;
@@ -177,17 +179,17 @@ export function ProjectTemplates({ isOpen, onClose, onCreateProject }: ProjectTe
       const today = new Date();
       for (const actionTemplate of selectedTemplate.actions) {
         const dueDate = actionTemplate.dueDays
-          ? new Date(today.getTime() + actionTemplate.dueDays * 24 * 60 * 60 * 1000)
+          ? toLocalDateString(addDays(startOfDay(today), actionTemplate.dueDays))
           : undefined;
         const deferDate = actionTemplate.deferDays
-          ? new Date(today.getTime() + actionTemplate.deferDays * 24 * 60 * 60 * 1000)
+          ? toLocalDateString(addDays(startOfDay(today), actionTemplate.deferDays))
           : undefined;
 
         await createAction({
           title: actionTemplate.title,
           projectId: project.id,
-          dueDate: dueDate?.toISOString(),
-          deferDate: deferDate?.toISOString(),
+          dueDate,
+          deferDate,
         });
       }
 

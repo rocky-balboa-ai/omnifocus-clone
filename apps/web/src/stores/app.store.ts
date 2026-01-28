@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { api } from '@/lib/api';
+import { toLocalDateString } from '@/lib/dateUtils';
 
 export interface Attachment {
   id: string;
@@ -713,13 +714,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (template.deferDays) {
       const deferDate = new Date(now);
       deferDate.setDate(deferDate.getDate() + template.deferDays);
-      actionData.deferDate = deferDate.toISOString();
+      actionData.deferDate = toLocalDateString(deferDate);
     }
 
     if (template.dueDays) {
       const dueDate = new Date(now);
       dueDate.setDate(dueDate.getDate() + template.dueDays);
-      actionData.dueDate = dueDate.toISOString();
+      actionData.dueDate = toLocalDateString(dueDate);
     }
 
     return createAction(actionData);

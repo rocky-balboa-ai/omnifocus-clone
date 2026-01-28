@@ -15,6 +15,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { addDays, startOfDay, endOfWeek, nextMonday } from 'date-fns';
+import { toLocalDateString } from '@/lib/dateUtils';
 import clsx from 'clsx';
 
 export function BatchActionsBar() {
@@ -58,7 +59,7 @@ export function BatchActionsBar() {
   };
 
   const handleSetDueDate = async (date: Date | null) => {
-    await bulkSetDueDate(date ? date.toISOString() : null);
+    await bulkSetDueDate(date ? toLocalDateString(date) : null);
     setShowDatePicker(false);
   };
 

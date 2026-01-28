@@ -27,6 +27,7 @@ import {
   nextMonday,
   nextFriday,
 } from 'date-fns';
+import { toLocalDateString } from '@/lib/dateUtils';
 import clsx from 'clsx';
 
 const QUICK_OPTIONS = [
@@ -79,7 +80,7 @@ export function QuickDatePicker({
   }, [isOpen]);
 
   const handleSelect = (date: Date) => {
-    onChange(date.toISOString());
+    onChange(toLocalDateString(date));
     setIsOpen(false);
     setShowCalendar(false);
   };
