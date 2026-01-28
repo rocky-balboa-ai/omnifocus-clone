@@ -38,6 +38,7 @@ export interface Action {
   children?: Action[];
   attachments?: Attachment[];
   recurrence?: RecurrenceRule;
+  blockedBy?: string[];  // IDs of actions that must complete before this one
 }
 
 export interface Project {

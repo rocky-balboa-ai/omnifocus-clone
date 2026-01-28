@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -147,7 +148,24 @@ model Action {
   tags        ActionTag[]
   attachments Attachment[]
 
+  // Task dependencies - blocking relationships
+  blockedByActions ActionDependency[] @relation("BlockedAction")
+  blocksActions    ActionDependency[] @relation("BlockingAction")
+
   @@map("actions")
+}
+
+// Junction table for action dependencies (blocking)
+model ActionDependency {
+  id             String @id @default(uuid())
+  blockedId      String // The action that is blocked
+  blockingId     String // The action that must complete first
+
+  blocked  Action @relation("BlockedAction", fields: [blockedId], references: [id], onDelete: Cascade)
+  blocking Action @relation("BlockingAction", fields: [blockingId], references: [id], onDelete: Cascade)
+
+  @@unique([blockedId, blockingId])
+  @@map("action_dependencies")
 }
 
 model Attachment {

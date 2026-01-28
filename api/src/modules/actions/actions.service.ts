@@ -28,10 +28,14 @@ export class ActionsService {
         project: true,
         parent: true,
         children: true,
+        blockedByActions: { select: { blockingId: true } },
       },
     });
 
-    return action;
+    return {
+      ...action,
+      blockedBy: action.blockedByActions.map((d) => d.blockingId),
+    };
   }
 
   async findAll(query: ActionQueryDto) {
@@ -105,6 +109,7 @@ export class ActionsService {
           parent: true,
           children: true,
           attachments: true,
+          blockedByActions: { select: { blockingId: true } },
         },
         orderBy: [{ position: 'asc' }, { createdAt: 'asc' }],
         take,
@@ -113,10 +118,16 @@ export class ActionsService {
       this.prisma.action.count({ where }),
     ]);
 
+    // Transform blockedByActions to blockedBy array
+    const transformedActions = actions.map((action) => ({
+      ...action,
+      blockedBy: action.blockedByActions.map((d) => d.blockingId),
+    }));
+
     // If pagination is used, return paginated response
     if (take !== undefined || skip !== undefined) {
       return {
-        data: actions,
+        data: transformedActions,
         meta: {
           total,
           limit: take || total,
@@ -127,7 +138,7 @@ export class ActionsService {
     }
 
     // Otherwise return plain array for backwards compatibility
-    return actions;
+    return transformedActions;
   }
 
   async findOne(id: string) {
@@ -143,6 +154,7 @@ export class ActionsService {
           },
         },
         attachments: true,
+        blockedByActions: { select: { blockingId: true } },
       },
     });
 
@@ -150,11 +162,14 @@ export class ActionsService {
       throw new NotFoundException(`Action ${id} not found`);
     }
 
-    return action;
+    return {
+      ...action,
+      blockedBy: action.blockedByActions.map((d) => d.blockingId),
+    };
   }
 
   async update(id: string, dto: UpdateActionDto) {
-    const { tagIds, ...data } = dto;
+    const { tagIds, blockedBy, ...data } = dto;
 
     // Handle tag updates
     if (tagIds !== undefined) {
@@ -166,7 +181,19 @@ export class ActionsService {
       }
     }
 
-    return this.prisma.action.update({
+    // Handle blockedBy updates
+    if (blockedBy !== undefined) {
+      // Delete existing dependencies
+      await this.prisma.actionDependency.deleteMany({ where: { blockedId: id } });
+      // Create new dependencies
+      if (blockedBy.length > 0) {
+        await this.prisma.actionDependency.createMany({
+          data: blockedBy.map((blockingId) => ({ blockedId: id, blockingId })),
+        });
+      }
+    }
+
+    const action = await this.prisma.action.update({
       where: { id },
       data,
       include: {
@@ -174,8 +201,15 @@ export class ActionsService {
         project: true,
         parent: true,
         children: true,
+        blockedByActions: { select: { blockingId: true } },
       },
     });
+
+    // Transform blockedByActions to blockedBy array
+    return {
+      ...action,
+      blockedBy: action.blockedByActions.map((d) => d.blockingId),
+    };
   }
 
   async delete(id: string) {

@@ -23,7 +23,9 @@ import {
   Loader2,
   Eye,
   Edit3,
+  Link,
 } from 'lucide-react';
+import { BlockingPicker } from './BlockingPicker';
 import { MarkdownPreview, hasMarkdown } from './MarkdownPreview';
 import clsx from 'clsx';
 import { format } from 'date-fns';
@@ -50,6 +52,7 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
   const [repeatInterval, setRepeatInterval] = useState('');
   const [showProjectPicker, setShowProjectPicker] = useState(false);
   const [showTagPicker, setShowTagPicker] = useState(false);
+  const [showBlockingPicker, setShowBlockingPicker] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -577,6 +580,56 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
             </div>
           </div>
 
+          {/* Blocked By */}
+          <div>
+            <label className={clsx('flex items-center gap-2 text-sm mb-2', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>
+              <Link size={16} />
+              Blocked By
+            </label>
+            {action.blockedBy && action.blockedBy.length > 0 ? (
+              <div className="space-y-1 mb-2">
+                {action.blockedBy.map((blockingId) => {
+                  const blockingAction = actions.find(a => a.id === blockingId);
+                  return blockingAction ? (
+                    <div
+                      key={blockingId}
+                      className={clsx(
+                        'flex items-center gap-2 px-3 py-2 rounded-lg text-sm',
+                        theme === 'dark' ? 'bg-omnifocus-surface' : 'bg-gray-50'
+                      )}
+                    >
+                      <span className={clsx(
+                        'w-2 h-2 rounded-full',
+                        blockingAction.status === 'completed' ? 'bg-green-500' : 'bg-yellow-500'
+                      )} />
+                      <span className={theme === 'dark' ? 'text-white' : 'text-gray-900'}>
+                        {blockingAction.title}
+                      </span>
+                      {blockingAction.status === 'completed' && (
+                        <Check size={14} className="text-green-500 ml-auto" />
+                      )}
+                    </div>
+                  ) : null;
+                })}
+              </div>
+            ) : (
+              <p className={clsx('text-sm mb-2', theme === 'dark' ? 'text-gray-500' : 'text-gray-400')}>
+                No blocking tasks
+              </p>
+            )}
+            <button
+              onClick={() => setShowBlockingPicker(true)}
+              className={clsx(
+                'w-full px-3 py-2 rounded-lg text-sm transition-colors',
+                theme === 'dark'
+                  ? 'bg-omnifocus-surface hover:bg-omnifocus-border text-gray-300'
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              )}
+            >
+              {action.blockedBy && action.blockedBy.length > 0 ? 'Edit blocking tasks' : 'Add blocking task'}
+            </button>
+          </div>
+
           {/* Attachments */}
           <div>
             <label className={clsx('flex items-center gap-2 text-sm mb-2', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>
@@ -694,6 +747,14 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
           </div>
         </div>
       </div>
+
+      {/* Blocking Picker Modal */}
+      {showBlockingPicker && (
+        <BlockingPicker
+          actionId={action.id}
+          onClose={() => setShowBlockingPicker(false)}
+        />
+      )}
     </>
   );
 }

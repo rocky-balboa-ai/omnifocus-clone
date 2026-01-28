@@ -44,13 +44,13 @@ describe('ActionsService', () => {
   describe('create', () => {
     it('should create an action', async () => {
       const dto = { title: 'Test Action' };
-      const expected = { id: '1', title: 'Test Action', isInbox: true };
+      const expected = { id: '1', title: 'Test Action', isInbox: true, blockedByActions: [] };
 
       mockPrismaService.action.create.mockResolvedValue(expected);
 
       const result = await service.create(dto);
 
-      expect(result).toEqual(expected);
+      expect(result).toEqual({ ...expected, blockedBy: [] });
       expect(mockPrismaService.action.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ title: 'Test Action', isInbox: true }),
@@ -60,7 +60,7 @@ describe('ActionsService', () => {
 
     it('should set isInbox to false when projectId provided', async () => {
       const dto = { title: 'Test Action', projectId: 'project-1' };
-      const expected = { id: '1', title: 'Test Action', isInbox: false, projectId: 'project-1' };
+      const expected = { id: '1', title: 'Test Action', isInbox: false, projectId: 'project-1', blockedByActions: [] };
 
       mockPrismaService.action.create.mockResolvedValue(expected);
 
@@ -76,13 +76,13 @@ describe('ActionsService', () => {
 
   describe('findAll', () => {
     it('should return actions filtered by inbox', async () => {
-      const actions = [{ id: '1', title: 'Inbox Action', isInbox: true }];
+      const actions = [{ id: '1', title: 'Inbox Action', isInbox: true, blockedByActions: [] }];
       mockPrismaService.action.findMany.mockResolvedValue(actions);
       mockPrismaService.action.count.mockResolvedValue(1);
 
       const result = await service.findAll({ inbox: true });
 
-      expect(result).toEqual(actions);
+      expect(result).toEqual([{ id: '1', title: 'Inbox Action', isInbox: true, blockedByActions: [], blockedBy: [] }]);
       expect(mockPrismaService.action.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ isInbox: true, projectId: null }),
@@ -91,13 +91,13 @@ describe('ActionsService', () => {
     });
 
     it('should return actions filtered by flagged', async () => {
-      const actions = [{ id: '1', title: 'Flagged Action', flagged: true }];
+      const actions = [{ id: '1', title: 'Flagged Action', flagged: true, blockedByActions: [] }];
       mockPrismaService.action.findMany.mockResolvedValue(actions);
       mockPrismaService.action.count.mockResolvedValue(1);
 
       const result = await service.findAll({ flagged: true });
 
-      expect(result).toEqual(actions);
+      expect(result).toEqual([{ id: '1', title: 'Flagged Action', flagged: true, blockedByActions: [], blockedBy: [] }]);
       expect(mockPrismaService.action.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ flagged: true }),
@@ -113,6 +113,7 @@ describe('ActionsService', () => {
         title: 'Test',
         repeatMode: null,
         tags: [],
+        blockedByActions: [],
       };
 
       mockPrismaService.action.findUnique.mockResolvedValue(action);
