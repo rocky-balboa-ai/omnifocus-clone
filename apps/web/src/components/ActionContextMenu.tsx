@@ -158,7 +158,7 @@ export function ActionContextMenu({ action, position, onClose }: ActionContextMe
 
     await createAction({
       title: action.title,
-      notes: action.notes,
+      note: action.note,
       flagged: action.flagged,
       dueDate: action.dueDate,
       deferDate: action.deferDate,
@@ -166,7 +166,7 @@ export function ActionContextMenu({ action, position, onClose }: ActionContextMe
       parentId: action.parentId,
       tagIds,
       estimatedMinutes: action.estimatedMinutes,
-    });
+    } as any);
     fetchActions(currentPerspective);
     onClose();
   };

@@ -3,64 +3,47 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: omnifocus-db
     environment:
-      POSTGRES_USER: omnifocus
-      POSTGRES_PASSWORD: omnifocus_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: omnifocus
     ports:
-      - "54329:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U omnifocus"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
 
   api:
     build:
-      context: ./api
-      dockerfile: Dockerfile
-    container_name: omnifocus-api
-    environment:
-      DATABASE_URL: postgresql://omnifocus:omnifocus_dev@postgres:5432/omnifocus
-      NODE_ENV: development
-      PORT: 3000
-      SESSION_SECRET: dev-session-secret-change-in-prod
-      API_KEY: dev-api-key-for-rocky
+      context: .
+      dockerfile: apps/api/Dockerfile
     ports:
-      - "7848:3000"
-    volumes:
-      - ./api:/app
-      - /app/node_modules
+      - "3001:3000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/omnifocus
+      NODE_ENV: production
+      JWT_SECRET: your-jwt-secret-here
+      CORS_ORIGIN: http://localhost:3000
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health/live"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    command: npm run start:dev
 
   web:
     build:
-      context: ./web
-      dockerfile: Dockerfile
-    container_name: omnifocus-web
-    environment:
-      NEXT_PUBLIC_API_URL: http://localhost:7848
-      NODE_ENV: development
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3001
     ports:
-      - "7847:3000"
-    volumes:
-      - ./web:/app
-      - /app/node_modules
-      - /app/.next
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
     depends_on:
       - api
-    command: npm run dev
 
 volumes:
   postgres_data:

@@ -1,7 +1,7 @@
 'use client';
 
 import { useAppStore, Project } from '@/stores/app.store';
-import { FolderKanban, Flag, Calendar, ChevronRight, Plus, Layers, List, Eye, EyeOff, Search, X, CornerDownLeft, FolderPlus } from 'lucide-react';
+import { FolderKanban, Flag, Calendar, ChevronRight, Plus, Layers, List, Eye, EyeOff, Search, X, CornerDownLeft, FolderPlus, Focus } from 'lucide-react';
 import { ProjectTemplates } from './ProjectTemplates';
 import { FolderTree } from './FolderTree';
 import clsx from 'clsx';
@@ -13,7 +13,7 @@ interface ProjectItemProps {
 }
 
 function ProjectItem({ project }: ProjectItemProps) {
-  const { setSelectedProject, selectedProjectId, setCurrentPerspective, theme } = useAppStore();
+  const { setSelectedProject, selectedProjectId, setCurrentPerspective, theme, setFocusedProject } = useAppStore();
 
   const isSelected = selectedProjectId === project.id;
   const isDueSoon = project.dueDate && (isToday(new Date(project.dueDate)) || isPast(new Date(project.dueDate)));
@@ -92,6 +92,23 @@ function ProjectItem({ project }: ProjectItemProps) {
           )}
         </div>
       </div>
+
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setFocusedProject(project.id);
+          setCurrentPerspective('inbox');
+        }}
+        className={clsx(
+          'p-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity',
+          theme === 'dark'
+            ? 'hover:bg-omnifocus-purple/20 text-gray-500 hover:text-omnifocus-purple'
+            : 'hover:bg-purple-50 text-gray-400 hover:text-purple-600'
+        )}
+        title="Focus on this project"
+      >
+        <Focus size={14} />
+      </button>
 
       <ChevronRight size={16} className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} />
     </li>

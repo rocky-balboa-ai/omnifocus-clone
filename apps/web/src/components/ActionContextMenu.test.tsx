@@ -11,7 +11,7 @@ describe('ActionContextMenu', () => {
   const mockAction = {
     id: 'action-1',
     title: 'Test Task',
-    notes: 'Some notes',
+    note: 'Some notes',
     status: 'active',
     flagged: true,
     dueDate: '2024-01-15T00:00:00.000Z',
@@ -76,7 +76,7 @@ describe('ActionContextMenu', () => {
       await waitFor(() => {
         expect(mockStore.createAction).toHaveBeenCalledWith({
           title: 'Test Task',
-          notes: 'Some notes',
+          note: 'Some notes',
           flagged: true,
           dueDate: '2024-01-15T00:00:00.000Z',
           deferDate: '2024-01-10T00:00:00.000Z',

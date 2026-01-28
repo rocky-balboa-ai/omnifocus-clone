@@ -26,6 +26,7 @@ import { KeyboardHintBar } from '@/components/KeyboardHintBar';
 import { Scratchpad } from '@/components/Scratchpad';
 import { BatchActionsBar } from '@/components/BatchActionsBar';
 import { FocusModeOverlay } from '@/components/FocusModeOverlay';
+import { FocusBar } from '@/components/FocusBar';
 import { MorningBriefing } from '@/components/MorningBriefing';
 import { EndOfDaySummary } from '@/components/EndOfDaySummary';
 import { HabitTracker } from '@/components/HabitTracker';
@@ -148,6 +149,9 @@ export default function Home() {
       <main className="flex-1 overflow-hidden pb-16 md:pb-0 flex flex-col">
         {/* Global Progress Bar */}
         <GlobalProgressBar dailyGoal={10} />
+
+        {/* Focus Bar - shows when focused on a project/tag */}
+        <FocusBar />
 
         <div className="flex-1 overflow-hidden">
           {currentPerspective === 'projects' ? (

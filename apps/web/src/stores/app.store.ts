@@ -117,6 +117,8 @@ interface AppState {
   selectedFolderId: string | null;
   editingPerspectiveId: string | null;
   filterTagId: string | null;
+  focusedProjectId: string | null;
+  focusedTagId: string | null;
   selectedActionIds: Set<string>;
   collapsedActionIds: Set<string>;
   isQuickEntryOpen: boolean;
@@ -151,6 +153,9 @@ interface AppState {
   setCommandPaletteOpen: (open: boolean) => void;
   setShowCompleted: (show: boolean) => void;
   setFilterTagId: (tagId: string | null) => void;
+  setFocusedProject: (projectId: string | null) => void;
+  setFocusedTag: (tagId: string | null) => void;
+  clearFocus: () => void;
   toggleActionSelection: (id: string) => void;
   clearActionSelection: () => void;
   selectAllActions: () => void;
@@ -222,6 +227,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   selectedFolderId: null,
   editingPerspectiveId: null,
   filterTagId: null,
+  focusedProjectId: null,
+  focusedTagId: null,
   selectedActionIds: new Set<string>(),
   collapsedActionIds: new Set<string>(),
   isQuickEntryOpen: false,
@@ -264,6 +271,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   setCommandPaletteOpen: (open) => set({ isCommandPaletteOpen: open }),
   setShowCompleted: (show) => set({ showCompleted: show }),
   setFilterTagId: (tagId) => set({ filterTagId: tagId }),
+  setFocusedProject: (projectId) => set({ focusedProjectId: projectId, focusedTagId: null }),
+  setFocusedTag: (tagId) => set({ focusedTagId: tagId, focusedProjectId: null }),
+  clearFocus: () => set({ focusedProjectId: null, focusedTagId: null }),
 
   toggleActionSelection: (id) => {
     set((state) => {
@@ -432,7 +442,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   fetchActions: async (perspectiveId) => {
     set({ isLoading: true, error: null });
     try {
-      const { filterTagId } = get();
+      const { filterTagId, focusedProjectId, focusedTagId } = get();
       let actions: Action[];
 
       if (filterTagId) {
@@ -441,6 +451,15 @@ export const useAppStore = create<AppState>((set, get) => ({
       } else {
         // Fetch actions by perspective
         actions = await api.get<Action[]>(`/perspectives/${perspectiveId}/actions`);
+      }
+
+      // Apply focus filter on the client side
+      if (focusedProjectId) {
+        actions = actions.filter(a => a.projectId === focusedProjectId);
+      } else if (focusedTagId) {
+        actions = actions.filter(a =>
+          a.tags?.some(t => t.tagId === focusedTagId || t.tag?.id === focusedTagId)
+        );
       }
 
       set({ actions, isLoading: false });

@@ -41,3 +41,7 @@ coverage/
 
 # Uploads
 api/uploads/
+
+# Turbo
+.turbo
+
