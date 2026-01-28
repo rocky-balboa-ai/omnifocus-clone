@@ -126,6 +126,7 @@ interface AppState {
   isQuickEntryOpen: boolean;
   isSearchOpen: boolean;
   isCommandPaletteOpen: boolean;
+  isQuickOpenOpen: boolean;
   isPerspectiveEditorOpen: boolean;
   isSettingsOpen: boolean;
   isKeyboardHelpOpen: boolean;
@@ -153,6 +154,7 @@ interface AppState {
   setQuickEntryOpen: (open: boolean) => void;
   setSearchOpen: (open: boolean) => void;
   setCommandPaletteOpen: (open: boolean) => void;
+  setQuickOpenOpen: (open: boolean) => void;
   setShowCompleted: (show: boolean) => void;
   setFilterTagId: (tagId: string | null) => void;
   setFocusedProject: (projectId: string | null) => void;
@@ -236,6 +238,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   isQuickEntryOpen: false,
   isSearchOpen: false,
   isCommandPaletteOpen: false,
+  isQuickOpenOpen: false,
   isPerspectiveEditorOpen: false,
   isSettingsOpen: false,
   isKeyboardHelpOpen: false,
@@ -271,6 +274,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setQuickEntryOpen: (open) => set({ isQuickEntryOpen: open }),
   setSearchOpen: (open) => set({ isSearchOpen: open }),
   setCommandPaletteOpen: (open) => set({ isCommandPaletteOpen: open }),
+  setQuickOpenOpen: (open) => set({ isQuickOpenOpen: open }),
   setShowCompleted: (show) => set({ showCompleted: show }),
   setFilterTagId: (tagId) => set({ filterTagId: tagId }),
   setFocusedProject: (projectId) => set({ focusedProjectId: projectId, focusedTagId: null }),

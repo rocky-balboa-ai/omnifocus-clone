@@ -34,6 +34,7 @@ import { TimeBlocker } from '@/components/TimeBlocker';
 import { GlobalProgressBar } from '@/components/GlobalProgressBar';
 import { OnboardingTour } from '@/components/OnboardingTour';
 import { CommandPalette } from '@/components/CommandPalette';
+import { QuickOpen } from '@/components/QuickOpen';
 import { ToastProvider } from '@/components/Toast';
 import { ConfettiProvider } from '@/components/Confetti';
 import { KeyboardShortcutHints, useKeyboardShortcutsModal } from '@/components/KeyboardShortcutHints';
@@ -64,6 +65,8 @@ export default function Home() {
     setSearchOpen,
     isCommandPaletteOpen,
     setCommandPaletteOpen,
+    isQuickOpenOpen,
+    setQuickOpenOpen,
     isPerspectiveEditorOpen,
     editingPerspectiveId,
     closePerspectiveEditor,
@@ -211,6 +214,12 @@ export default function Home() {
       <CommandPalette
         isOpen={isCommandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
+      />
+
+      {/* Quick Open - opens with cmd+o */}
+      <QuickOpen
+        isOpen={isQuickOpenOpen}
+        onClose={() => setQuickOpenOpen(false)}
       />
 
       {/* Perspective Editor */}

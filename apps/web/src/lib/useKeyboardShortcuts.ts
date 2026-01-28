@@ -25,6 +25,8 @@ export function useKeyboardShortcuts() {
     isQuickEntryOpen,
     isSearchOpen,
     isCommandPaletteOpen,
+    isQuickOpenOpen,
+    setQuickOpenOpen,
     isKeyboardHelpOpen,
     isFocusTimerOpen,
     isWeeklyReviewOpen,
@@ -52,6 +54,13 @@ export function useKeyboardShortcuts() {
     if ((e.metaKey || e.ctrlKey) && e.key === 'p') {
       e.preventDefault();
       setCommandPaletteOpen(true);
+      return;
+    }
+
+    // Cmd/Ctrl + O: Open quick open (go to)
+    if ((e.metaKey || e.ctrlKey) && e.key === 'o') {
+      e.preventDefault();
+      setQuickOpenOpen(true);
       return;
     }
 
@@ -97,6 +106,10 @@ export function useKeyboardShortcuts() {
         setSearchOpen(false);
         return;
       }
+      if (isQuickOpenOpen) {
+        setQuickOpenOpen(false);
+        return;
+      }
       if (isQuickEntryOpen) {
         setQuickEntryOpen(false);
         return;
@@ -118,7 +131,7 @@ export function useKeyboardShortcuts() {
     if (isInputField) return;
 
     // Skip if modals are open
-    if (isQuickEntryOpen || isSearchOpen || isCommandPaletteOpen || isKeyboardHelpOpen || isFocusTimerOpen || isWeeklyReviewOpen || isHabitTrackerOpen || isTimeBlockerOpen) return;
+    if (isQuickEntryOpen || isSearchOpen || isCommandPaletteOpen || isQuickOpenOpen || isKeyboardHelpOpen || isFocusTimerOpen || isWeeklyReviewOpen || isHabitTrackerOpen || isTimeBlockerOpen) return;
 
     switch (e.key.toLowerCase()) {
       case 'n':
@@ -271,6 +284,8 @@ export function useKeyboardShortcuts() {
     isQuickEntryOpen,
     isSearchOpen,
     isCommandPaletteOpen,
+    isQuickOpenOpen,
+    setQuickOpenOpen,
     isKeyboardHelpOpen,
     isFocusTimerOpen,
     isWeeklyReviewOpen,
