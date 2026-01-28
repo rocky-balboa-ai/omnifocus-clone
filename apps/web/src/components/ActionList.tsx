@@ -21,7 +21,7 @@ import {
 // Removed restrictToVerticalAxis to allow horizontal drag for indent/outdent
 import { useAppStore, Action } from '@/stores/app.store';
 import { SortableActionItem } from './SortableActionItem';
-import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff, Inbox, CheckCircle2, Sparkles, CornerDownLeft, Maximize2, Minimize2, AlertTriangle, Calendar, Filter, Sun, CalendarDays, CalendarClock, ArrowUpDown, FolderKanban, Timer } from 'lucide-react';
+import { Plus, Search, Eye, EyeOff, Trash2, Clock, X, Tag, CheckSquare, Square, Flag, FlagOff, Inbox, CheckCircle2, Sparkles, CornerDownLeft, Maximize2, Minimize2, AlertTriangle, Calendar, Filter, Sun, CalendarDays, CalendarClock, ArrowUpDown, FolderKanban, Timer, FileText } from 'lucide-react';
 import { isBefore, isToday, startOfDay, isFuture, addDays, nextMonday } from 'date-fns';
 import { parseQuickAdd } from '@/lib/parseQuickAdd';
 
@@ -30,6 +30,7 @@ type SortOption = 'manual' | 'due-date' | 'name' | 'flagged' | 'created';
 type TimeFilter = 'all' | '5' | '15' | '30' | '60';
 import clsx from 'clsx';
 import { ExportMenu } from './ExportMenu';
+import { TaskTemplates } from './TaskTemplates';
 
 interface ActionWithDepth {
   action: Action;
@@ -81,6 +82,7 @@ export function ActionList() {
   const [quickAddText, setQuickAddText] = useState('');
   const [isQuickAdding, setIsQuickAdding] = useState(false);
   const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
+  const [showTemplates, setShowTemplates] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('manual');
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [showBulkProjectMenu, setShowBulkProjectMenu] = useState(false);
@@ -657,6 +659,20 @@ export function ActionList() {
           )}>⌘K</kbd>
         </button>
 
+        {/* Templates button */}
+        <button
+          onClick={() => setShowTemplates(true)}
+          className={clsx(
+            'hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm',
+            theme === 'dark'
+              ? 'bg-omnifocus-surface text-gray-400 hover:text-white hover:bg-omnifocus-border'
+              : 'bg-gray-100 text-gray-500 hover:text-gray-900 hover:bg-gray-200'
+          )}
+          title="Task Templates"
+        >
+          <FileText size={16} />
+        </button>
+
         {/* Export menu */}
         <ExportMenu />
 
@@ -1168,6 +1184,12 @@ export function ActionList() {
           </DndContext>
         )}
       </div>
+
+      {/* Task Templates Modal */}
+      <TaskTemplates
+        isOpen={showTemplates}
+        onClose={() => setShowTemplates(false)}
+      />
     </div>
   );
 }
