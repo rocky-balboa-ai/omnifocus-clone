@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -16,7 +16,8 @@ export interface TokenResponse {
 }
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit {
+  private readonly logger = new Logger(AuthService.name);
   // 2 months in seconds
   private readonly TOKEN_EXPIRY = 60 * 24 * 60 * 60; // 60 days
 
@@ -25,6 +26,11 @@ export class AuthService {
     private config: ConfigService,
     private jwtService: JwtService,
   ) {}
+
+  async onModuleInit() {
+    await this.getOrCreateDefaultUser();
+    this.logger.log('Default user ensured');
+  }
 
   async validateUser(username: string, password: string) {
     const user = await this.prisma.user.findUnique({
