@@ -46,7 +46,6 @@ export function InlineQuickAdd({
         flagged: parsed.flagged,
         estimatedMinutes: parsed.estimatedMinutes,
         projectId: projectId,
-        status: 'active',
       });
 
       setValue('');

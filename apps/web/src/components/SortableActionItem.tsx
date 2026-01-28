@@ -159,7 +159,6 @@ export function SortableActionItem({
     await createAction({
       title: `${action.title} (copy)`,
       note: action.note,
-      status: 'active',
       flagged: action.flagged,
       dueDate: action.dueDate,
       deferDate: action.deferDate,

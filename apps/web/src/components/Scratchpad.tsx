@@ -65,7 +65,6 @@ export function Scratchpad() {
       await createAction({
         title: note.content.split('\n')[0].slice(0, 100), // First line as title
         note: note.content.split('\n').slice(1).join('\n') || undefined, // Rest as note
-        status: 'active',
       });
       handleDeleteNote(note.id);
       fetchActions(currentPerspective);

@@ -85,7 +85,6 @@ export function ProjectPicker({
     try {
       const project = await createProject({
         name: newProjectName.trim(),
-        status: 'active',
         type: 'parallel',
         flagged: false,
       });

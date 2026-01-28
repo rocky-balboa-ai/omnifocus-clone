@@ -69,10 +69,9 @@ export function UndoToast() {
         await uncompleteAction(item.actionId);
       } else if (item.type === 'deleted' && item.actionData) {
         // Recreate the action (without the id, timestamps, etc.)
-        const { id, completedAt, project, tags, children, attachments, ...restoreData } = item.actionData as any;
+        const { id, completedAt, project, tags, children, attachments, status, ...restoreData } = item.actionData as any;
         await createAction({
           ...restoreData,
-          status: 'active',
         });
       }
     } catch (error) {

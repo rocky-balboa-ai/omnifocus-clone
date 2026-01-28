@@ -702,7 +702,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       flagged: template.flagged,
       estimatedMinutes: template.estimatedMinutes,
       projectId: template.projectId,
-      status: 'active',
     };
 
     if (template.deferDays) {

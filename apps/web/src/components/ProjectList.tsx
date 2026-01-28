@@ -151,7 +151,6 @@ export function ProjectList() {
       await createProject({
         name: newProjectName.trim(),
         type: newProjectType,
-        status: 'active',
       });
       setNewProjectName('');
       setShowNewProjectForm(false);

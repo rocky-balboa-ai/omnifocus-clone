@@ -337,7 +337,6 @@ export function ActionList() {
 
       await createAction({
         title: parsed.title,
-        status: 'active',
         dueDate: parsed.dueDate,
         deferDate: parsed.deferDate,
         flagged: parsed.flagged,

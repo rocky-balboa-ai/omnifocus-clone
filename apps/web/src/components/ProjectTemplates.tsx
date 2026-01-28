@@ -171,7 +171,6 @@ export function ProjectTemplates({ isOpen, onClose, onCreateProject }: ProjectTe
       const project = await createProject({
         name: customName || selectedTemplate.name,
         type: selectedTemplate.projectType,
-        status: 'active',
       });
 
       // Create actions for the project
@@ -189,7 +188,6 @@ export function ProjectTemplates({ isOpen, onClose, onCreateProject }: ProjectTe
           projectId: project.id,
           dueDate: dueDate?.toISOString(),
           deferDate: deferDate?.toISOString(),
-          status: 'active',
         });
       }
 

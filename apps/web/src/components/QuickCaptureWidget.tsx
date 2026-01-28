@@ -30,7 +30,6 @@ export function QuickCaptureWidget({ className }: QuickCaptureWidgetProps) {
     try {
       await createAction({
         title: title.trim(),
-        status: 'active',
         flagged: false,
         position: 0,
       });
