@@ -458,7 +458,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         actions = actions.filter(a => a.projectId === focusedProjectId);
       } else if (focusedTagId) {
         actions = actions.filter(a =>
-          a.tags?.some(t => t.tagId === focusedTagId || t.tag?.id === focusedTagId)
+          a.tags?.some(t => t.tag?.id === focusedTagId)
         );
       }
 
