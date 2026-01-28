@@ -35,7 +35,7 @@ export class AuthController {
   }
 
   /**
-   * Session Login - For web browser (cookie-based)
+   * Session Login - For web browser (also returns JWT for localStorage)
    */
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -43,15 +43,17 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Req() req: Request,
   ) {
-    const user = await this.authService.validateUser(
+    // Get token response which validates and returns JWT
+    const tokenResponse = await this.authService.login(
       loginDto.username,
       loginDto.password,
     );
 
-    req.session.userId = user.id;
-    req.session.username = user.username;
+    // Also set session for cookie-based auth
+    req.session.userId = tokenResponse.user.id;
+    req.session.username = tokenResponse.user.username;
 
-    return { success: true, user };
+    return tokenResponse;
   }
 
   @Post('logout')
