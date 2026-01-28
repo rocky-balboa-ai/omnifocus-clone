@@ -6,12 +6,27 @@ import { UpdateActionDto } from './dto/update-action.dto';
 import { ActionQueryDto, SearchActionDto } from './dto/action-query.dto';
 import { parseInterval, addInterval } from '../../common/utils/date.utils';
 
+// Helper to convert date string to ISO-8601 datetime
+function toISODateTime(dateStr: string | null | undefined): string | null {
+  if (!dateStr) return null;
+  // If already has time component, return as is
+  if (dateStr.includes('T')) return dateStr;
+  // Otherwise append time to make it a valid datetime
+  return `${dateStr}T00:00:00.000Z`;
+}
+
 @Injectable()
 export class ActionsService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateActionDto) {
-    const { tagIds, ...data } = dto;
+    const { tagIds, dueDate, deferDate, plannedDate, ...rest } = dto;
+    const data = {
+      ...rest,
+      dueDate: toISODateTime(dueDate),
+      deferDate: toISODateTime(deferDate),
+      plannedDate: toISODateTime(plannedDate),
+    };
 
     const action = await this.prisma.action.create({
       data: {
@@ -169,7 +184,13 @@ export class ActionsService {
   }
 
   async update(id: string, dto: UpdateActionDto) {
-    const { tagIds, blockedBy, ...data } = dto;
+    const { tagIds, blockedBy, dueDate, deferDate, plannedDate, ...rest } = dto;
+    const data = {
+      ...rest,
+      ...(dueDate !== undefined && { dueDate: toISODateTime(dueDate) }),
+      ...(deferDate !== undefined && { deferDate: toISODateTime(deferDate) }),
+      ...(plannedDate !== undefined && { plannedDate: toISODateTime(plannedDate) }),
+    };
 
     // Handle tag updates
     if (tagIds !== undefined) {
