@@ -2,17 +2,20 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useAppStore, Tag } from '@/stores/app.store';
-import { Tags as TagsIcon, ChevronRight, Plus, Search, X, CornerDownLeft, Trash2, Palette } from 'lucide-react';
+import { Tags as TagsIcon, ChevronRight, Plus, Search, X, CornerDownLeft, Trash2, Palette, Clock } from 'lucide-react';
 import { TagColorPicker, getTagColor } from './TagColorPicker';
+import { TagDetailPanel } from './TagDetailPanel';
 import clsx from 'clsx';
 
 interface TagItemProps {
   tag: Tag;
   level?: number;
+  onEdit: (tagId: string) => void;
 }
 
-function TagItem({ tag, level = 0 }: TagItemProps) {
+function TagItem({ tag, level = 0, onEdit }: TagItemProps) {
   const { setFilterTagId, fetchActions, currentPerspective, theme, deleteTag } = useAppStore();
+  const hasAvailability = tag.availableFrom || tag.availableUntil;
   const [isDeleting, setIsDeleting] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [tagColor, setTagColor] = useState(() => getTagColor(tag.id));
@@ -109,11 +112,32 @@ function TagItem({ tag, level = 0 }: TagItemProps) {
         </div>
 
         <div className="flex-1 min-w-0">
-          <span className={clsx('text-sm', theme === 'dark' ? 'text-white' : 'text-gray-900')}>{tag.name}</span>
+          <div className="flex items-center gap-2">
+            <span className={clsx('text-sm', theme === 'dark' ? 'text-white' : 'text-gray-900')}>{tag.name}</span>
+            {hasAvailability && (
+              <Clock size={12} className="text-omnifocus-purple" title={`Available ${tag.availableFrom || ''} - ${tag.availableUntil || ''}`} />
+            )}
+          </div>
           <p className={clsx('text-xs mt-0.5', theme === 'dark' ? 'text-gray-500' : 'text-gray-500')}>
             {tag._count?.actions || 0} actions
           </p>
         </div>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(tag.id);
+          }}
+          className={clsx(
+            'p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity',
+            theme === 'dark'
+              ? 'hover:bg-omnifocus-border text-gray-500 hover:text-white'
+              : 'hover:bg-gray-100 text-gray-400 hover:text-gray-600'
+          )}
+          title="Edit tag"
+        >
+          <Clock size={14} />
+        </button>
 
         <button
           onClick={handleDelete}
@@ -135,7 +159,7 @@ function TagItem({ tag, level = 0 }: TagItemProps) {
       {tag.children && tag.children.length > 0 && (
         <>
           {tag.children.map((child) => (
-            <TagItem key={child.id} tag={child} level={level + 1} />
+            <TagItem key={child.id} tag={child} level={level + 1} onEdit={onEdit} />
           ))}
         </>
       )}
@@ -148,6 +172,7 @@ export function TagList() {
   const [showNewTagForm, setShowNewTagForm] = useState(false);
   const [newTagName, setNewTagName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [editingTagId, setEditingTagId] = useState<string | null>(null);
 
   // Get top-level tags (no parent)
   const topLevelTags = tags.filter(t => !t.parentId);
@@ -296,11 +321,17 @@ export function TagList() {
         ) : (
           <ul className="space-y-1">
             {topLevelTags.map((tag) => (
-              <TagItem key={tag.id} tag={tag} />
+              <TagItem key={tag.id} tag={tag} onEdit={setEditingTagId} />
             ))}
           </ul>
         )}
       </div>
+
+      {/* Tag Detail Panel */}
+      <TagDetailPanel
+        tagId={editingTagId}
+        onClose={() => setEditingTagId(null)}
+      />
     </div>
   );
 }

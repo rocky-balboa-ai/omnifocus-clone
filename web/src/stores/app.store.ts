@@ -60,6 +60,8 @@ export interface Tag {
   id: string;
   name: string;
   parentId?: string;
+  availableFrom?: string | null;  // Time like "09:00"
+  availableUntil?: string | null; // Time like "17:00"
   children?: Tag[];
   _count?: { actions: number; projects: number };
 }
@@ -191,6 +193,7 @@ interface AppState {
   cleanupCompleted: (olderThanDays?: number) => Promise<{ deleted: number }>;
 
   createTag: (data: Partial<Tag>) => Promise<Tag>;
+  updateTag: (id: string, data: Partial<Tag>) => Promise<Tag>;
   deleteTag: (id: string) => Promise<void>;
 
   // Templates
@@ -624,6 +627,14 @@ export const useAppStore = create<AppState>((set, get) => ({
   createTag: async (data) => {
     const tag = await api.post<Tag>('/tags', data);
     set((state) => ({ tags: [...state.tags, tag] }));
+    return tag;
+  },
+
+  updateTag: async (id, data) => {
+    const tag = await api.patch<Tag>(`/tags/${id}`, data);
+    set((state) => ({
+      tags: state.tags.map((t) => (t.id === id ? { ...t, ...tag } : t)),
+    }));
     return tag;
   },
 
