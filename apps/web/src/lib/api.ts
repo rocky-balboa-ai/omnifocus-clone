@@ -18,6 +18,12 @@ class ApiClient {
       'Content-Type': 'application/json',
     };
 
+    // Add JWT token if available
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await fetch(url, {
       method,
       headers,
@@ -54,8 +60,15 @@ class ApiClient {
     const formData = new FormData();
     formData.append('file', file);
 
+    const headers: HeadersInit = {};
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await fetch(url, {
       method: 'POST',
+      headers,
       body: formData,
       credentials: 'include',
     });
