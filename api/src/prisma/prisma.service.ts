@@ -1,33 +1,37 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import { Injectable, OnModuleDestroy, Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
 @Injectable()
-export class PrismaService
-  extends PrismaClient
-  implements OnModuleInit, OnModuleDestroy
-{
+export class PrismaService extends PrismaClient implements OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
 
-  async onModuleInit() {
-    // Retry connection with exponential backoff
+  constructor() {
+    super();
+    // Connect lazily in background - don't block app startup
+    this.connectInBackground();
+  }
+
+  private async connectInBackground() {
+    // Small delay to let the app start first
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     const maxRetries = 5;
     const baseDelay = 2000;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        this.logger.log(`Attempting database connection (attempt ${attempt}/${maxRetries})...`);
+        this.logger.log(`Background: Attempting database connection (attempt ${attempt}/${maxRetries})...`);
         await this.$connect();
-        this.logger.log('Database connection established');
+        this.logger.log('Background: Database connection established');
         return;
       } catch (error) {
-        this.logger.warn(`Connection attempt ${attempt} failed: ${error.message}`);
+        this.logger.warn(`Background: Connection attempt ${attempt} failed: ${error.message}`);
         if (attempt === maxRetries) {
-          this.logger.error('All connection attempts failed, starting without database');
-          // Don't throw - let the app start and fail gracefully on queries
+          this.logger.error('Background: All connection attempts failed');
           return;
         }
         const delay = baseDelay * Math.pow(2, attempt - 1);
-        this.logger.log(`Waiting ${delay}ms before retry...`);
+        this.logger.log(`Background: Waiting ${delay}ms before retry...`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }

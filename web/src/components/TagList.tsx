@@ -115,7 +115,9 @@ function TagItem({ tag, level = 0, onEdit }: TagItemProps) {
           <div className="flex items-center gap-2">
             <span className={clsx('text-sm', theme === 'dark' ? 'text-white' : 'text-gray-900')}>{tag.name}</span>
             {hasAvailability && (
-              <Clock size={12} className="text-omnifocus-purple" title={`Available ${tag.availableFrom || ''} - ${tag.availableUntil || ''}`} />
+              <span title={`Available ${tag.availableFrom || ''} - ${tag.availableUntil || ''}`}>
+                <Clock size={12} className="text-omnifocus-purple" />
+              </span>
             )}
           </div>
           <p className={clsx('text-xs mt-0.5', theme === 'dark' ? 'text-gray-500' : 'text-gray-500')}>
