@@ -28,6 +28,7 @@ import {
   subWeeks,
 } from 'date-fns';
 import clsx from 'clsx';
+import { ProductivityStreak } from './ProductivityStreak';
 
 export function StatsDashboard() {
   const {
@@ -245,6 +246,9 @@ export function StatsDashboard() {
             theme={theme}
           />
         </div>
+
+        {/* Productivity Streak Widget */}
+        <ProductivityStreak className="mb-6" />
 
         {/* 7-Day Activity Chart */}
         <div className={clsx(
