@@ -8,6 +8,7 @@ import {
   Calendar,
   Trash2,
   Copy,
+  CopyPlus,
   Clipboard,
   ArrowUp,
   ArrowDown,
@@ -148,6 +149,25 @@ export function ActionContextMenu({ action, position, onClose }: ActionContextMe
 
   const handleCopyTitle = () => {
     navigator.clipboard.writeText(action.title);
+    onClose();
+  };
+
+  const handleDuplicate = async () => {
+    // Copy relevant properties but not blockedBy (new task is independent)
+    const tagIds = action.tags?.map((t: any) => t.tagId || t.tag?.id).filter(Boolean) || [];
+
+    await createAction({
+      title: action.title,
+      notes: action.notes,
+      flagged: action.flagged,
+      dueDate: action.dueDate,
+      deferDate: action.deferDate,
+      projectId: action.projectId,
+      parentId: action.parentId,
+      tagIds,
+      estimatedMinutes: action.estimatedMinutes,
+    });
+    fetchActions(currentPerspective);
     onClose();
   };
 
@@ -323,6 +343,12 @@ export function ActionContextMenu({ action, position, onClose }: ActionContextMe
         icon={Copy}
         label="Copy Title"
         onClick={handleCopyTitle}
+      />
+      <MenuItem
+        icon={CopyPlus}
+        label="Duplicate"
+        onClick={handleDuplicate}
+        shortcut="⌘D"
       />
 
       <Divider />
