@@ -37,6 +37,7 @@ export interface Action {
   tags: { tag: Tag }[];
   children?: Action[];
   attachments?: Attachment[];
+  links?: { id: string; url: string; title: string }[];
   recurrence?: RecurrenceRule;
   blockedBy?: string[];  // IDs of actions that must complete before this one
 }

@@ -26,6 +26,7 @@ import {
   Link,
 } from 'lucide-react';
 import { BlockingPicker } from './BlockingPicker';
+import { LinkAttachment, LinkItem } from './LinkAttachment';
 import { MarkdownPreview, hasMarkdown } from './MarkdownPreview';
 import clsx from 'clsx';
 import { format } from 'date-fns';
@@ -55,6 +56,7 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
   const [showBlockingPicker, setShowBlockingPicker] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [links, setLinks] = useState<LinkItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isNotePreview, setIsNotePreview] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -73,6 +75,7 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
       setRepeatMode((action as any).repeatMode || '');
       setRepeatInterval((action as any).repeatInterval || '');
       setAttachments(action.attachments || []);
+      setLinks(action.links || []);
       setIsDirty(false);
     }
   }, [action]);
@@ -142,6 +145,23 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
       console.error('Failed to delete attachment:', error);
       alert('Failed to delete attachment. Please try again.');
     }
+  };
+
+  const handleAddLink = async (link: { url: string; title: string }) => {
+    const newLink: LinkItem = {
+      id: `link-${Date.now()}`,
+      url: link.url,
+      title: link.title,
+    };
+    const updatedLinks = [...links, newLink];
+    setLinks(updatedLinks);
+    await updateAction(action.id, { links: updatedLinks } as any);
+  };
+
+  const handleRemoveLink = async (linkId: string) => {
+    const updatedLinks = links.filter(l => l.id !== linkId);
+    setLinks(updatedLinks);
+    await updateAction(action.id, { links: updatedLinks } as any);
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -744,6 +764,19 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Links */}
+          <div>
+            <label className={clsx('flex items-center gap-2 text-sm mb-2', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>
+              <Link size={16} />
+              Links
+            </label>
+            <LinkAttachment
+              links={links}
+              onAdd={handleAddLink}
+              onRemove={handleRemoveLink}
+            />
           </div>
         </div>
       </div>

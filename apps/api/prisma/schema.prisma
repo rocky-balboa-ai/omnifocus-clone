@@ -131,6 +131,9 @@ model Action {
   repeatEndCount  Int?
   repeatCount     Int       @default(0) // Track how many times repeated
 
+  // Links (stored as JSON array)
+  links           Json?
+
   // Hierarchy
   projectId String?
   parentId  String?   // For action groups

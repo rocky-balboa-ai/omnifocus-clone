@@ -12,4 +12,8 @@ export class UpdateActionDto extends PartialType(CreateActionDto) {
   @IsArray()
   @IsString({ each: true })
   blockedBy?: string[];  // IDs of actions that must complete before this one
+
+  @IsOptional()
+  @IsArray()
+  links?: { id: string; url: string; title: string }[];  // URL links attached to the action
 }
