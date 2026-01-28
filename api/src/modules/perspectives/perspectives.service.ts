@@ -152,11 +152,16 @@ export class PerspectivesService implements OnModuleInit {
         project: true,
         parent: true,
         attachments: true,
+        blockedByActions: {
+          include: {
+            blocking: { select: { status: true } },
+          },
+        },
       },
       orderBy: this.buildOrderBy(perspective.sortRules as any[], perspective.groupBy),
     });
 
-    // Apply sequential project filtering
+    // Apply sequential project filtering and blocked task filtering
     return this.filterSequentialProjects(actions);
   }
 
@@ -167,15 +172,28 @@ export class PerspectivesService implements OnModuleInit {
         project: true;
         parent: true;
         attachments: true;
+        blockedByActions: { include: { blocking: { select: { status: true } } } };
       };
     }>[],
   ) {
     // Filter out tasks from on-hold or dropped projects
+    // Also filter out tasks blocked by incomplete actions
     const availableActions = actions.filter(action => {
       // Check project status (inbox tasks always available)
       if (action.project && action.project.status !== 'active') {
         return false;
       }
+
+      // Check if blocked by any incomplete actions
+      if (action.blockedByActions && action.blockedByActions.length > 0) {
+        const hasIncompleteBlocker = action.blockedByActions.some(
+          (dep) => dep.blocking?.status !== 'completed'
+        );
+        if (hasIncompleteBlocker) {
+          return false;
+        }
+      }
+
       return true;
     });
 

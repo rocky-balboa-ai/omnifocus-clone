@@ -333,5 +333,77 @@ describe('PerspectivesService', () => {
       // Inbox (no project) should show all actions
       expect(result).toHaveLength(2);
     });
+
+    it('should filter out blocked tasks with incomplete blocking actions', async () => {
+      const mockPerspective = {
+        id: 'available',
+        name: 'Available',
+        filterRules: [{ field: 'isAvailable', operator: 'eq', value: true }],
+        sortRules: [],
+        isBuiltIn: true,
+      };
+
+      const mockActions = [
+        {
+          id: '1',
+          title: 'Available task',
+          position: 0,
+          status: 'active',
+          deferDate: null,
+          projectId: null,
+          parentId: null,
+          project: null,
+          blockedByActions: [],
+        },
+        {
+          id: '2',
+          title: 'Blocked by incomplete task',
+          position: 1,
+          status: 'active',
+          deferDate: null,
+          projectId: null,
+          parentId: null,
+          project: null,
+          blockedByActions: [{ blockingId: '3', blocking: { status: 'active' } }],
+        },
+        {
+          id: '3',
+          title: 'Blocking task',
+          position: 2,
+          status: 'active',
+          deferDate: null,
+          projectId: null,
+          parentId: null,
+          project: null,
+          blockedByActions: [],
+        },
+        {
+          id: '4',
+          title: 'Blocked by completed task (should show)',
+          position: 3,
+          status: 'active',
+          deferDate: null,
+          projectId: null,
+          parentId: null,
+          project: null,
+          blockedByActions: [{ blockingId: '5', blocking: { status: 'completed' } }],
+        },
+      ];
+
+      mockPrismaService.perspective.findUnique.mockResolvedValue(mockPerspective);
+      mockPrismaService.action.findMany.mockResolvedValue(mockActions);
+
+      const result = await service.getActions('available');
+
+      // Should have 3 actions: task 1, 3, and 4 (blocked by complete task)
+      // Task 2 should be filtered out (blocked by incomplete task)
+      expect(result).toHaveLength(3);
+
+      const titles = result.map(a => a.title);
+      expect(titles).toContain('Available task');
+      expect(titles).toContain('Blocking task');
+      expect(titles).toContain('Blocked by completed task (should show)');
+      expect(titles).not.toContain('Blocked by incomplete task');
+    });
   });
 });
