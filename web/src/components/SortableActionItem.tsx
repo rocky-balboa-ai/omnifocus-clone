@@ -5,6 +5,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useAppStore, Action } from '@/stores/app.store';
 import { ActionContextMenu } from './ActionContextMenu';
+import { BlockedIndicator } from './BlockedIndicator';
 import {
   Circle,
   CheckCircle2,
@@ -259,6 +260,9 @@ export function SortableActionItem({
             {action.title}
           </span>
           {action.flagged && <Flag size={14} className="text-omnifocus-orange shrink-0" />}
+          {action.blockedBy && action.blockedBy.length > 0 && (
+            <BlockedIndicator blockedBy={action.blockedBy} />
+          )}
           {isDeferred && (
             <span className="flex items-center gap-1 text-xs text-omnifocus-orange shrink-0" title={`Available ${format(new Date(action.deferDate!), 'MMM d')}`}>
               <PauseCircle size={14} />
