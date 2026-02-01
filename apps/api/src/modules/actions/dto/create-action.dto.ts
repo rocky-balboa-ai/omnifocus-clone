@@ -7,6 +7,7 @@ import {
   IsDateString,
   IsEnum,
   IsArray,
+  IsIn,
   Min,
 } from 'class-validator';
 import { RepeatMode } from '@prisma/client';
@@ -73,4 +74,21 @@ export class CreateActionDto {
   @IsArray()
   @IsUUID('4', { each: true })
   tagIds?: string[];
+
+  // Rocky Integration Fields
+  @IsOptional()
+  @IsIn(['rocky', 'fred'])
+  managedBy?: string;
+
+  @IsOptional()
+  @IsIn(['inbox', 'todo', 'in_progress', 'waiting_on_fred', 'waiting_external', 'done', 'dropped'])
+  rockyStatus?: string;
+
+  @IsOptional()
+  @IsIn(['bills', 'documents', 'household', 'family', 'errands', 'health', 'finance', 'other'])
+  category?: string;
+
+  @IsOptional()
+  @IsIn(['high', 'medium', 'low'])
+  priority?: string;
 }

@@ -20,6 +20,12 @@ export interface RecurrenceRule {
   count?: number; // number of occurrences
 }
 
+export interface ActivityLogEntry {
+  timestamp: string;
+  author: string;
+  note: string;
+}
+
 export interface Action {
   id: string;
   title: string;
@@ -41,6 +47,12 @@ export interface Action {
   links?: { id: string; url: string; title: string }[];
   recurrence?: RecurrenceRule;
   blockedBy?: string[];  // IDs of actions that must complete before this one
+  // Rocky Integration Fields
+  managedBy?: 'rocky' | 'fred' | null;
+  rockyStatus?: 'inbox' | 'todo' | 'in_progress' | 'waiting_on_fred' | 'waiting_external' | 'done' | 'dropped';
+  category?: 'bills' | 'documents' | 'household' | 'family' | 'errands' | 'health' | 'finance' | 'other' | null;
+  activityLog?: ActivityLogEntry[];
+  priority?: 'high' | 'medium' | 'low' | null;
 }
 
 export interface Project {

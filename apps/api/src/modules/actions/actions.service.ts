@@ -97,6 +97,23 @@ export class ActionsService {
       where.dueDate = { gte: new Date(query.dueAfter) };
     }
 
+    // Rocky Integration Filters
+    if (query.managedBy) {
+      where.managedBy = query.managedBy;
+    }
+
+    if (query.rockyStatus) {
+      where.rockyStatus = query.rockyStatus;
+    }
+
+    if (query.category) {
+      where.category = query.category;
+    }
+
+    if (query.priority) {
+      where.priority = query.priority;
+    }
+
     if (query.available) {
       // Only show actions that are available (deferred date passed or no defer date)
       const existingAnd = Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : [];
@@ -432,6 +449,43 @@ export class ActionsService {
     });
 
     return { success: true, count: actionIds.length };
+  }
+
+  async addActivityLog(id: string, author: string, note: string) {
+    const action = await this.prisma.action.findUnique({
+      where: { id },
+      select: { activityLog: true },
+    });
+
+    if (!action) {
+      throw new NotFoundException(`Action ${id} not found`);
+    }
+
+    const currentLog = (action.activityLog as Array<{ timestamp: string; author: string; note: string }>) || [];
+    const newEntry = {
+      timestamp: new Date().toISOString(),
+      author,
+      note,
+    };
+
+    const updatedAction = await this.prisma.action.update({
+      where: { id },
+      data: {
+        activityLog: [...currentLog, newEntry],
+      },
+      include: {
+        tags: { include: { tag: true } },
+        project: true,
+        parent: true,
+        children: true,
+        blockedByActions: { select: { blockingId: true } },
+      },
+    });
+
+    return {
+      ...updatedAction,
+      blockedBy: updatedAction.blockedByActions.map((d) => d.blockingId),
+    };
   }
 
   private async createNextRepeat(

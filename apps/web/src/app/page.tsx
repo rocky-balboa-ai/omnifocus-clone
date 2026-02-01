@@ -10,6 +10,7 @@ import { FlaggedList } from '@/components/FlaggedList';
 import { ReviewList } from '@/components/ReviewList';
 import { TodayDashboard } from '@/components/TodayDashboard';
 import { StatsDashboard } from '@/components/StatsDashboard';
+import { RockyQueueList } from '@/components/RockyQueueList';
 import { BottomNav } from '@/components/BottomNav';
 import { FloatingActionButton } from '@/components/FloatingActionButton';
 import { TaskDetailPanel } from '@/components/TaskDetailPanel';
@@ -172,6 +173,8 @@ export default function Home() {
             <TodayDashboard />
           ) : currentPerspective === 'stats' ? (
             <StatsDashboard />
+          ) : currentPerspective === 'rocky-queue' ? (
+            <RockyQueueList />
           ) : (
             <ActionList />
           )}

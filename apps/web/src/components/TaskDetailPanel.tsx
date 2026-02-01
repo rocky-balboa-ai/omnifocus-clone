@@ -24,6 +24,10 @@ import {
   Eye,
   Edit3,
   Link,
+  Bot,
+  User,
+  CircleDot,
+  Activity,
 } from 'lucide-react';
 import { BlockingPicker } from './BlockingPicker';
 import { LinkAttachment, LinkItem } from './LinkAttachment';
@@ -61,6 +65,12 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
   const [isNotePreview, setIsNotePreview] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Rocky Integration Fields
+  const [managedBy, setManagedBy] = useState<string | null>(null);
+  const [rockyStatus, setRockyStatus] = useState<string>('inbox');
+  const [category, setCategory] = useState<string | null>(null);
+  const [priority, setPriority] = useState<string | null>(null);
+
   useEffect(() => {
     if (action) {
       setTitle(action.title);
@@ -76,6 +86,11 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
       setRepeatInterval((action as any).repeatInterval || '');
       setAttachments(action.attachments || []);
       setLinks(action.links || []);
+      // Rocky fields
+      setManagedBy(action.managedBy || null);
+      setRockyStatus(action.rockyStatus || 'inbox');
+      setCategory(action.category || null);
+      setPriority(action.priority || null);
       setIsDirty(false);
     }
   }, [action]);
@@ -94,6 +109,11 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
       projectId: projectId || undefined,
       repeatMode: repeatMode || undefined,
       repeatInterval: repeatInterval || undefined,
+      // Rocky fields
+      managedBy: managedBy || undefined,
+      rockyStatus: rockyStatus || undefined,
+      category: category || undefined,
+      priority: priority || undefined,
     } as any);
     setIsDirty(false);
   };
@@ -456,6 +476,157 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
                 {tags.length === 0 && (
                   <div className="px-3 py-2 text-gray-500">No tags available</div>
                 )}
+              </div>
+            )}
+          </div>
+
+          {/* Rocky Integration Section */}
+          <div className={clsx(
+            'p-4 rounded-lg border',
+            theme === 'dark'
+              ? 'bg-omnifocus-purple/5 border-omnifocus-purple/20'
+              : 'bg-purple-50 border-purple-200'
+          )}>
+            <h3 className={clsx(
+              'flex items-center gap-2 text-sm font-medium mb-3',
+              theme === 'dark' ? 'text-omnifocus-purple' : 'text-purple-700'
+            )}>
+              <Bot size={16} />
+              Rocky Management
+            </h3>
+
+            <div className="grid grid-cols-2 gap-3">
+              {/* Managed By */}
+              <div>
+                <label className={clsx('text-xs mb-1 block', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>
+                  Managed By
+                </label>
+                <select
+                  value={managedBy || ''}
+                  onChange={(e) => { setManagedBy(e.target.value || null); markDirty(); }}
+                  className={clsx(
+                    'w-full px-3 py-2 rounded-lg border text-sm',
+                    theme === 'dark'
+                      ? 'bg-omnifocus-surface border-omnifocus-border text-white'
+                      : 'bg-white border-gray-200 text-gray-900'
+                  )}
+                >
+                  <option value="">Not assigned</option>
+                  <option value="rocky">Rocky</option>
+                  <option value="fred">Fred</option>
+                </select>
+              </div>
+
+              {/* Priority */}
+              <div>
+                <label className={clsx('text-xs mb-1 block', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>
+                  Priority
+                </label>
+                <select
+                  value={priority || ''}
+                  onChange={(e) => { setPriority(e.target.value || null); markDirty(); }}
+                  className={clsx(
+                    'w-full px-3 py-2 rounded-lg border text-sm',
+                    theme === 'dark'
+                      ? 'bg-omnifocus-surface border-omnifocus-border text-white'
+                      : 'bg-white border-gray-200 text-gray-900'
+                  )}
+                >
+                  <option value="">No priority</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+
+              {/* Rocky Status */}
+              <div>
+                <label className={clsx('text-xs mb-1 block', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>
+                  Status
+                </label>
+                <select
+                  value={rockyStatus}
+                  onChange={(e) => { setRockyStatus(e.target.value); markDirty(); }}
+                  className={clsx(
+                    'w-full px-3 py-2 rounded-lg border text-sm',
+                    theme === 'dark'
+                      ? 'bg-omnifocus-surface border-omnifocus-border text-white'
+                      : 'bg-white border-gray-200 text-gray-900'
+                  )}
+                >
+                  <option value="inbox">Inbox</option>
+                  <option value="todo">To Do</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="waiting_on_fred">Waiting on Fred</option>
+                  <option value="waiting_external">Waiting External</option>
+                  <option value="done">Done</option>
+                  <option value="dropped">Dropped</option>
+                </select>
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className={clsx('text-xs mb-1 block', theme === 'dark' ? 'text-gray-400' : 'text-gray-500')}>
+                  Category
+                </label>
+                <select
+                  value={category || ''}
+                  onChange={(e) => { setCategory(e.target.value || null); markDirty(); }}
+                  className={clsx(
+                    'w-full px-3 py-2 rounded-lg border text-sm',
+                    theme === 'dark'
+                      ? 'bg-omnifocus-surface border-omnifocus-border text-white'
+                      : 'bg-white border-gray-200 text-gray-900'
+                  )}
+                >
+                  <option value="">No category</option>
+                  <option value="bills">Bills</option>
+                  <option value="documents">Documents</option>
+                  <option value="household">Household</option>
+                  <option value="family">Family</option>
+                  <option value="errands">Errands</option>
+                  <option value="health">Health</option>
+                  <option value="finance">Finance</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Activity Log */}
+            {action.activityLog && action.activityLog.length > 0 && (
+              <div className="mt-4">
+                <label className={clsx(
+                  'flex items-center gap-2 text-xs mb-2',
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                )}>
+                  <Activity size={14} />
+                  Activity Log
+                </label>
+                <div className={clsx(
+                  'space-y-2 max-h-40 overflow-y-auto rounded-lg p-2',
+                  theme === 'dark' ? 'bg-omnifocus-bg' : 'bg-white'
+                )}>
+                  {action.activityLog.map((entry, index) => (
+                    <div key={index} className="text-xs">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className={clsx(
+                          'font-medium',
+                          entry.author === 'rocky'
+                            ? 'text-omnifocus-purple'
+                            : theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
+                        )}>
+                          {entry.author === 'rocky' ? 'Rocky' : 'Fred'}
+                        </span>
+                        <span className="text-gray-500">
+                          {format(new Date(entry.timestamp), 'MMM d, h:mm a')}
+                        </span>
+                      </div>
+                      <p className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>
+                        {entry.note}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

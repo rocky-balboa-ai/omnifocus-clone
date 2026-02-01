@@ -14,6 +14,7 @@ import {
   Sun,
   BarChart3,
   LogOut,
+  Bot,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { startOfDay, isBefore, isToday } from 'date-fns';
@@ -82,6 +83,8 @@ export function Sidebar() {
       flagged: activeActions.filter(a => a.flagged).length,
       // Forecast: Actions with due dates
       forecast: activeActions.filter(a => a.dueDate).length,
+      // Rocky's Queue: Actions managed by Rocky
+      rockyQueue: activeActions.filter(a => a.managedBy === 'rocky').length,
     };
   }, [actions]);
 
@@ -157,6 +160,30 @@ export function Sidebar() {
               </button>
             );
           })}
+
+          {/* Rocky's Queue - special perspective */}
+          <button
+            onClick={() => setCurrentPerspective('rocky-queue')}
+            className={clsx(
+              'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
+              currentPerspective === 'rocky-queue'
+                ? themeClasses.navItem.active
+                : themeClasses.navItem.inactive[theme]
+            )}
+          >
+            <Bot size={18} />
+            <span className="flex-1 text-left">Rocky's Queue</span>
+            {counts.rockyQueue > 0 && (
+              <span className={clsx(
+                'px-1.5 py-0.5 text-xs rounded-full font-medium',
+                currentPerspective === 'rocky-queue'
+                  ? 'bg-white/20'
+                  : 'bg-omnifocus-purple text-white'
+              )}>
+                {counts.rockyQueue}
+              </span>
+            )}
+          </button>
 
           {/* Stats - special perspective */}
           <button

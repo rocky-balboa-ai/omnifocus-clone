@@ -134,6 +134,13 @@ model Action {
   // Links (stored as JSON array)
   links           Json?
 
+  // Rocky Integration Fields
+  managedBy       String?   // "rocky" | "fred" | null
+  rockyStatus     String    @default("inbox")  // "inbox" | "todo" | "in_progress" | "waiting_on_fred" | "waiting_external" | "done" | "dropped"
+  category        String?   // "bills" | "documents" | "household" | "family" | "errands" | "health" | "finance" | "other"
+  activityLog     Json      @default("[]")  // Array of {timestamp, author, note}
+  priority        String?   // "high" | "medium" | "low" | null
+
   // Hierarchy
   projectId String?
   parentId  String?   // For action groups

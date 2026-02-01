@@ -1,4 +1,4 @@
-import { IsOptional, IsEnum, IsUUID, IsBoolean, IsDateString, IsString, MinLength, IsInt, Min, Max } from 'class-validator';
+import { IsOptional, IsEnum, IsUUID, IsBoolean, IsDateString, IsString, MinLength, IsInt, Min, Max, IsIn } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ItemStatus } from '@prisma/client';
 
@@ -55,6 +55,23 @@ export class ActionQueryDto {
   @IsOptional()
   @IsDateString()
   dueAfter?: string;
+
+  // Rocky Integration Filters
+  @IsOptional()
+  @IsIn(['rocky', 'fred'])
+  managedBy?: string;
+
+  @IsOptional()
+  @IsIn(['inbox', 'todo', 'in_progress', 'waiting_on_fred', 'waiting_external', 'done', 'dropped'])
+  rockyStatus?: string;
+
+  @IsOptional()
+  @IsIn(['bills', 'documents', 'household', 'family', 'errands', 'health', 'finance', 'other'])
+  category?: string;
+
+  @IsOptional()
+  @IsIn(['high', 'medium', 'low'])
+  priority?: string;
 }
 
 export class SearchActionDto {

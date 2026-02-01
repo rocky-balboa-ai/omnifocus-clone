@@ -94,4 +94,9 @@ export class ActionsController {
   bulkMove(@Body() body: { actionIds: string[]; projectId: string | null }) {
     return this.actionsService.bulkMove(body.actionIds, body.projectId);
   }
+
+  @Post(':id/log')
+  addActivityLog(@Param('id') id: string, @Body() body: { author: string; note: string }) {
+    return this.actionsService.addActivityLog(id, body.author, body.note);
+  }
 }
