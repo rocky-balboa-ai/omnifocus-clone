@@ -45,3 +45,4 @@ api/uploads/
 # Turbo
 .turbo
 
+.vercel
