@@ -19,6 +19,7 @@ import {
   Table2,
 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { usePushNotifications } from '@/lib/usePushNotifications';
 import clsx from 'clsx';
 
 interface SettingsPanelProps {
@@ -32,6 +33,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const [isCleaningUp, setIsCleaningUp] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [exportFormat, setExportFormat] = useState<'json' | 'csv' | 'markdown'>('json');
+  const pushNotifications = usePushNotifications();
 
   const handleCleanup = async () => {
     if (!confirm(`Delete completed actions older than ${cleanupDays} days? This cannot be undone.`)) return;
@@ -275,6 +277,53 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
               </div>
             </div>
           </section>
+
+          {/* Notifications */}
+          {pushNotifications.isSupported && (
+            <section>
+              <h3 className={clsx(
+                'flex items-center gap-2 text-sm font-semibold mb-3',
+                theme === 'dark' ? 'text-white' : 'text-gray-900'
+              )}>
+                <Bell size={16} />
+                Notifications
+              </h3>
+              <div className={clsx(
+                'p-3 rounded-lg',
+                theme === 'dark' ? 'bg-omnifocus-surface' : 'bg-omnifocus-light-surface'
+              )}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className={clsx('text-sm', theme === 'dark' ? 'text-gray-300' : 'text-gray-700')}>
+                      Push Notifications
+                    </span>
+                    <p className={clsx('text-xs mt-0.5', theme === 'dark' ? 'text-gray-500' : 'text-gray-500')}>
+                      Get notified when tasks are due
+                    </p>
+                  </div>
+                  <button
+                    onClick={pushNotifications.toggle}
+                    disabled={pushNotifications.isLoading}
+                    className={clsx(
+                      'relative w-11 h-6 rounded-full transition-colors disabled:opacity-50',
+                      pushNotifications.isSubscribed
+                        ? 'bg-omnifocus-purple'
+                        : theme === 'dark'
+                          ? 'bg-omnifocus-bg'
+                          : 'bg-gray-300'
+                    )}
+                  >
+                    <span
+                      className={clsx(
+                        'absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform',
+                        pushNotifications.isSubscribed && 'translate-x-5'
+                      )}
+                    />
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
 
           {/* Keyboard Shortcuts */}
           <section>

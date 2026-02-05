@@ -258,6 +258,20 @@ model Perspective {
 }
 
 // ============================================================================
+// Push Notifications
+// ============================================================================
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  endpoint  String   @unique
+  p256dh    String   // Public key
+  auth      String   // Auth secret
+  createdAt DateTime @default(now())
+
+  @@map("push_subscriptions")
+}
+
+// ============================================================================
 // Changelog (for Rocky polling)
 // ============================================================================
 
