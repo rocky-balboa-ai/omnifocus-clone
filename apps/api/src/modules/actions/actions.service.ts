@@ -6,6 +6,7 @@ import { UpdateActionDto } from './dto/update-action.dto';
 import { ActionQueryDto, SearchActionDto } from './dto/action-query.dto';
 import { parseInterval, addInterval } from '../../common/utils/date.utils';
 import { ChangelogService } from '../changelog/changelog.service';
+import { PushService } from '../push/push.service';
 
 // Helper to convert date string to ISO-8601 datetime
 function toISODateTime(dateStr: string | null | undefined): string | null {
@@ -21,6 +22,7 @@ export class ActionsService {
   constructor(
     private prisma: PrismaService,
     private changelogService: ChangelogService,
+    private pushService: PushService,
   ) {}
 
   async create(dto: CreateActionDto, actor: string = 'system') {
@@ -334,6 +336,14 @@ export class ActionsService {
       action: 'complete',
       actor,
       changes: { status: { old: action.status, new: 'completed' } },
+    });
+
+    // Send push notification for task completion
+    await this.pushService.sendToAll({
+      title: '✅ Task Completed',
+      body: action.title,
+      tag: `complete-${id}`,
+      url: '/',
     });
 
     // Handle repeating actions
