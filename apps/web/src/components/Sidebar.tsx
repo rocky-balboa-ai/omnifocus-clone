@@ -19,6 +19,8 @@ import {
 import clsx from 'clsx';
 import { startOfDay, isBefore, isToday } from 'date-fns';
 import { SidebarCalendar } from './MiniCalendar';
+import { ProjectTree } from './ProjectTree';
+import { TagTree } from './TagTree';
 
 const themeClasses = {
   sidebar: {
@@ -199,6 +201,12 @@ export function Sidebar() {
             <span>Statistics</span>
           </button>
         </div>
+
+        {/* Projects Tree */}
+        <ProjectTree theme={theme} />
+
+        {/* Tags Tree */}
+        <TagTree theme={theme} />
 
         <div className="mt-6">
           <div className="flex items-center justify-between px-3 mb-2">

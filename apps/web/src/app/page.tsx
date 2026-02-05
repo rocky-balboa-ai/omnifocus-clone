@@ -57,6 +57,7 @@ export default function Home() {
     fetchActions,
     fetchProjects,
     fetchTags,
+    fetchFolders,
     selectedActionId,
     setSelectedAction,
     selectedProjectId,
@@ -107,8 +108,9 @@ export default function Home() {
       fetchPerspectives();
       fetchProjects();
       fetchTags();
+      fetchFolders();
     }
-  }, [isAuthenticated, fetchPerspectives, fetchProjects, fetchTags]);
+  }, [isAuthenticated, fetchPerspectives, fetchProjects, fetchTags, fetchFolders]);
 
   useEffect(() => {
     if (currentPerspective) {

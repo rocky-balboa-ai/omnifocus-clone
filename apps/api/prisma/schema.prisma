@@ -256,3 +256,22 @@ model Perspective {
 
   @@map("perspectives")
 }
+
+// ============================================================================
+// Changelog (for Rocky polling)
+// ============================================================================
+
+model ChangeLog {
+  id         String   @id @default(uuid())
+  entityType String   // 'action', 'project', 'tag', 'folder'
+  entityId   String
+  action     String   // 'create', 'update', 'delete', 'complete', 'uncomplete'
+  actor      String   // 'fred', 'rocky', 'system'
+  changes    Json?    // { field: { old, new } }
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([actor])
+  @@index([entityType])
+  @@map("change_logs")
+}

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ActionsService } from './actions.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ChangelogService } from '../changelog/changelog.service';
 
 describe('ActionsService', () => {
   let service: ActionsService;
@@ -21,11 +22,16 @@ describe('ActionsService', () => {
     },
   };
 
+  const mockChangelogService = {
+    logChange: jest.fn().mockResolvedValue({}),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ActionsService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: ChangelogService, useValue: mockChangelogService },
       ],
     }).compile();
 

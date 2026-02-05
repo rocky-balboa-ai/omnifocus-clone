@@ -5,6 +5,7 @@ import { CreateActionDto } from './dto/create-action.dto';
 import { UpdateActionDto } from './dto/update-action.dto';
 import { ActionQueryDto, SearchActionDto } from './dto/action-query.dto';
 import { parseInterval, addInterval } from '../../common/utils/date.utils';
+import { ChangelogService } from '../changelog/changelog.service';
 
 // Helper to convert date string to ISO-8601 datetime
 function toISODateTime(dateStr: string | null | undefined): string | null {
@@ -17,9 +18,12 @@ function toISODateTime(dateStr: string | null | undefined): string | null {
 
 @Injectable()
 export class ActionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private changelogService: ChangelogService,
+  ) {}
 
-  async create(dto: CreateActionDto) {
+  async create(dto: CreateActionDto, actor: string = 'system') {
     const { tagIds, dueDate, deferDate, plannedDate, ...rest } = dto;
     const data = {
       ...rest,
@@ -45,6 +49,15 @@ export class ActionsService {
         children: true,
         blockedByActions: { select: { blockingId: true } },
       },
+    });
+
+    // Log the change
+    await this.changelogService.logChange({
+      entityType: 'action',
+      entityId: action.id,
+      action: 'create',
+      actor,
+      changes: { title: { old: null, new: action.title } },
     });
 
     return {
@@ -200,7 +213,13 @@ export class ActionsService {
     };
   }
 
-  async update(id: string, dto: UpdateActionDto) {
+  async update(id: string, dto: UpdateActionDto, actor: string = 'system') {
+    // Get the old action state for diff
+    const oldAction = await this.prisma.action.findUnique({
+      where: { id },
+      include: { blockedByActions: { select: { blockingId: true } } },
+    });
+
     const { tagIds, blockedBy, dueDate, deferDate, plannedDate, ...rest } = dto;
     const data = {
       ...rest,
@@ -243,6 +262,30 @@ export class ActionsService {
       },
     });
 
+    // Build field-level changes for logging
+    const changes: Record<string, { old: unknown; new: unknown }> = {};
+    const fieldsToTrack = ['title', 'note', 'status', 'flagged', 'dueDate', 'deferDate', 'plannedDate', 'projectId', 'priority', 'managedBy', 'rockyStatus', 'category'];
+    for (const field of fieldsToTrack) {
+      if (dto[field as keyof UpdateActionDto] !== undefined && oldAction) {
+        const oldVal = (oldAction as Record<string, unknown>)[field];
+        const newVal = (action as Record<string, unknown>)[field];
+        if (oldVal !== newVal) {
+          changes[field] = { old: oldVal, new: newVal };
+        }
+      }
+    }
+
+    // Log the change if there were any changes
+    if (Object.keys(changes).length > 0) {
+      await this.changelogService.logChange({
+        entityType: 'action',
+        entityId: id,
+        action: 'update',
+        actor,
+        changes,
+      });
+    }
+
     // Transform blockedByActions to blockedBy array
     return {
       ...action,
@@ -250,12 +293,28 @@ export class ActionsService {
     };
   }
 
-  async delete(id: string) {
+  async delete(id: string, actor: string = 'system') {
+    // Get action title before deleting for the log
+    const action = await this.prisma.action.findUnique({
+      where: { id },
+      select: { title: true },
+    });
+
     await this.prisma.action.delete({ where: { id } });
+
+    // Log the deletion
+    await this.changelogService.logChange({
+      entityType: 'action',
+      entityId: id,
+      action: 'delete',
+      actor,
+      changes: action ? { title: { old: action.title, new: null } } : null,
+    });
+
     return { success: true };
   }
 
-  async complete(id: string) {
+  async complete(id: string, actor: string = 'system') {
     const action = await this.findOne(id);
     const now = new Date();
 
@@ -268,6 +327,15 @@ export class ActionsService {
       },
     });
 
+    // Log the completion
+    await this.changelogService.logChange({
+      entityType: 'action',
+      entityId: id,
+      action: 'complete',
+      actor,
+      changes: { status: { old: action.status, new: 'completed' } },
+    });
+
     // Handle repeating actions
     if (action.repeatMode && action.repeatInterval) {
       await this.createNextRepeat(action, now);
@@ -276,8 +344,13 @@ export class ActionsService {
     return this.findOne(id);
   }
 
-  async drop(id: string) {
-    return this.prisma.action.update({
+  async drop(id: string, actor: string = 'system') {
+    const oldAction = await this.prisma.action.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+
+    const action = await this.prisma.action.update({
       where: { id },
       data: {
         status: ItemStatus.dropped,
@@ -288,10 +361,21 @@ export class ActionsService {
         project: true,
       },
     });
+
+    // Log the drop
+    await this.changelogService.logChange({
+      entityType: 'action',
+      entityId: id,
+      action: 'drop',
+      actor,
+      changes: { status: { old: oldAction?.status, new: 'dropped' } },
+    });
+
+    return action;
   }
 
-  async uncomplete(id: string) {
-    return this.prisma.action.update({
+  async uncomplete(id: string, actor: string = 'system') {
+    const action = await this.prisma.action.update({
       where: { id },
       data: {
         status: ItemStatus.active,
@@ -304,6 +388,17 @@ export class ActionsService {
         children: true,
       },
     });
+
+    // Log the uncomplete
+    await this.changelogService.logChange({
+      entityType: 'action',
+      entityId: id,
+      action: 'uncomplete',
+      actor,
+      changes: { status: { old: 'completed', new: 'active' } },
+    });
+
+    return action;
   }
 
   async reorder(actionIds: string[]) {
@@ -389,7 +484,7 @@ export class ActionsService {
     };
   }
 
-  async bulkComplete(actionIds: string[]) {
+  async bulkComplete(actionIds: string[], actor: string = 'system') {
     const now = new Date();
 
     await this.prisma.action.updateMany({
@@ -399,6 +494,17 @@ export class ActionsService {
         completedAt: now,
       },
     });
+
+    // Log changes for each action
+    for (const actionId of actionIds) {
+      await this.changelogService.logChange({
+        entityType: 'action',
+        entityId: actionId,
+        action: 'complete',
+        actor,
+        changes: { status: { old: 'active', new: 'completed' } },
+      });
+    }
 
     // Handle repeating actions
     const actions = await this.prisma.action.findMany({
@@ -419,15 +525,25 @@ export class ActionsService {
     return { success: true, count: actionIds.length };
   }
 
-  async bulkDelete(actionIds: string[]) {
+  async bulkDelete(actionIds: string[], actor: string = 'system') {
     const result = await this.prisma.action.deleteMany({
       where: { id: { in: actionIds } },
     });
 
+    // Log deletions for each action
+    for (const actionId of actionIds) {
+      await this.changelogService.logChange({
+        entityType: 'action',
+        entityId: actionId,
+        action: 'delete',
+        actor,
+      });
+    }
+
     return { success: true, count: result.count };
   }
 
-  async bulkUpdate(actionIds: string[], update: Record<string, unknown>) {
+  async bulkUpdate(actionIds: string[], update: Record<string, unknown>, actor: string = 'system') {
     // Remove any fields that shouldn't be bulk updated
     const { id, createdAt, updatedAt, tags, ...safeUpdate } = update as Record<string, unknown>;
 
@@ -436,10 +552,26 @@ export class ActionsService {
       data: safeUpdate as Prisma.ActionUpdateManyMutationInput,
     });
 
+    // Log updates for each action
+    const changes: Record<string, { old: unknown; new: unknown }> = {};
+    for (const [key, value] of Object.entries(safeUpdate)) {
+      changes[key] = { old: null, new: value }; // We don't track old values in bulk update
+    }
+
+    for (const actionId of actionIds) {
+      await this.changelogService.logChange({
+        entityType: 'action',
+        entityId: actionId,
+        action: 'update',
+        actor,
+        changes,
+      });
+    }
+
     return { success: true, count: actionIds.length };
   }
 
-  async bulkMove(actionIds: string[], projectId: string | null) {
+  async bulkMove(actionIds: string[], projectId: string | null, actor: string = 'system') {
     await this.prisma.action.updateMany({
       where: { id: { in: actionIds } },
       data: {
@@ -447,6 +579,17 @@ export class ActionsService {
         isInbox: projectId === null,
       },
     });
+
+    // Log move for each action
+    for (const actionId of actionIds) {
+      await this.changelogService.logChange({
+        entityType: 'action',
+        entityId: actionId,
+        action: 'update',
+        actor,
+        changes: { projectId: { old: null, new: projectId } },
+      });
+    }
 
     return { success: true, count: actionIds.length };
   }
