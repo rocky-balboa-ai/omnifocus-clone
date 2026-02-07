@@ -284,7 +284,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         localStorage.removeItem('authToken');
         set({ isAuthenticated: false, currentUser: null });
         if (typeof window !== 'undefined') {
-          window.location.href = '/login';
+          window.location.href = '/';
         }
       }
     } else {

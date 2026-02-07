@@ -34,7 +34,7 @@ class ApiClient {
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) {
         localStorage.removeItem('authToken');
-        window.location.href = "/login";
+        window.location.href = "/";
         throw new Error('Session expired');
       }
       const error = await response.json().catch(() => ({}));
@@ -81,7 +81,7 @@ class ApiClient {
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) {
         localStorage.removeItem('authToken');
-        window.location.href = "/login";
+        window.location.href = "/";
         throw new Error('Session expired');
       }
       const error = await response.json().catch(() => ({}));
