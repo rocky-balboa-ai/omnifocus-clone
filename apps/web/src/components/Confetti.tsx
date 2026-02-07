@@ -131,7 +131,7 @@ function ConfettiDisplay({
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[200] overflow-hidden">
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{__html: `
         @keyframes confetti-fall {
           0% {
             transform: translate(0, 0) rotate(0deg);
@@ -142,7 +142,7 @@ function ConfettiDisplay({
             opacity: 0;
           }
         }
-      `}</style>
+      `}} />
       {pieces.map(piece => (
         <ConfettiPiece
           key={piece.id}

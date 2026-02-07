@@ -158,7 +158,7 @@ interface AppState {
   // Auth Actions
   setAuthenticated: (isAuthenticated: boolean, user?: { id: string; username: string } | null) => void;
   logout: () => void;
-  checkAuth: () => void;
+  checkAuth: () => Promise<void>;
 
   setCurrentPerspective: (id: string) => void;
   setSelectedAction: (id: string | null) => void;
@@ -272,10 +272,23 @@ export const useAppStore = create<AppState>((set, get) => ({
     localStorage.removeItem('authToken');
     set({ isAuthenticated: false, currentUser: null });
   },
-  checkAuth: () => {
+  checkAuth: async () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
     if (token) {
-      set({ isAuthenticated: true });
+      try {
+        // Verify token is still valid by calling /auth/me
+        const response = await api.get<{ id: string; username: string }>('/auth/me');
+        set({ isAuthenticated: true, currentUser: response });
+      } catch {
+        // Token invalid - clear it and redirect to login
+        localStorage.removeItem('authToken');
+        set({ isAuthenticated: false, currentUser: null });
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+      }
+    } else {
+      set({ isAuthenticated: false, currentUser: null });
     }
   },
 

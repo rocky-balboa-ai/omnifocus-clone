@@ -32,6 +32,11 @@ class ApiClient {
     });
 
     if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('authToken');
+        window.location.href = "/login";
+        throw new Error('Session expired');
+      }
       const error = await response.json().catch(() => ({}));
       throw new Error(error.message || `API error: ${response.status}`);
     }
@@ -74,6 +79,11 @@ class ApiClient {
     });
 
     if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('authToken');
+        window.location.href = "/login";
+        throw new Error('Session expired');
+      }
       const error = await response.json().catch(() => ({}));
       throw new Error(error.message || `API error: ${response.status}`);
     }
