@@ -5,12 +5,21 @@ Command-line interface for OmniFocus Clone API.
 ## Installation
 
 ```bash
-# From the repo
+# Quick install (recommended)
 cd cli
+./install.sh
+
+# Or manually with npm link
 npm link
 
-# Or install globally (after publishing)
-npm install -g omnifocus-cli
+# Or direct symlink
+ln -s $(pwd)/index.js ~/bin/omnifocus
+```
+
+## Uninstall
+
+```bash
+./uninstall.sh
 ```
 
 ## Setup
