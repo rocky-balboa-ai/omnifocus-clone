@@ -29,7 +29,6 @@ import { Scratchpad } from '@/components/Scratchpad';
 import { BatchActionsBar } from '@/components/BatchActionsBar';
 import { FocusModeOverlay } from '@/components/FocusModeOverlay';
 import { FocusBar } from '@/components/FocusBar';
-import { MorningBriefing } from '@/components/MorningBriefing';
 import { EndOfDaySummary } from '@/components/EndOfDaySummary';
 import { HabitTracker } from '@/components/HabitTracker';
 import { TimeBlocker } from '@/components/TimeBlocker';
@@ -146,7 +145,7 @@ export default function Home() {
     <ToastProvider>
     <ConfettiProvider>
     <div className={clsx(
-      'flex h-screen',
+      'flex h-screen pt-safe',
       theme === 'dark' ? 'bg-omnifocus-bg' : 'bg-omnifocus-light-bg'
     )}>
       {/* Desktop sidebar - hidden on mobile and in focus mode */}
@@ -286,9 +285,6 @@ export default function Home() {
 
       {/* Focus Mode Overlay */}
       <FocusModeOverlay />
-
-      {/* Morning Briefing */}
-      <MorningBriefing />
 
       {/* End of Day Summary */}
       <EndOfDaySummary />

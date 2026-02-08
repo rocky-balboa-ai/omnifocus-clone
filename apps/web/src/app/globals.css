@@ -27,7 +27,14 @@ body {
 }
 
 .pt-safe {
-  padding-top: env(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Mobile status bar safe area - ensure minimum on standalone PWA */
+@media (display-mode: standalone) {
+  .pt-safe {
+    padding-top: max(env(safe-area-inset-top, 0px), 0px);
+  }
 }
 
 /* Prevent pull-to-refresh and bounce on mobile */
