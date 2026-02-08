@@ -1,0 +1,15 @@
+{
+  "name": "omnifocus-cli",
+  "version": "1.0.0",
+  "description": "CLI for OmniFocus Clone API",
+  "main": "index.js",
+  "bin": {
+    "omnifocus": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": ["omnifocus", "cli", "tasks", "gtd"],
+  "author": "Rocky Balboa",
+  "license": "MIT"
+}
