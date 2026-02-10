@@ -103,10 +103,22 @@ export class AuthController {
     return { authenticated: false };
   }
 
-  private getUserId(req: Request): string {
+  private async getUserId(req: Request): Promise<string> {
+    // Check if user was set by guard
     const user = (req as any).user;
     if (user?.id) return user.id;
+    
+    // Check JWT Bearer token
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      const tokenUser = await this.authService.getUserFromToken(token);
+      if (tokenUser?.id) return tokenUser.id;
+    }
+    
+    // Check session auth
     if (req.session?.userId) return req.session.userId;
+    
     throw new UnauthorizedException('Not authenticated');
   }
 
@@ -115,7 +127,7 @@ export class AuthController {
     @Req() req: Request,
     @Body() dto: UpdateProfileDto,
   ) {
-    const userId = this.getUserId(req);
+    const userId = await this.getUserId(req);
     return this.authService.updateProfile(userId, { username: dto.username });
   }
 
@@ -124,7 +136,7 @@ export class AuthController {
     @Req() req: Request,
     @Body() dto: ChangePasswordDto,
   ) {
-    const userId = this.getUserId(req);
+    const userId = await this.getUserId(req);
     return this.authService.changePassword(userId, {
       currentPassword: dto.currentPassword,
       newPassword: dto.newPassword,
@@ -133,19 +145,19 @@ export class AuthController {
 
   @Get('api-key')
   async getApiKey(@Req() req: Request) {
-    const userId = this.getUserId(req);
+    const userId = await this.getUserId(req);
     return this.authService.getUserApiKey(userId);
   }
 
   @Get('api-key/reveal')
   async revealApiKey(@Req() req: Request) {
-    const userId = this.getUserId(req);
+    const userId = await this.getUserId(req);
     return this.authService.revealUserApiKey(userId);
   }
 
   @Post('api-key/regenerate')
   async regenerateApiKey(@Req() req: Request) {
-    const userId = this.getUserId(req);
+    const userId = await this.getUserId(req);
     return this.authService.regenerateUserApiKey(userId);
   }
 }

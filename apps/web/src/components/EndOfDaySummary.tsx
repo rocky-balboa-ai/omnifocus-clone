@@ -23,24 +23,23 @@ export function EndOfDaySummary() {
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
 
-  // Check if we should show the summary (after 6 PM)
+  // DISABLED: Auto-show after 6 PM
+  // This modal was auto-showing which Fred doesn't want
+  // Keeping the component for potential manual trigger later
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const checkTime = () => {
-      const hour = new Date().getHours();
-      const lastSummary = localStorage.getItem(SUMMARY_KEY);
-      const today = format(new Date(), 'yyyy-MM-dd');
-
-      // Show summary between 6 PM and midnight if not shown today
-      if (hour >= 18 && lastSummary !== today && !isDismissed) {
-        setIsVisible(true);
-      }
-    };
-
-    checkTime();
-    const interval = setInterval(checkTime, 60000);
-    return () => clearInterval(interval);
+    // Disabled - don't auto-show
+    // if (typeof window === 'undefined') return;
+    // const checkTime = () => {
+    //   const hour = new Date().getHours();
+    //   const lastSummary = localStorage.getItem(SUMMARY_KEY);
+    //   const today = format(new Date(), 'yyyy-MM-dd');
+    //   if (hour >= 18 && lastSummary !== today && !isDismissed) {
+    //     setIsVisible(true);
+    //   }
+    // };
+    // checkTime();
+    // const interval = setInterval(checkTime, 60000);
+    // return () => clearInterval(interval);
   }, [isDismissed]);
 
   const handleDismiss = () => {

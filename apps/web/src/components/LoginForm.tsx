@@ -6,7 +6,7 @@ import { CheckSquare } from 'lucide-react';
 import clsx from 'clsx';
 
 interface LoginFormProps {
-  onSuccess: () => void;
+  onSuccess: (user: { id: string; username: string }) => void;
 }
 
 interface LoginResponse {
@@ -28,7 +28,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     try {
       const response = await api.post<LoginResponse>('/auth/login', { username, password });
       localStorage.setItem('authToken', response.accessToken);
-      onSuccess();
+      onSuccess(response.user);
     } catch (err) {
       setError('Invalid credentials');
     } finally {

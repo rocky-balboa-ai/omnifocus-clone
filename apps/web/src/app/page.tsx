@@ -132,8 +132,8 @@ export default function Home() {
   // Keyboard shortcuts modal
   const keyboardShortcutsModal = useKeyboardShortcutsModal();
 
-  const handleLoginSuccess = () => {
-    setAuthenticated(true);
+  const handleLoginSuccess = (user: { id: string; username: string }) => {
+    setAuthenticated(true, user);
   };
 
   // Show login form if not authenticated
