@@ -280,12 +280,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         const response = await api.get<{ id: string; username: string }>('/auth/me');
         set({ isAuthenticated: true, currentUser: response });
       } catch {
-        // Token invalid - clear it and redirect to login
+        // Token invalid - clear it (api.ts already removes it on 401)
+        // Don't redirect - React will show LoginForm when isAuthenticated is false
         localStorage.removeItem('authToken');
         set({ isAuthenticated: false, currentUser: null });
-        if (typeof window !== 'undefined') {
-          window.location.href = '/';
-        }
       }
     } else {
       set({ isAuthenticated: false, currentUser: null });

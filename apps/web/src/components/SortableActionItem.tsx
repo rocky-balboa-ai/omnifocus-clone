@@ -367,8 +367,8 @@ export function SortableActionItem({
         </div>
       </div>
 
-      {/* Action buttons - shown on hover */}
-      <div className="hidden group-hover:flex items-center gap-1 shrink-0">
+      {/* Action buttons - shown on hover, desktop only (mobile uses detail panel) */}
+      <div className="hidden md:group-hover:flex items-center gap-1 shrink-0">
         {/* Quick date buttons */}
         <button
           onClick={(e) => handleQuickDate(e, startOfDay(new Date()))}
