@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { useAppStore } from '@/stores/app.store';
 import {
   Inbox,
@@ -10,6 +10,11 @@ import {
   Flag,
   RefreshCw,
   Sun,
+  MoreHorizontal,
+  Settings,
+  LogOut,
+  Bot,
+  BarChart3,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { isBefore, isToday, startOfDay } from 'date-fns';
@@ -24,11 +29,26 @@ const perspectiveIcons: Record<string, React.ComponentType<{ size?: number; clas
   review: RefreshCw,
 };
 
-// Mobile shows fewer items due to space constraints
-const perspectiveOrder = ['today', 'inbox', 'forecast', 'flagged', 'projects'];
+// Mobile shows fewer items due to space constraints - reduced to make room for More
+const perspectiveOrder = ['today', 'inbox', 'forecast', 'flagged'];
 
 export function BottomNav() {
-  const { perspectives, currentPerspective, setCurrentPerspective, actions, projects, theme } = useAppStore();
+  const { perspectives, currentPerspective, setCurrentPerspective, setSettingsOpen, logout, actions, projects, theme } = useAppStore();
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
+        setIsMoreOpen(false);
+      }
+    }
+    if (isMoreOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isMoreOpen]);
 
   // Calculate badge counts for each perspective
   const badgeCounts = useMemo(() => {
@@ -69,6 +89,21 @@ export function BottomNav() {
       return perspectives.find(p => p.id === id);
     })
     .filter(Boolean);
+
+  const handleLogout = () => {
+    setIsMoreOpen(false);
+    logout();
+  };
+
+  const handleOpenSettings = () => {
+    setIsMoreOpen(false);
+    setSettingsOpen(true);
+  };
+
+  const handleNavigate = (id: string) => {
+    setIsMoreOpen(false);
+    setCurrentPerspective(id);
+  };
 
   return (
     <nav className={clsx(
@@ -125,6 +160,118 @@ export function BottomNav() {
             </button>
           );
         })}
+
+        {/* More Menu Button */}
+        <div className="relative" ref={moreMenuRef}>
+          <button
+            onClick={() => setIsMoreOpen(!isMoreOpen)}
+            className={clsx(
+              'relative flex flex-col items-center justify-center py-2 px-2 rounded-xl transition-all duration-200 min-w-[52px]',
+              isMoreOpen
+                ? 'text-omnifocus-purple'
+                : theme === 'dark' ? 'text-gray-500 active:scale-95' : 'text-gray-400 active:scale-95'
+            )}
+          >
+            <MoreHorizontal
+              size={24}
+              className={clsx(
+                'transition-transform duration-200',
+                isMoreOpen && 'scale-110'
+              )}
+            />
+            <span className={clsx(
+              'text-[10px] mt-0.5 font-medium',
+              isMoreOpen
+                ? 'text-omnifocus-purple'
+                : theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+            )}>
+              More
+            </span>
+          </button>
+
+          {/* Popup Menu */}
+          {isMoreOpen && (
+            <div className={clsx(
+              'absolute bottom-full right-0 mb-2 w-48 rounded-xl shadow-lg border overflow-hidden',
+              theme === 'dark'
+                ? 'bg-omnifocus-sidebar border-omnifocus-border'
+                : 'bg-white border-gray-200'
+            )}>
+              {/* Navigation items */}
+              <button
+                onClick={() => handleNavigate('projects')}
+                className={clsx(
+                  'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
+                  currentPerspective === 'projects'
+                    ? 'text-omnifocus-purple bg-omnifocus-purple/10'
+                    : theme === 'dark'
+                      ? 'text-gray-300 hover:bg-omnifocus-surface'
+                      : 'text-gray-700 hover:bg-gray-100'
+                )}
+              >
+                <FolderKanban size={18} />
+                <span>Projects</span>
+              </button>
+              <button
+                onClick={() => handleNavigate('rocky-queue')}
+                className={clsx(
+                  'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
+                  currentPerspective === 'rocky-queue'
+                    ? 'text-omnifocus-purple bg-omnifocus-purple/10'
+                    : theme === 'dark'
+                      ? 'text-gray-300 hover:bg-omnifocus-surface'
+                      : 'text-gray-700 hover:bg-gray-100'
+                )}
+              >
+                <Bot size={18} />
+                <span>Rocky's Queue</span>
+              </button>
+              <button
+                onClick={() => handleNavigate('stats')}
+                className={clsx(
+                  'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
+                  currentPerspective === 'stats'
+                    ? 'text-omnifocus-purple bg-omnifocus-purple/10'
+                    : theme === 'dark'
+                      ? 'text-gray-300 hover:bg-omnifocus-surface'
+                      : 'text-gray-700 hover:bg-gray-100'
+                )}
+              >
+                <BarChart3 size={18} />
+                <span>Statistics</span>
+              </button>
+
+              {/* Divider */}
+              <div className={clsx(
+                'border-t',
+                theme === 'dark' ? 'border-omnifocus-border' : 'border-gray-200'
+              )} />
+
+              {/* Settings */}
+              <button
+                onClick={handleOpenSettings}
+                className={clsx(
+                  'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
+                  theme === 'dark'
+                    ? 'text-gray-300 hover:bg-omnifocus-surface'
+                    : 'text-gray-700 hover:bg-gray-100'
+                )}
+              >
+                <Settings size={18} />
+                <span>Settings</span>
+              </button>
+
+              {/* Sign out */}
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+              >
+                <LogOut size={18} />
+                <span>Sign out</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </nav>
   );

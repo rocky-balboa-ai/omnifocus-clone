@@ -545,19 +545,20 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   completeAction: async (id) => {
-    const { actions, showCompleted } = get();
+    const { actions } = get();
     const action = actions.find(a => a.id === id);
     const actionTitle = action?.title || 'Action';
 
     await api.post(`/actions/${id}/complete`);
 
-    // Update action status instead of removing (so undo can work)
+    // Update action status - keep in store for progress tracking
+    // Filtering for display is done at the component level
     set((state) => ({
       actions: state.actions.map(a =>
         a.id === id
           ? { ...a, status: 'completed' as const, completedAt: new Date().toISOString() }
           : a
-      ).filter(a => showCompleted || a.status !== 'completed'),
+      ),
     }));
 
     // Dispatch undo event
