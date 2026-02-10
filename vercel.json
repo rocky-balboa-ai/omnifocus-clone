@@ -1,0 +1,5 @@
+{
+  "buildCommand": "turbo build --filter=omnifocus-web",
+  "outputDirectory": "apps/web/.next",
+  "framework": "nextjs"
+}
