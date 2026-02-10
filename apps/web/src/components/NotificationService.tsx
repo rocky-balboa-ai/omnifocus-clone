@@ -17,7 +17,13 @@ const notifiedTasks = new Set<string>();
  * Hook to manage notification permissions
  */
 export function useNotificationPermission() {
-  const [permission, setPermission] = useState<NotificationPermission>('default');
+  // Initialize with actual permission value if available (avoids flash)
+  const [permission, setPermission] = useState<NotificationPermission>(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      return Notification.permission;
+    }
+    return 'default';
+  });
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -150,15 +156,40 @@ export function NotificationService() {
   return null;
 }
 
+const NOTIFICATION_PROMPT_DISMISSED_KEY = 'omnifocus-notification-prompt-dismissed';
+
 /**
  * UI component to enable notifications
  */
 export function NotificationPrompt() {
   const { permission, requestPermission } = useNotificationPermission();
-  const [dismissed, setDismissed] = useState(false);
   const { theme } = useAppStore();
+  
+  // Initialize dismissed state from localStorage
+  const [dismissed, setDismissed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(NOTIFICATION_PROMPT_DISMISSED_KEY) === 'true';
+    }
+    return false;
+  });
 
-  // Don't show if permission already granted/denied or dismissed
+  // Persist dismissed state to localStorage
+  const handleDismiss = useCallback(() => {
+    setDismissed(true);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(NOTIFICATION_PROMPT_DISMISSED_KEY, 'true');
+    }
+  }, []);
+
+  // Don't show if:
+  // - Notifications not supported in browser
+  // - Permission already granted (user already enabled)
+  // - Permission denied (user blocked, nothing we can do)
+  // - User previously dismissed the prompt
+  if (typeof window === 'undefined' || !('Notification' in window)) {
+    return null;
+  }
+  
   if (permission !== 'default' || dismissed) {
     return null;
   }
@@ -184,7 +215,7 @@ export function NotificationPrompt() {
           Enable
         </button>
         <button
-          onClick={() => setDismissed(true)}
+          onClick={handleDismiss}
           className={`
             px-3 py-1.5 rounded-lg text-sm
             ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}
