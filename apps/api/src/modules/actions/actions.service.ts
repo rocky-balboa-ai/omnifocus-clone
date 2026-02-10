@@ -286,6 +286,35 @@ export class ActionsService {
         actor,
         changes,
       });
+
+      // Also add to the action's activityLog field for tracked fields
+      const activityLogFields = ['dueDate', 'deferDate', 'plannedDate', 'priority', 'rockyStatus', 'status', 'projectId', 'category'];
+      const relevantChanges = Object.entries(changes).filter(([field]) => activityLogFields.includes(field));
+      
+      if (relevantChanges.length > 0) {
+        const currentLog = (action.activityLog as Array<{ timestamp: string; author: string; note: string }>) || [];
+        const changeDescriptions = relevantChanges.map(([field, { old: oldVal, new: newVal }]) => {
+          const formatValue = (v: unknown) => v === null || v === undefined ? 'none' : String(v);
+          return `${field}: ${formatValue(oldVal)} → ${formatValue(newVal)}`;
+        });
+        
+        const newEntry = {
+          timestamp: new Date().toISOString(),
+          author: actor,
+          note: `Updated ${changeDescriptions.join(', ')}`,
+        };
+
+        // Update the action with the new activity log entry
+        await this.prisma.action.update({
+          where: { id },
+          data: {
+            activityLog: [...currentLog, newEntry],
+          },
+        });
+
+        // Update the returned action object as well
+        (action as any).activityLog = [...currentLog, newEntry];
+      }
     }
 
     // Transform blockedByActions to blockedBy array

@@ -250,9 +250,11 @@ export function useKeyboardShortcuts() {
         break;
 
       case 'r':
-        // Open weekly review
-        e.preventDefault();
-        setWeeklyReviewOpen(true);
+        // Open weekly review (only without modifiers to avoid conflict with Cmd+R browser refresh)
+        if (!e.metaKey && !e.ctrlKey && !e.altKey) {
+          e.preventDefault();
+          setWeeklyReviewOpen(true);
+        }
         break;
 
       case 'h':

@@ -112,10 +112,10 @@ export default function Home() {
   }, [isAuthenticated, fetchPerspectives, fetchProjects, fetchTags, fetchFolders]);
 
   useEffect(() => {
-    if (currentPerspective) {
+    if (isAuthenticated && currentPerspective) {
       fetchActions(currentPerspective);
     }
-  }, [currentPerspective, fetchActions]);
+  }, [isAuthenticated, currentPerspective, fetchActions]);
 
   const handleNewAction = () => {
     setQuickEntryOpen(true);
