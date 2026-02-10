@@ -267,7 +267,20 @@ export const useAppStore = create<AppState>((set, get) => ({
   isFocusMode: false,
 
   // Auth Actions
-  setAuthenticated: (isAuthenticated, user = null) => set({ isAuthenticated, currentUser: user }),
+  setAuthenticated: (isAuthenticated, user = null) => {
+    set({ isAuthenticated, currentUser: user });
+    // Immediately fetch data after login to avoid PWA/hydration timing issues
+    if (isAuthenticated) {
+      const { fetchActions, fetchPerspectives, fetchProjects, fetchTags, fetchFolders, currentPerspective } = get();
+      Promise.all([
+        fetchPerspectives(),
+        fetchProjects(),
+        fetchTags(),
+        fetchFolders(),
+        fetchActions(currentPerspective),
+      ]).catch(console.error);
+    }
+  },
   logout: () => {
     localStorage.removeItem('authToken');
     set({ isAuthenticated: false, currentUser: null });
@@ -280,6 +293,17 @@ export const useAppStore = create<AppState>((set, get) => ({
         const response = await api.get<{ authenticated: boolean; user: { id: string; username: string } }>('/auth/me');
         if (response.authenticated && response.user) {
           set({ isAuthenticated: true, currentUser: response.user });
+          // Immediately fetch initial data after confirming auth
+          // This prevents PWA/hydration timing issues with useEffect
+          const { fetchActions, fetchPerspectives, fetchProjects, fetchTags, fetchFolders, currentPerspective } = get();
+          // Fetch all data in parallel
+          Promise.all([
+            fetchPerspectives(),
+            fetchProjects(),
+            fetchTags(),
+            fetchFolders(),
+            fetchActions(currentPerspective),
+          ]).catch(console.error);
         } else {
           localStorage.removeItem('authToken');
           set({ isAuthenticated: false, currentUser: null });
