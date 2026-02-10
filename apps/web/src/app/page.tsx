@@ -33,7 +33,7 @@ import { EndOfDaySummary } from '@/components/EndOfDaySummary';
 import { HabitTracker } from '@/components/HabitTracker';
 import { TimeBlocker } from '@/components/TimeBlocker';
 import { GlobalProgressBar } from '@/components/GlobalProgressBar';
-import { OnboardingTour } from '@/components/OnboardingTour';
+// OnboardingTour removed - users land directly into the app
 import { CommandPalette } from '@/components/CommandPalette';
 import { QuickOpen } from '@/components/QuickOpen';
 import { ToastProvider } from '@/components/Toast';
@@ -289,8 +289,7 @@ export default function Home() {
       {/* End of Day Summary */}
       <EndOfDaySummary />
 
-      {/* Onboarding Tour */}
-      <OnboardingTour />
+      {/* Onboarding Tour - disabled */}
 
       {/* Keyboard Shortcuts Modal (press ? to toggle) */}
       <KeyboardShortcutHints
