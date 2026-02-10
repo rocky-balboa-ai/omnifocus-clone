@@ -16,6 +16,7 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { UpdateBotSettingsDto } from './dto/update-bot-settings.dto';
 
 declare module 'express-session' {
   interface SessionData {
@@ -159,5 +160,36 @@ export class AuthController {
   async regenerateApiKey(@Req() req: Request) {
     const userId = await this.getUserId(req);
     return this.authService.regenerateUserApiKey(userId);
+  }
+
+  // ============================================================================
+  // Bot Settings
+  // ============================================================================
+
+  @Get('bot-settings')
+  async getBotSettings(@Req() req: Request) {
+    const userId = await this.getUserId(req);
+    return this.authService.getBotSettings(userId);
+  }
+
+  @Patch('bot-settings')
+  async updateBotSettings(
+    @Req() req: Request,
+    @Body() dto: UpdateBotSettingsDto,
+  ) {
+    const userId = await this.getUserId(req);
+    return this.authService.updateBotSettings(userId, { botName: dto.botName });
+  }
+
+  @Get('bot-api-key/reveal')
+  async revealBotApiKey(@Req() req: Request) {
+    const userId = await this.getUserId(req);
+    return this.authService.revealBotApiKey(userId);
+  }
+
+  @Post('bot-api-key/regenerate')
+  async regenerateBotApiKey(@Req() req: Request) {
+    const userId = await this.getUserId(req);
+    return this.authService.regenerateBotApiKey(userId);
   }
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { User, Key, Eye, EyeOff, Copy, RefreshCw } from 'lucide-react';
+import { User, Key, Eye, EyeOff, Copy, RefreshCw, Bot } from 'lucide-react';
 import clsx from 'clsx';
 
 interface AccountSettingsProps {
@@ -29,9 +29,24 @@ export function AccountSettings({ currentUser, theme }: AccountSettingsProps) {
   const [isRevealed, setIsRevealed] = useState(false);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
 
+  // Bot Settings
+  const [botName, setBotName] = useState('Rocky');
+  const [maskedBotKey, setMaskedBotKey] = useState<string | null>(null);
+  const [revealedBotKey, setRevealedBotKey] = useState<string | null>(null);
+  const [isBotKeyRevealed, setIsBotKeyRevealed] = useState(false);
+  const [botCopyMessage, setBotCopyMessage] = useState<string | null>(null);
+  const [botNameMessage, setBotNameMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isSavingBotName, setIsSavingBotName] = useState(false);
+  const [originalBotName, setOriginalBotName] = useState('Rocky');
+
   useEffect(() => {
     api.get<{ maskedKey: string }>('/auth/api-key').then((res) => {
       setMaskedKey(res.maskedKey);
+    });
+    api.get<{ botName: string; maskedBotApiKey: string | null }>('/auth/bot-settings').then((res) => {
+      setBotName(res.botName);
+      setOriginalBotName(res.botName);
+      setMaskedBotKey(res.maskedBotApiKey);
     });
   }, []);
 
@@ -94,6 +109,49 @@ export function AccountSettings({ currentUser, theme }: AccountSettingsProps) {
     // Update masked key display
     const masked = await api.get<{ maskedKey: string }>('/auth/api-key');
     setMaskedKey(masked.maskedKey);
+  };
+
+  // Bot Settings handlers
+  const handleSaveBotName = async () => {
+    setBotNameMessage(null);
+    setIsSavingBotName(true);
+    try {
+      const res = await api.patch<{ botName: string }>('/auth/bot-settings', { botName });
+      setOriginalBotName(res.botName);
+      setBotNameMessage({ type: 'success', text: 'Bot name updated' });
+    } catch (err: any) {
+      setBotNameMessage({ type: 'error', text: err.message || 'Failed to update bot name' });
+    } finally {
+      setIsSavingBotName(false);
+    }
+  };
+
+  const handleRevealBotKey = async () => {
+    if (isBotKeyRevealed) {
+      setIsBotKeyRevealed(false);
+      setRevealedBotKey(null);
+      return;
+    }
+    const res = await api.get<{ botApiKey: string }>('/auth/bot-api-key/reveal');
+    setRevealedBotKey(res.botApiKey);
+    setIsBotKeyRevealed(true);
+  };
+
+  const handleCopyBotKey = async () => {
+    const res = await api.get<{ botApiKey: string }>('/auth/bot-api-key/reveal');
+    await navigator.clipboard.writeText(res.botApiKey);
+    setBotCopyMessage('Copied!');
+    setTimeout(() => setBotCopyMessage(null), 2000);
+  };
+
+  const handleRegenerateBotKey = async () => {
+    if (!confirm('Are you sure? This will invalidate your current Bot API key.')) return;
+    const res = await api.post<{ botApiKey: string }>('/auth/bot-api-key/regenerate');
+    setRevealedBotKey(res.botApiKey);
+    setIsBotKeyRevealed(true);
+    // Update masked key display
+    const settings = await api.get<{ botName: string; maskedBotApiKey: string | null }>('/auth/bot-settings');
+    setMaskedBotKey(settings.maskedBotApiKey);
   };
 
   const isDark = theme === 'dark';
@@ -257,6 +315,109 @@ export function AccountSettings({ currentUser, theme }: AccountSettingsProps) {
               <RefreshCw size={14} />
               Regenerate
             </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Bot Settings */}
+      <section>
+        <h3 className={clsx(
+          'flex items-center gap-2 text-sm font-semibold mb-3',
+          isDark ? 'text-white' : 'text-gray-900'
+        )}>
+          <Bot size={16} />
+          Bot Settings
+        </h3>
+        <div className={clsx('p-3 rounded-lg space-y-4', isDark ? 'bg-omnifocus-surface' : 'bg-omnifocus-light-surface')}>
+          {/* Bot Name */}
+          <div>
+            <label className={clsx('text-sm block mb-1.5', isDark ? 'text-gray-300' : 'text-gray-700')}>
+              Bot Name
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={botName}
+                onChange={(e) => setBotName(e.target.value)}
+                placeholder="Rocky"
+                className={clsx(
+                  'flex-1 px-3 py-2 rounded-lg border text-sm',
+                  isDark
+                    ? 'bg-omnifocus-bg border-omnifocus-border text-white placeholder-gray-500'
+                    : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'
+                )}
+              />
+              <button
+                onClick={handleSaveBotName}
+                disabled={isSavingBotName || botName === originalBotName}
+                className={clsx(
+                  'px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50',
+                  'bg-omnifocus-purple text-white hover:bg-omnifocus-purple/90'
+                )}
+              >
+                Save
+              </button>
+            </div>
+            {botNameMessage && (
+              <p className={clsx('text-xs mt-2', botNameMessage.type === 'success' ? 'text-green-400' : 'text-red-400')}>
+                {botNameMessage.text}
+              </p>
+            )}
+            <p className={clsx('text-xs mt-2', isDark ? 'text-gray-500' : 'text-gray-400')}>
+              This name appears in activity logs and UI references.
+            </p>
+          </div>
+
+          {/* Bot API Key */}
+          <div>
+            <label className={clsx('text-sm block mb-1.5', isDark ? 'text-gray-300' : 'text-gray-700')}>
+              Bot API Key
+            </label>
+            <div className={clsx(
+              'px-3 py-2 rounded-lg font-mono text-sm mb-3',
+              isDark ? 'bg-omnifocus-bg text-gray-300' : 'bg-gray-100 text-gray-700'
+            )}>
+              {isBotKeyRevealed && revealedBotKey ? revealedBotKey : maskedBotKey || 'Not generated yet'}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleRevealBotKey}
+                className={clsx(
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                  isDark
+                    ? 'bg-omnifocus-bg text-gray-300 hover:text-white'
+                    : 'bg-gray-100 text-gray-600 hover:text-gray-900'
+                )}
+                aria-label={isBotKeyRevealed ? 'Hide' : 'Reveal'}
+              >
+                {isBotKeyRevealed ? <EyeOff size={14} /> : <Eye size={14} />}
+                {isBotKeyRevealed ? 'Hide' : 'Reveal'}
+              </button>
+              <button
+                onClick={handleCopyBotKey}
+                className={clsx(
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                  isDark
+                    ? 'bg-omnifocus-bg text-gray-300 hover:text-white'
+                    : 'bg-gray-100 text-gray-600 hover:text-gray-900'
+                )}
+                aria-label="Copy"
+              >
+                <Copy size={14} />
+                {botCopyMessage || 'Copy'}
+              </button>
+              <button
+                onClick={handleRegenerateBotKey}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+                aria-label="Regenerate"
+              >
+                <RefreshCw size={14} />
+                Regenerate
+              </button>
+            </div>
+            <p className={clsx('text-xs mt-2', isDark ? 'text-gray-500' : 'text-gray-400')}>
+              Use this key for bot/automation access. Separate from your personal API key.
+            </p>
           </div>
         </div>
       </section>

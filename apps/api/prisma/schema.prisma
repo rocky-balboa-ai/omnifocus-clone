@@ -17,6 +17,8 @@ model User {
   username     String   @unique
   passwordHash String
   apiKey       String?  @unique
+  botApiKey    String?  @unique
+  botName      String   @default("Rocky")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

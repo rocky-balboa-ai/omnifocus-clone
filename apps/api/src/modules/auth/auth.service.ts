@@ -245,4 +245,86 @@ export class AuthService implements OnModuleInit {
     });
     return { apiKey: updated.apiKey };
   }
+
+  // ============================================================================
+  // Bot Settings
+  // ============================================================================
+
+  async getBotSettings(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, botName: true, botApiKey: true },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return {
+      botName: user.botName,
+      maskedBotApiKey: user.botApiKey ? this.maskApiKey(user.botApiKey) : null,
+    };
+  }
+
+  async updateBotSettings(userId: string, data: { botName: string }) {
+    if (!data.botName || data.botName.trim().length < 1) {
+      throw new BadRequestException('Bot name cannot be empty');
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { botName: data.botName.trim() },
+      select: { id: true, botName: true },
+    });
+
+    return { botName: updated.botName };
+  }
+
+  async getBotApiKey(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, botApiKey: true },
+    });
+
+    if (!user!.botApiKey) {
+      const newKey = this.generateApiKey();
+      const updated = await this.prisma.user.update({
+        where: { id: userId },
+        data: { botApiKey: newKey },
+        select: { id: true, botApiKey: true },
+      });
+      return { maskedKey: this.maskApiKey(updated.botApiKey!) };
+    }
+
+    return { maskedKey: this.maskApiKey(user!.botApiKey) };
+  }
+
+  async revealBotApiKey(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, botApiKey: true },
+    });
+
+    if (!user!.botApiKey) {
+      const newKey = this.generateApiKey();
+      const updated = await this.prisma.user.update({
+        where: { id: userId },
+        data: { botApiKey: newKey },
+        select: { id: true, botApiKey: true },
+      });
+      return { botApiKey: updated.botApiKey! };
+    }
+
+    return { botApiKey: user!.botApiKey };
+  }
+
+  async regenerateBotApiKey(userId: string) {
+    const newKey = this.generateApiKey();
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { botApiKey: newKey },
+      select: { id: true, botApiKey: true },
+    });
+    return { botApiKey: updated.botApiKey };
+  }
 }
