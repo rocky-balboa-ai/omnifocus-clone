@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { usePushNotifications } from '@/lib/usePushNotifications';
+import { AccountSettings } from './AccountSettings';
 import clsx from 'clsx';
 
 interface SettingsPanelProps {
@@ -28,7 +29,7 @@ interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
-  const { cleanupCompleted, theme, themeMode, setThemeMode, actions, projects } = useAppStore();
+  const { cleanupCompleted, theme, themeMode, setThemeMode, actions, projects, currentUser } = useAppStore();
   const [cleanupDays, setCleanupDays] = useState(7);
   const [isCleaningUp, setIsCleaningUp] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -277,6 +278,11 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
               </div>
             </div>
           </section>
+
+          {/* Account Settings */}
+          {currentUser && (
+            <AccountSettings currentUser={currentUser} theme={theme} />
+          )}
 
           {/* Notifications */}
           {pushNotifications.isSupported && (

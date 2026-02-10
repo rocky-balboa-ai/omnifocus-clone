@@ -106,10 +106,6 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             )}
           </button>
         </form>
-
-        <p className="text-center text-gray-500 text-sm mt-6">
-          Default: fred / omnifocus
-        </p>
       </div>
     </div>
   );

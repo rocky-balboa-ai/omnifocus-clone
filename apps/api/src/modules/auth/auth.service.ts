@@ -1,7 +1,8 @@
-import { Injectable, UnauthorizedException, OnModuleInit, Logger } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, ConflictException, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 
 export interface JwtPayload {
@@ -132,5 +133,116 @@ export class AuthService implements OnModuleInit {
     }
 
     return { id: user.id, username: user.username };
+  }
+
+  async updateProfile(userId: string, data: { username: string }) {
+    if (!data.username || data.username.trim().length < 3) {
+      throw new BadRequestException('Username must be at least 3 characters');
+    }
+
+    const currentUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (data.username !== currentUser!.username) {
+      const existing = await this.prisma.user.findUnique({
+        where: { username: data.username },
+      });
+      if (existing) {
+        throw new ConflictException('Username already taken');
+      }
+    }
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { username: data.username },
+      select: { id: true, username: true },
+    });
+  }
+
+  async changePassword(userId: string, data: { currentPassword: string; newPassword: string }) {
+    if (!data.newPassword || data.newPassword.length < 3) {
+      throw new BadRequestException('New password must be at least 3 characters');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const isValid = await bcrypt.compare(data.currentPassword, user.passwordHash);
+    if (!isValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    const passwordHash = await bcrypt.hash(data.newPassword, 10);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    });
+
+    return { success: true };
+  }
+
+  private generateApiKey(): string {
+    return 'sk_' + randomBytes(24).toString('hex');
+  }
+
+  private maskApiKey(key: string): string {
+    if (key.length <= 6) return key;
+    const prefix = key.substring(0, 3);
+    const suffix = key.substring(key.length - 3);
+    return `${prefix}***...${suffix}`;
+  }
+
+  async getUserApiKey(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, apiKey: true },
+    });
+
+    if (!user!.apiKey) {
+      const newKey = this.generateApiKey();
+      const updated = await this.prisma.user.update({
+        where: { id: userId },
+        data: { apiKey: newKey },
+        select: { id: true, apiKey: true },
+      });
+      return { maskedKey: this.maskApiKey(updated.apiKey!) };
+    }
+
+    return { maskedKey: this.maskApiKey(user!.apiKey) };
+  }
+
+  async revealUserApiKey(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, apiKey: true },
+    });
+
+    if (!user!.apiKey) {
+      const newKey = this.generateApiKey();
+      const updated = await this.prisma.user.update({
+        where: { id: userId },
+        data: { apiKey: newKey },
+        select: { id: true, apiKey: true },
+      });
+      return { apiKey: updated.apiKey! };
+    }
+
+    return { apiKey: user!.apiKey };
+  }
+
+  async regenerateUserApiKey(userId: string) {
+    const newKey = this.generateApiKey();
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { apiKey: newKey },
+      select: { id: true, apiKey: true },
+    });
+    return { apiKey: updated.apiKey };
   }
 }

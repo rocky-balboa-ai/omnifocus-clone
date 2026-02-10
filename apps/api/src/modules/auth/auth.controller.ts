@@ -2,16 +2,20 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
   Body,
   Req,
   Res,
   Headers,
   HttpCode,
   HttpStatus,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 declare module 'express-session' {
   interface SessionData {
@@ -97,5 +101,51 @@ export class AuthController {
     }
 
     return { authenticated: false };
+  }
+
+  private getUserId(req: Request): string {
+    const user = (req as any).user;
+    if (user?.id) return user.id;
+    if (req.session?.userId) return req.session.userId;
+    throw new UnauthorizedException('Not authenticated');
+  }
+
+  @Patch('profile')
+  async updateProfile(
+    @Req() req: Request,
+    @Body() dto: UpdateProfileDto,
+  ) {
+    const userId = this.getUserId(req);
+    return this.authService.updateProfile(userId, { username: dto.username });
+  }
+
+  @Patch('password')
+  async changePassword(
+    @Req() req: Request,
+    @Body() dto: ChangePasswordDto,
+  ) {
+    const userId = this.getUserId(req);
+    return this.authService.changePassword(userId, {
+      currentPassword: dto.currentPassword,
+      newPassword: dto.newPassword,
+    });
+  }
+
+  @Get('api-key')
+  async getApiKey(@Req() req: Request) {
+    const userId = this.getUserId(req);
+    return this.authService.getUserApiKey(userId);
+  }
+
+  @Get('api-key/reveal')
+  async revealApiKey(@Req() req: Request) {
+    const userId = this.getUserId(req);
+    return this.authService.revealUserApiKey(userId);
+  }
+
+  @Post('api-key/regenerate')
+  async regenerateApiKey(@Req() req: Request) {
+    const userId = this.getUserId(req);
+    return this.authService.regenerateUserApiKey(userId);
   }
 }
