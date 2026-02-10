@@ -52,4 +52,4 @@ ENV NODE_ENV=production
 EXPOSE 3000
 
 # Run migrations and start the application
-CMD npx prisma db push --skip-generate && npm run start:prod
+CMD npx prisma db push --skip-generate --accept-data-loss && npm run start:prod
