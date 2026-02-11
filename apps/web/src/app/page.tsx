@@ -32,7 +32,6 @@ import { FocusBar } from '@/components/FocusBar';
 import { EndOfDaySummary } from '@/components/EndOfDaySummary';
 import { HabitTracker } from '@/components/HabitTracker';
 import { TimeBlocker } from '@/components/TimeBlocker';
-// import { GlobalProgressBar } from '@/components/GlobalProgressBar'; // Removed per Fred's request
 // OnboardingTour removed - users land directly into the app
 import { CommandPalette } from '@/components/CommandPalette';
 import { QuickOpen } from '@/components/QuickOpen';
@@ -153,8 +152,6 @@ export default function Home() {
 
       {/* Main content - full width on mobile */}
       <main className="flex-1 overflow-hidden pb-16 md:pb-0 flex flex-col">
-        {/* Global Progress Bar - removed per Fred's request */}
-
         {/* Focus Bar - shows when focused on a project/tag */}
         <FocusBar />
 
