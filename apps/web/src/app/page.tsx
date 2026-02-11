@@ -144,7 +144,7 @@ export default function Home() {
     <ToastProvider>
     <ConfettiProvider>
     <div className={clsx(
-      'flex h-screen pt-safe',
+      'flex h-screen',
       theme === 'dark' ? 'bg-omnifocus-bg' : 'bg-omnifocus-light-bg'
     )}>
       {/* Desktop sidebar - hidden on mobile and in focus mode */}
