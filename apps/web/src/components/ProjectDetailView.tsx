@@ -117,17 +117,47 @@ export function ProjectDetailView({ projectId }: ProjectDetailViewProps) {
     }
   };
 
+  // Track completing actions for fade-out animation
+  const [completingActionIds, setCompletingActionIds] = useState<Set<string>>(new Set());
+
   const handleToggleComplete = async (action: Action) => {
     try {
       if (action.status === 'completed') {
         await uncompleteAction(action.id);
+        // Optimistically update the local project state
+        setProject(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            actions: prev.actions?.map(a =>
+              a.id === action.id ? { ...a, status: 'active' as const, completedAt: undefined } : a
+            )
+          };
+        });
       } else {
-        await completeAction(action.id);
+        // Add to completing set for fade-out animation
+        setCompletingActionIds(prev => new Set(prev).add(action.id));
+
+        // Wait for animation to complete before actually completing
+        setTimeout(async () => {
+          await completeAction(action.id);
+          // Remove from completing set
+          setCompletingActionIds(prev => {
+            const next = new Set(prev);
+            next.delete(action.id);
+            return next;
+          });
+        }, 300); // 300ms fade-out duration
       }
-      await fetchProject();
       await fetchProjects();
     } catch (error) {
       console.error('Failed to toggle action:', error);
+      // Remove from completing set on error
+      setCompletingActionIds(prev => {
+        const next = new Set(prev);
+        next.delete(action.id);
+        return next;
+      });
     }
   };
 
@@ -397,6 +427,7 @@ export function ProjectDetailView({ projectId }: ProjectDetailViewProps) {
                 onToggleComplete={handleToggleComplete}
                 onSelect={setSelectedAction}
                 isSelected={selectedActionId === action.id}
+                isCompleting={completingActionIds.has(action.id)}
               />
             ))}
           </ul>
@@ -413,9 +444,10 @@ interface ActionRowProps {
   onSelect: (id: string) => void;
   isSelected: boolean;
   depth?: number;
+  isCompleting?: boolean;
 }
 
-function ActionRow({ action, theme, onToggleComplete, onSelect, isSelected, depth = 0 }: ActionRowProps) {
+function ActionRow({ action, theme, onToggleComplete, onSelect, isSelected, depth = 0, isCompleting = false }: ActionRowProps) {
   const isCompleted = action.status === 'completed';
   const isDueSoon = action.dueDate && (isToday(new Date(action.dueDate)) || isPast(new Date(action.dueDate)));
 
@@ -424,12 +456,13 @@ function ActionRow({ action, theme, onToggleComplete, onSelect, isSelected, dept
       <li
         onClick={() => onSelect(action.id)}
         className={clsx(
-          'group flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors',
+          'group flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300',
           isSelected
             ? 'bg-omnifocus-purple/20 border border-omnifocus-purple'
             : theme === 'dark'
               ? 'hover:bg-omnifocus-surface border border-transparent'
-              : 'hover:bg-gray-100 border border-transparent'
+              : 'hover:bg-gray-100 border border-transparent',
+          isCompleting && 'opacity-0 scale-95 pointer-events-none'
         )}
         style={{ paddingLeft: `${12 + depth * 24}px` }}
       >
@@ -441,21 +474,21 @@ function ActionRow({ action, theme, onToggleComplete, onSelect, isSelected, dept
           }}
           className={clsx(
             'shrink-0 transition-colors',
-            isCompleted
+            isCompleted || isCompleting
               ? 'text-green-500'
               : theme === 'dark'
                 ? 'text-gray-500 hover:text-omnifocus-purple'
                 : 'text-gray-400 hover:text-omnifocus-purple'
           )}
         >
-          {isCompleted ? <CheckCircle2 size={18} /> : <Circle size={18} />}
+          {isCompleted || isCompleting ? <CheckCircle2 size={18} /> : <Circle size={18} />}
         </button>
 
         {/* Title */}
         <span
           className={clsx(
             'flex-1 text-sm min-w-0 truncate',
-            isCompleted
+            isCompleted || isCompleting
               ? 'line-through text-gray-500'
               : theme === 'dark' ? 'text-white' : 'text-gray-900'
           )}
@@ -508,6 +541,7 @@ function ActionRow({ action, theme, onToggleComplete, onSelect, isSelected, dept
           onSelect={onSelect}
           isSelected={isSelected}
           depth={depth + 1}
+          isCompleting={isCompleting}
         />
       ))}
     </>
