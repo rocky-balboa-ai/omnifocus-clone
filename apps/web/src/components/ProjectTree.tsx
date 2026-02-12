@@ -191,7 +191,7 @@ export function ProjectTree({ theme }: ProjectTreeProps) {
         </button>
         <button
           type="button"
-          onClick={() => router.push('/projects')}
+          onClick={() => { window.location.href = '/projects'; }}
           className={clsx(
             'text-xs font-semibold uppercase tracking-wider transition-colors flex-1 py-1 -my-1 text-left cursor-pointer',
             isProjectsActive
