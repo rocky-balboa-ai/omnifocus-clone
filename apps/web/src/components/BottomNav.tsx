@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useAppStore } from '@/stores/app.store';
 import {
   Inbox,
@@ -49,7 +49,6 @@ const perspectiveOrder = ['today', 'inbox', 'forecast', 'flagged'];
 export function BottomNav() {
   const { perspectives, setSettingsOpen, logout, actions, projects, theme } = useAppStore();
   const pathname = usePathname();
-  const router = useRouter();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
@@ -120,12 +119,6 @@ export function BottomNav() {
   const handleOpenSettings = () => {
     setIsMoreOpen(false);
     setSettingsOpen(true);
-  };
-
-  const handleNavigate = (id: string) => {
-    setIsMoreOpen(false);
-    const href = perspectiveHref[id];
-    if (href) router.push(href);
   };
 
   return (
@@ -222,8 +215,9 @@ export function BottomNav() {
                 : 'bg-white border-gray-200'
             )}>
               {/* Navigation items */}
-              <button
-                onClick={() => handleNavigate('projects')}
+              <Link
+                href="/projects"
+                onClick={() => setIsMoreOpen(false)}
                 className={clsx(
                   'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
                   isActive('projects')
@@ -235,9 +229,10 @@ export function BottomNav() {
               >
                 <FolderKanban size={18} />
                 <span>Projects</span>
-              </button>
-              <button
-                onClick={() => handleNavigate('rocky-queue')}
+              </Link>
+              <Link
+                href="/rocky-queue"
+                onClick={() => setIsMoreOpen(false)}
                 className={clsx(
                   'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
                   isActive('rocky-queue')
@@ -249,9 +244,10 @@ export function BottomNav() {
               >
                 <Bot size={18} />
                 <span>Rocky's Queue</span>
-              </button>
-              <button
-                onClick={() => handleNavigate('stats')}
+              </Link>
+              <Link
+                href="/stats"
+                onClick={() => setIsMoreOpen(false)}
                 className={clsx(
                   'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
                   isActive('stats')
@@ -263,7 +259,7 @@ export function BottomNav() {
               >
                 <BarChart3 size={18} />
                 <span>Statistics</span>
-              </button>
+              </Link>
 
               {/* Divider */}
               <div className={clsx(
