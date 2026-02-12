@@ -193,7 +193,8 @@ export function ProjectTree({ theme }: ProjectTreeProps) {
           type="button"
           onClick={() => {
             setCurrentPerspective('projects');
-            router.push('/projects');
+            window.history.pushState({}, '', '/projects');
+            router.refresh();
           }}
           className={clsx(
             'text-xs font-semibold uppercase tracking-wider transition-colors flex-1 py-1 -my-1 text-left cursor-pointer',

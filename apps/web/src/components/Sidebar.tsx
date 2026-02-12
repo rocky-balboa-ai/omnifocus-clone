@@ -81,12 +81,15 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   
-  // Navigation helper that updates both URL and state
+  // Navigation helper that updates URL and triggers re-render
   const navigate = (path: string, perspectiveId?: string) => {
+    // Update state first for immediate UI feedback
     if (perspectiveId) {
       setCurrentPerspective(perspectiveId);
     }
-    router.push(path);
+    // Use history.pushState + router.refresh for reliable SPA navigation
+    window.history.pushState({}, '', path);
+    router.refresh();
   };
 
   const builtInPerspectives = perspectives.filter((p) => p.isBuiltIn);
