@@ -142,15 +142,19 @@ export function TagTree({ theme }: TagTreeProps) {
     <div className="mt-4">
       <div className="flex items-center gap-1 px-3 mb-1">
         <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className={clsx(themeClasses.sectionTitle[theme])}
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsExpanded(!isExpanded);
+          }}
+          className={clsx('p-0.5 rounded hover:bg-gray-700/30', themeClasses.sectionTitle[theme])}
         >
           {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         </button>
         <Link
           href="/tags"
           className={clsx(
-            'text-xs font-semibold uppercase tracking-wider transition-colors',
+            'text-xs font-semibold uppercase tracking-wider transition-colors flex-1',
             isTagsActive
               ? 'text-omnifocus-purple'
               : themeClasses.sectionTitle[theme],
