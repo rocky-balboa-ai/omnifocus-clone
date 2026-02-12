@@ -147,6 +147,22 @@ button {
   animation: fade-in 0.2s ease-out;
 }
 
+/* Fade in with slide for newly created tasks */
+@keyframes fade-in-slide {
+  0% {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in-slide {
+  animation: fade-in-slide 0.3s ease-out;
+}
+
 /* Scale animation for badges */
 @keyframes badge-pop {
   0% {

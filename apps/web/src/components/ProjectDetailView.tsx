@@ -102,14 +102,38 @@ export function ProjectDetailView({ projectId }: ProjectDetailViewProps) {
     if (!newTaskTitle.trim() || !projectId) return;
     setIsCreating(true);
     try {
-      await createAction({
+      const newAction = await createAction({
         title: newTaskTitle.trim(),
         projectId,
       });
+
+      // Optimistically add the new task to local state for smooth animation
+      setProject(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          actions: [...(prev.actions || []), newAction],
+        };
+      });
+
+      // Add to newActionIds for fade-in animation
+      setNewActionIds(prev => new Set(prev).add(newAction.id));
+
+      // Clear form immediately
       setNewTaskTitle('');
       setShowNewTaskForm(false);
-      await fetchProject();
-      await fetchProjects();
+
+      // Remove from newActionIds after animation completes
+      setTimeout(() => {
+        setNewActionIds(prev => {
+          const next = new Set(prev);
+          next.delete(newAction.id);
+          return next;
+        });
+      }, 300); // 300ms fade-in duration
+
+      // Refresh projects list in background (don't await)
+      fetchProjects().catch(console.error);
     } catch (error) {
       console.error('Failed to create task:', error);
     } finally {
@@ -119,6 +143,8 @@ export function ProjectDetailView({ projectId }: ProjectDetailViewProps) {
 
   // Track completing actions for fade-out animation
   const [completingActionIds, setCompletingActionIds] = useState<Set<string>>(new Set());
+  // Track newly created actions for fade-in animation
+  const [newActionIds, setNewActionIds] = useState<Set<string>>(new Set());
 
   const handleToggleComplete = async (action: Action) => {
     try {
@@ -428,6 +454,7 @@ export function ProjectDetailView({ projectId }: ProjectDetailViewProps) {
                 onSelect={setSelectedAction}
                 isSelected={selectedActionId === action.id}
                 isCompleting={completingActionIds.has(action.id)}
+                isNew={newActionIds.has(action.id)}
               />
             ))}
           </ul>
@@ -445,9 +472,10 @@ interface ActionRowProps {
   isSelected: boolean;
   depth?: number;
   isCompleting?: boolean;
+  isNew?: boolean;
 }
 
-function ActionRow({ action, theme, onToggleComplete, onSelect, isSelected, depth = 0, isCompleting = false }: ActionRowProps) {
+function ActionRow({ action, theme, onToggleComplete, onSelect, isSelected, depth = 0, isCompleting = false, isNew = false }: ActionRowProps) {
   const isCompleted = action.status === 'completed';
   const isDueSoon = action.dueDate && (isToday(new Date(action.dueDate)) || isPast(new Date(action.dueDate)));
 
@@ -462,7 +490,8 @@ function ActionRow({ action, theme, onToggleComplete, onSelect, isSelected, dept
             : theme === 'dark'
               ? 'hover:bg-omnifocus-surface border border-transparent'
               : 'hover:bg-gray-100 border border-transparent',
-          isCompleting && 'opacity-0 scale-95 pointer-events-none'
+          isCompleting && 'opacity-0 scale-95 pointer-events-none',
+          isNew && 'animate-fade-in-slide'
         )}
         style={{ paddingLeft: `${12 + depth * 24}px` }}
       >
@@ -542,6 +571,7 @@ function ActionRow({ action, theme, onToggleComplete, onSelect, isSelected, dept
           isSelected={isSelected}
           depth={depth + 1}
           isCompleting={isCompleting}
+          isNew={isNew}
         />
       ))}
     </>
