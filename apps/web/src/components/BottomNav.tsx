@@ -1,8 +1,7 @@
 'use client';
 
 import { useMemo, useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAppStore } from '@/stores/app.store';
 import {
   Inbox,
@@ -47,8 +46,16 @@ const perspectiveHref: Record<string, string> = {
 const perspectiveOrder = ['today', 'inbox', 'forecast', 'flagged'];
 
 export function BottomNav() {
-  const { perspectives, setSettingsOpen, logout, actions, projects, theme } = useAppStore();
+  const { perspectives, setCurrentPerspective, setSettingsOpen, logout, actions, projects, theme } = useAppStore();
   const pathname = usePathname();
+  const router = useRouter();
+  
+  // Navigation helper for reliable SPA navigation
+  const navigate = (path: string, perspectiveId: string) => {
+    setCurrentPerspective(perspectiveId);
+    window.history.pushState({}, '', path);
+    router.refresh();
+  };
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
@@ -137,9 +144,9 @@ export function BottomNav() {
           const href = perspectiveHref[perspective.id] || '/inbox';
 
           return (
-            <Link
+            <button
               key={perspective.id}
-              href={href}
+              onClick={() => navigate(href, perspective.id)}
               className={clsx(
                 'relative flex flex-col items-center justify-center py-2 px-2 rounded-xl transition-all duration-200 min-w-[52px]',
                 active
@@ -174,7 +181,7 @@ export function BottomNav() {
               )}>
                 {perspective.name}
               </span>
-            </Link>
+            </button>
           );
         })}
 
@@ -215,9 +222,8 @@ export function BottomNav() {
                 : 'bg-white border-gray-200'
             )}>
               {/* Navigation items */}
-              <Link
-                href="/projects"
-                onClick={() => setIsMoreOpen(false)}
+              <button
+                onClick={() => { setIsMoreOpen(false); navigate('/projects', 'projects'); }}
                 className={clsx(
                   'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
                   isActive('projects')
@@ -229,10 +235,9 @@ export function BottomNav() {
               >
                 <FolderKanban size={18} />
                 <span>Projects</span>
-              </Link>
-              <Link
-                href="/rocky-queue"
-                onClick={() => setIsMoreOpen(false)}
+              </button>
+              <button
+                onClick={() => { setIsMoreOpen(false); navigate('/rocky-queue', 'rocky-queue'); }}
                 className={clsx(
                   'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
                   isActive('rocky-queue')
@@ -244,10 +249,9 @@ export function BottomNav() {
               >
                 <Bot size={18} />
                 <span>Rocky's Queue</span>
-              </Link>
-              <Link
-                href="/stats"
-                onClick={() => setIsMoreOpen(false)}
+              </button>
+              <button
+                onClick={() => { setIsMoreOpen(false); navigate('/stats', 'stats'); }}
                 className={clsx(
                   'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
                   isActive('stats')
@@ -259,7 +263,7 @@ export function BottomNav() {
               >
                 <BarChart3 size={18} />
                 <span>Statistics</span>
-              </Link>
+              </button>
 
               {/* Divider */}
               <div className={clsx(
