@@ -1,6 +1,8 @@
 'use client';
 
 import { useMemo, useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAppStore } from '@/stores/app.store';
 import {
   Inbox,
@@ -29,13 +31,33 @@ const perspectiveIcons: Record<string, React.ComponentType<{ size?: number; clas
   review: RefreshCw,
 };
 
+const perspectiveHref: Record<string, string> = {
+  inbox: '/inbox',
+  projects: '/projects',
+  tags: '/tags',
+  forecast: '/forecast',
+  flagged: '/flagged',
+  review: '/review',
+  today: '/today',
+  stats: '/stats',
+  'rocky-queue': '/rocky-queue',
+};
+
 // Mobile shows fewer items due to space constraints - reduced to make room for More
 const perspectiveOrder = ['today', 'inbox', 'forecast', 'flagged'];
 
 export function BottomNav() {
-  const { perspectives, currentPerspective, setCurrentPerspective, setSettingsOpen, logout, actions, projects, theme } = useAppStore();
+  const { perspectives, setSettingsOpen, logout, actions, projects, theme } = useAppStore();
+  const pathname = usePathname();
+  const router = useRouter();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  const isActive = (id: string) => {
+    const href = perspectiveHref[id];
+    if (!href) return false;
+    return pathname === href || pathname.startsWith(href + '/');
+  };
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -102,7 +124,8 @@ export function BottomNav() {
 
   const handleNavigate = (id: string) => {
     setIsMoreOpen(false);
-    setCurrentPerspective(id);
+    const href = perspectiveHref[id];
+    if (href) router.push(href);
   };
 
   return (
@@ -116,16 +139,17 @@ export function BottomNav() {
         {orderedPerspectives.map((perspective) => {
           if (!perspective) return null;
           const Icon = perspectiveIcons[perspective.id] || Inbox;
-          const isActive = currentPerspective === perspective.id;
+          const active = isActive(perspective.id);
           const badgeCount = badgeCounts[perspective.id as keyof typeof badgeCounts] || 0;
+          const href = perspectiveHref[perspective.id] || '/inbox';
 
           return (
-            <button
+            <Link
               key={perspective.id}
-              onClick={() => setCurrentPerspective(perspective.id)}
+              href={href}
               className={clsx(
                 'relative flex flex-col items-center justify-center py-2 px-2 rounded-xl transition-all duration-200 min-w-[52px]',
-                isActive
+                active
                   ? 'text-omnifocus-purple'
                   : theme === 'dark' ? 'text-gray-500 active:scale-95' : 'text-gray-400 active:scale-95'
               )}
@@ -135,7 +159,7 @@ export function BottomNav() {
                   size={24}
                   className={clsx(
                     'transition-transform duration-200',
-                    isActive && 'scale-110'
+                    active && 'scale-110'
                   )}
                 />
                 {badgeCount > 0 && (
@@ -151,13 +175,13 @@ export function BottomNav() {
               </div>
               <span className={clsx(
                 'text-[10px] mt-0.5 font-medium',
-                isActive
+                active
                   ? 'text-omnifocus-purple'
                   : theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
               )}>
                 {perspective.name}
               </span>
-            </button>
+            </Link>
           );
         })}
 
@@ -202,7 +226,7 @@ export function BottomNav() {
                 onClick={() => handleNavigate('projects')}
                 className={clsx(
                   'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
-                  currentPerspective === 'projects'
+                  isActive('projects')
                     ? 'text-omnifocus-purple bg-omnifocus-purple/10'
                     : theme === 'dark'
                       ? 'text-gray-300 hover:bg-omnifocus-surface'
@@ -216,7 +240,7 @@ export function BottomNav() {
                 onClick={() => handleNavigate('rocky-queue')}
                 className={clsx(
                   'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
-                  currentPerspective === 'rocky-queue'
+                  isActive('rocky-queue')
                     ? 'text-omnifocus-purple bg-omnifocus-purple/10'
                     : theme === 'dark'
                       ? 'text-gray-300 hover:bg-omnifocus-surface'
@@ -230,7 +254,7 @@ export function BottomNav() {
                 onClick={() => handleNavigate('stats')}
                 className={clsx(
                   'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
-                  currentPerspective === 'stats'
+                  isActive('stats')
                     ? 'text-omnifocus-purple bg-omnifocus-purple/10'
                     : theme === 'dark'
                       ? 'text-gray-300 hover:bg-omnifocus-surface'

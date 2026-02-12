@@ -1,6 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAppStore } from '@/stores/app.store';
 import {
   Inbox,
@@ -62,11 +64,32 @@ const iconMap: Record<string, React.ReactNode> = {
   sun: <Sun size={18} />,
 };
 
+// Map perspective IDs to URL paths
+const perspectiveHref: Record<string, string> = {
+  inbox: '/inbox',
+  projects: '/projects',
+  tags: '/tags',
+  forecast: '/forecast',
+  flagged: '/flagged',
+  review: '/review',
+  today: '/today',
+  stats: '/stats',
+  'rocky-queue': '/rocky-queue',
+};
+
 export function Sidebar() {
-  const { perspectives, currentPerspective, setCurrentPerspective, setQuickEntryOpen, openPerspectiveEditor, setSettingsOpen, setWeeklyReviewOpen, theme, actions, logout } = useAppStore();
+  const { perspectives, setQuickEntryOpen, openPerspectiveEditor, setSettingsOpen, setWeeklyReviewOpen, theme, actions, logout } = useAppStore();
+  const pathname = usePathname();
 
   const builtInPerspectives = perspectives.filter((p) => p.isBuiltIn);
   const customPerspectives = perspectives.filter((p) => !p.isBuiltIn);
+
+  // Determine active perspective from pathname
+  const isActive = (id: string) => {
+    const href = perspectiveHref[id];
+    if (!href) return false;
+    return pathname === href || pathname.startsWith(href + '/');
+  };
 
   // Calculate counts for badges
   const counts = useMemo(() => {
@@ -102,11 +125,11 @@ export function Sidebar() {
       <nav className="flex-1 overflow-y-auto px-2">
         <div className="space-y-1">
           {/* Today - special perspective */}
-          <button
-            onClick={() => setCurrentPerspective('today')}
+          <Link
+            href="/today"
             className={clsx(
               'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
-              currentPerspective === 'today'
+              isActive('today')
                 ? themeClasses.navItem.active
                 : themeClasses.navItem.inactive[theme]
             )}
@@ -116,14 +139,14 @@ export function Sidebar() {
             {counts.today > 0 && (
               <span className={clsx(
                 'px-1.5 py-0.5 text-xs rounded-full font-medium',
-                currentPerspective === 'today'
+                isActive('today')
                   ? 'bg-white/20'
                   : 'bg-omnifocus-orange text-white'
               )}>
                 {counts.today}
               </span>
             )}
-          </button>
+          </Link>
 
           {builtInPerspectives.map((perspective) => {
             // Map perspective to count
@@ -132,13 +155,16 @@ export function Sidebar() {
               : perspective.id === 'forecast' ? counts.forecast
               : 0;
 
+            const href = perspectiveHref[perspective.id] || '/inbox';
+            const active = isActive(perspective.id);
+
             return (
-              <button
+              <Link
                 key={perspective.id}
-                onClick={() => setCurrentPerspective(perspective.id)}
+                href={href}
                 className={clsx(
                   'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
-                  currentPerspective === perspective.id
+                  active
                     ? themeClasses.navItem.active
                     : themeClasses.navItem.inactive[theme]
                 )}
@@ -148,7 +174,7 @@ export function Sidebar() {
                 {count > 0 && (
                   <span className={clsx(
                     'px-1.5 py-0.5 text-xs rounded-full font-medium',
-                    currentPerspective === perspective.id
+                    active
                       ? 'bg-white/20'
                       : perspective.id === 'flagged'
                         ? 'bg-omnifocus-orange text-white'
@@ -159,16 +185,16 @@ export function Sidebar() {
                     {count}
                   </span>
                 )}
-              </button>
+              </Link>
             );
           })}
 
           {/* Rocky's Queue - special perspective */}
-          <button
-            onClick={() => setCurrentPerspective('rocky-queue')}
+          <Link
+            href="/rocky-queue"
             className={clsx(
               'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
-              currentPerspective === 'rocky-queue'
+              isActive('rocky-queue')
                 ? themeClasses.navItem.active
                 : themeClasses.navItem.inactive[theme]
             )}
@@ -178,28 +204,28 @@ export function Sidebar() {
             {counts.rockyQueue > 0 && (
               <span className={clsx(
                 'px-1.5 py-0.5 text-xs rounded-full font-medium',
-                currentPerspective === 'rocky-queue'
+                isActive('rocky-queue')
                   ? 'bg-white/20'
                   : 'bg-omnifocus-purple text-white'
               )}>
                 {counts.rockyQueue}
               </span>
             )}
-          </button>
+          </Link>
 
           {/* Stats - special perspective */}
-          <button
-            onClick={() => setCurrentPerspective('stats')}
+          <Link
+            href="/stats"
             className={clsx(
               'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
-              currentPerspective === 'stats'
+              isActive('stats')
                 ? themeClasses.navItem.active
                 : themeClasses.navItem.inactive[theme]
             )}
           >
             <BarChart3 size={18} />
             <span>Statistics</span>
-          </button>
+          </Link>
         </div>
 
         {/* Projects Tree */}
@@ -231,19 +257,19 @@ export function Sidebar() {
           {customPerspectives.length > 0 ? (
             <div className="space-y-1">
               {customPerspectives.map((perspective) => (
-                <button
+                <Link
                   key={perspective.id}
-                  onClick={() => setCurrentPerspective(perspective.id)}
+                  href={perspectiveHref[perspective.id] || `/inbox`}
                   className={clsx(
                     'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
-                    currentPerspective === perspective.id
+                    isActive(perspective.id)
                       ? themeClasses.navItem.active
                       : themeClasses.navItem.inactive[theme]
                   )}
                 >
                   <FolderKanban size={18} />
                   <span>{perspective.name}</span>
-                </button>
+                </Link>
               ))}
             </div>
           ) : (
@@ -255,7 +281,7 @@ export function Sidebar() {
 
         {/* Mini Calendar */}
         <div className="mt-6 px-2">
-          <SidebarCalendar onSelectDate={(date) => setCurrentPerspective('forecast')} />
+          <SidebarCalendar onSelectDate={() => {}} />
         </div>
       </nav>
 
