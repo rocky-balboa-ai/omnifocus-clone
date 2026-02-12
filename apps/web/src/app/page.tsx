@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { ActionList } from '@/components/ActionList';
 import { ProjectList } from '@/components/ProjectList';
+import { ProjectDetailView } from '@/components/ProjectDetailView';
 import { TagList } from '@/components/TagList';
 import { ForecastList } from '@/components/ForecastList';
 import { FlaggedList } from '@/components/FlaggedList';
@@ -85,6 +86,7 @@ export default function Home() {
     setTimeBlockerOpen,
     theme,
     isFocusMode,
+    viewingProjectId,
   } = useAppStore();
 
   // Check auth status on mount
@@ -156,7 +158,9 @@ export default function Home() {
         <FocusBar />
 
         <div className="flex-1 overflow-hidden">
-          {currentPerspective === 'projects' ? (
+          {currentPerspective === 'projects' && viewingProjectId ? (
+            <ProjectDetailView />
+          ) : currentPerspective === 'projects' ? (
             <ProjectList />
           ) : currentPerspective === 'tags' ? (
             <TagList />

@@ -1,7 +1,7 @@
 'use client';
 
 import { useAppStore, Project } from '@/stores/app.store';
-import { FolderKanban, Flag, Calendar, ChevronRight, Plus, Layers, List, Eye, EyeOff, Search, X, CornerDownLeft, FolderPlus, Focus } from 'lucide-react';
+import { FolderKanban, Flag, Calendar, Settings, Plus, Layers, List, Eye, EyeOff, Search, X, CornerDownLeft, FolderPlus, Focus } from 'lucide-react';
 import { ProjectTemplates } from './ProjectTemplates';
 import { FolderTree } from './FolderTree';
 import { StalledIndicator } from './StalledIndicator';
@@ -14,7 +14,7 @@ interface ProjectItemProps {
 }
 
 function ProjectItem({ project }: ProjectItemProps) {
-  const { setSelectedProject, selectedProjectId, setCurrentPerspective, theme, setFocusedProject } = useAppStore();
+  const { setSelectedProject, selectedProjectId, setCurrentPerspective, theme, setFocusedProject, setViewingProject } = useAppStore();
 
   const isSelected = selectedProjectId === project.id;
   const isDueSoon = project.dueDate && (isToday(new Date(project.dueDate)) || isPast(new Date(project.dueDate)));
@@ -27,7 +27,7 @@ function ProjectItem({ project }: ProjectItemProps) {
   const progressPercent = totalActions > 0 ? Math.round((completedActions / totalActions) * 100) : 0;
 
   const handleClick = () => {
-    setSelectedProject(project.id);
+    setViewingProject(project.id);
   };
 
   return (
@@ -112,7 +112,21 @@ function ProjectItem({ project }: ProjectItemProps) {
         <Focus size={14} />
       </button>
 
-      <ChevronRight size={16} className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} />
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setSelectedProject(project.id);
+        }}
+        className={clsx(
+          'p-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity',
+          theme === 'dark'
+            ? 'hover:bg-omnifocus-surface text-gray-500 hover:text-gray-300'
+            : 'hover:bg-gray-100 text-gray-400 hover:text-gray-600'
+        )}
+        title="Project settings"
+      >
+        <Settings size={14} />
+      </button>
     </li>
   );
 }
