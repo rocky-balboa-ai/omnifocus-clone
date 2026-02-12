@@ -33,6 +33,7 @@ import { useAppStore } from '@/stores/app.store';
 import { useKeyboardShortcuts } from '@/lib/useKeyboardShortcuts';
 import { useThemeInit } from '@/lib/useThemeInit';
 import { useNotifications } from '@/lib/useNotifications';
+import { useTaskUrlSync } from '@/lib/useTaskUrlSync';
 import clsx from 'clsx';
 
 interface AppShellProps {
@@ -88,6 +89,7 @@ export function AppShell({ children }: AppShellProps) {
   useThemeInit();
   useKeyboardShortcuts();
   useNotifications();
+  useTaskUrlSync();
 
   useEffect(() => {
     if (isAuthenticated) {
