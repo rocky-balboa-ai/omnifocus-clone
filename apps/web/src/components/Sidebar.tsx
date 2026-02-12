@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAppStore } from '@/stores/app.store';
 import {
   Inbox,
@@ -79,6 +79,11 @@ const perspectiveHref: Record<string, string> = {
 export function Sidebar() {
   const { perspectives, setQuickEntryOpen, openPerspectiveEditor, setSettingsOpen, setWeeklyReviewOpen, theme, actions, logout } = useAppStore();
   const pathname = usePathname();
+  const router = useRouter();
+  
+  const navigate = (path: string) => {
+    router.push(path);
+  };
 
   const builtInPerspectives = perspectives.filter((p) => p.isBuiltIn);
   const customPerspectives = perspectives.filter((p) => !p.isBuiltIn);
@@ -125,7 +130,7 @@ export function Sidebar() {
         <div className="space-y-1">
           {/* Today - special perspective */}
           <button
-            onClick={() => { window.location.href = '/today'; }}
+            onClick={() => navigate('/today')}
             className={clsx(
               'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
               isActive('today')
@@ -160,7 +165,7 @@ export function Sidebar() {
             return (
               <button
                 key={perspective.id}
-                onClick={() => { window.location.href = href; }}
+                onClick={() => navigate(href)}
                 className={clsx(
                   'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
                   active
@@ -190,7 +195,7 @@ export function Sidebar() {
 
           {/* Rocky's Queue - special perspective */}
           <button
-            onClick={() => { window.location.href = '/rocky-queue'; }}
+            onClick={() => navigate('/rocky-queue')}
             className={clsx(
               'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
               isActive('rocky-queue')
@@ -214,7 +219,7 @@ export function Sidebar() {
 
           {/* Stats - special perspective */}
           <button
-            onClick={() => { window.location.href = '/stats'; }}
+            onClick={() => navigate('/stats')}
             className={clsx(
               'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
               isActive('stats')
@@ -258,7 +263,7 @@ export function Sidebar() {
               {customPerspectives.map((perspective) => (
                 <button
                   key={perspective.id}
-                  onClick={() => { window.location.href = perspectiveHref[perspective.id] || '/inbox'; }}
+                  onClick={() => navigate(perspectiveHref[perspective.id] || '/inbox')}
                   className={clsx(
                     'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
                     isActive(perspective.id)

@@ -153,7 +153,7 @@ export function TagTree({ theme }: TagTreeProps) {
         </button>
         <button
           type="button"
-          onClick={() => { window.location.href = '/tags'; }}
+          onClick={() => router.push('/tags')}
           className={clsx(
             'text-xs font-semibold uppercase tracking-wider transition-colors flex-1 py-1 -my-1 text-left cursor-pointer',
             isTagsActive
