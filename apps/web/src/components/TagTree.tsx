@@ -153,7 +153,10 @@ export function TagTree({ theme }: TagTreeProps) {
         </button>
         <button
           type="button"
-          onClick={() => router.push('/tags')}
+          onClick={() => {
+            setCurrentPerspective('tags');
+            router.push('/tags');
+          }}
           className={clsx(
             'text-xs font-semibold uppercase tracking-wider transition-colors flex-1 py-1 -my-1 text-left cursor-pointer',
             isTagsActive
