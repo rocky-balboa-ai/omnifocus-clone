@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useAppStore, Folder, Project } from '@/stores/app.store';
 import { ChevronRight, ChevronDown, Folder as FolderIcon, FolderKanban } from 'lucide-react';
 import clsx from 'clsx';
@@ -147,7 +146,6 @@ function ProjectItem({
 export function ProjectTree({ theme }: ProjectTreeProps) {
   const { projects, folders, focusedProjectId, setFocusedProject, setCurrentPerspective } = useAppStore();
   const pathname = usePathname();
-  const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(true);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
@@ -190,12 +188,8 @@ export function ProjectTree({ theme }: ProjectTreeProps) {
         >
           {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         </button>
-        <Link
+        <a
           href="/projects"
-          onClick={() => {
-            setCurrentPerspective('projects');
-            router.push('/projects');
-          }}
           className={clsx(
             'text-xs font-semibold uppercase tracking-wider transition-colors flex-1 py-1 -my-1',
             isProjectsActive
@@ -205,7 +199,7 @@ export function ProjectTree({ theme }: ProjectTreeProps) {
           )}
         >
           Projects
-        </Link>
+        </a>
       </div>
 
       {isExpanded && (
