@@ -18,6 +18,10 @@ import {
   Eye,
   EyeOff,
   CornerDownLeft,
+  ChevronDown,
+  PlayCircle,
+  PauseCircle,
+  XCircle,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { format, isPast, isToday } from 'date-fns';
@@ -48,6 +52,8 @@ export function ProjectDetailView({ projectId }: ProjectDetailViewProps) {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   const fetchProject = useCallback(async () => {
     if (!projectId) return;
@@ -125,6 +131,30 @@ export function ProjectDetailView({ projectId }: ProjectDetailViewProps) {
     }
   };
 
+  const handleStatusChange = async (newStatus: string) => {
+    if (!project) return;
+    setIsUpdatingStatus(true);
+    setShowStatusMenu(false);
+    try {
+      await api.patch(`/projects/${projectId}`, { status: newStatus });
+      await fetchProject();
+      await fetchProjects();
+    } catch (error) {
+      console.error('Failed to update project status:', error);
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  const statusConfig = {
+    active: { label: 'Active', icon: PlayCircle, color: 'text-green-500' },
+    on_hold: { label: 'On Hold', icon: PauseCircle, color: 'text-yellow-500' },
+    completed: { label: 'Completed', icon: CheckCircle2, color: 'text-blue-500' },
+    dropped: { label: 'Dropped', icon: XCircle, color: 'text-gray-500' },
+  };
+
+  const currentStatus = statusConfig[project?.status as keyof typeof statusConfig] || statusConfig.active;
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -181,6 +211,58 @@ export function ProjectDetailView({ projectId }: ProjectDetailViewProps) {
               <span className={clsx('text-xs capitalize', theme === 'dark' ? 'text-gray-500' : 'text-gray-400')}>
                 {project.type.replace('_', ' ')}
               </span>
+
+              {/* Status Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowStatusMenu(!showStatusMenu)}
+                  disabled={isUpdatingStatus}
+                  className={clsx(
+                    'flex items-center gap-1.5 px-2 py-0.5 rounded text-xs transition-colors',
+                    theme === 'dark'
+                      ? 'bg-omnifocus-surface hover:bg-omnifocus-border'
+                      : 'bg-gray-100 hover:bg-gray-200',
+                    isUpdatingStatus && 'opacity-50'
+                  )}
+                >
+                  <currentStatus.icon size={12} className={currentStatus.color} />
+                  <span className={currentStatus.color}>{currentStatus.label}</span>
+                  <ChevronDown size={12} className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} />
+                </button>
+
+                {showStatusMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowStatusMenu(false)} />
+                    <div className={clsx(
+                      'absolute top-full left-0 mt-1 py-1 rounded-lg shadow-lg border z-50 min-w-[140px]',
+                      theme === 'dark'
+                        ? 'bg-omnifocus-surface border-omnifocus-border'
+                        : 'bg-white border-gray-200'
+                    )}>
+                      {Object.entries(statusConfig).map(([key, config]) => (
+                        <button
+                          key={key}
+                          onClick={() => handleStatusChange(key)}
+                          className={clsx(
+                            'w-full flex items-center gap-2 px-3 py-1.5 text-xs text-left transition-colors',
+                            project.status === key
+                              ? 'bg-omnifocus-purple/20'
+                              : theme === 'dark'
+                                ? 'hover:bg-omnifocus-border'
+                                : 'hover:bg-gray-100'
+                          )}
+                        >
+                          <config.icon size={14} className={config.color} />
+                          <span className={theme === 'dark' ? 'text-white' : 'text-gray-900'}>
+                            {config.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
               {totalActions > 0 && (
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <div className={clsx(
