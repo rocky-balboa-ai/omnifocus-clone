@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAppStore, Folder, Project } from '@/stores/app.store';
 import { ChevronRight, ChevronDown, Folder as FolderIcon, FolderKanban } from 'lucide-react';
 import clsx from 'clsx';
@@ -144,8 +146,11 @@ function ProjectItem({
 
 export function ProjectTree({ theme }: ProjectTreeProps) {
   const { projects, folders, focusedProjectId, setFocusedProject, setCurrentPerspective } = useAppStore();
+  const pathname = usePathname();
   const [isExpanded, setIsExpanded] = useState(true);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+
+  const isProjectsActive = pathname === '/projects' || pathname.startsWith('/projects/');
 
   const toggleFolder = (id: string) => {
     setExpandedFolders(prev => {
@@ -173,18 +178,26 @@ export function ProjectTree({ theme }: ProjectTreeProps) {
 
   return (
     <div className="mt-4">
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className={clsx(
-          'w-full flex items-center gap-1 px-3 mb-1',
-          themeClasses.sectionTitle[theme]
-        )}
-      >
-        {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-        <h3 className="text-xs font-semibold uppercase tracking-wider">
+      <div className="flex items-center gap-1 px-3 mb-1">
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className={clsx(themeClasses.sectionTitle[theme])}
+        >
+          {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+        </button>
+        <Link
+          href="/projects"
+          className={clsx(
+            'text-xs font-semibold uppercase tracking-wider transition-colors',
+            isProjectsActive
+              ? 'text-omnifocus-purple'
+              : themeClasses.sectionTitle[theme],
+            'hover:text-omnifocus-purple'
+          )}
+        >
           Projects
-        </h3>
-      </button>
+        </Link>
+      </div>
 
       {isExpanded && (
         <div className="space-y-0.5">

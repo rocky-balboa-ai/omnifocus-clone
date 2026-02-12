@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAppStore, Tag } from '@/stores/app.store';
 import { ChevronRight, ChevronDown, Tag as TagIcon } from 'lucide-react';
 import clsx from 'clsx';
@@ -110,8 +112,11 @@ function TagItem({
 
 export function TagTree({ theme }: TagTreeProps) {
   const { tags, focusedTagId, setFocusedTag, setCurrentPerspective } = useAppStore();
+  const pathname = usePathname();
   const [isExpanded, setIsExpanded] = useState(true);
   const [expandedTags, setExpandedTags] = useState<Set<string>>(new Set());
+
+  const isTagsActive = pathname === '/tags' || pathname.startsWith('/tags/');
 
   const toggleTag = (id: string) => {
     setExpandedTags(prev => {
@@ -135,18 +140,26 @@ export function TagTree({ theme }: TagTreeProps) {
 
   return (
     <div className="mt-4">
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className={clsx(
-          'w-full flex items-center gap-1 px-3 mb-1',
-          themeClasses.sectionTitle[theme]
-        )}
-      >
-        {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-        <h3 className="text-xs font-semibold uppercase tracking-wider">
+      <div className="flex items-center gap-1 px-3 mb-1">
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className={clsx(themeClasses.sectionTitle[theme])}
+        >
+          {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+        </button>
+        <Link
+          href="/tags"
+          className={clsx(
+            'text-xs font-semibold uppercase tracking-wider transition-colors',
+            isTagsActive
+              ? 'text-omnifocus-purple'
+              : themeClasses.sectionTitle[theme],
+            'hover:text-omnifocus-purple'
+          )}
+        >
           Tags
-        </h3>
-      </button>
+        </Link>
+      </div>
 
       {isExpanded && (
         <div className="space-y-0.5">
