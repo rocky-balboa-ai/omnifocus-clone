@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAppStore, Tag } from '@/stores/app.store';
 import { ChevronRight, ChevronDown, Tag as TagIcon } from 'lucide-react';
@@ -150,7 +151,7 @@ export function TagTree({ theme }: TagTreeProps) {
         >
           {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         </button>
-        <a
+        <Link
           href="/tags"
           className={clsx(
             'text-xs font-semibold uppercase tracking-wider transition-colors flex-1 py-1 -my-1',
@@ -161,7 +162,7 @@ export function TagTree({ theme }: TagTreeProps) {
           )}
         >
           Tags
-        </a>
+        </Link>
       </div>
 
       {isExpanded && (

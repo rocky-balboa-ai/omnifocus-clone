@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAppStore, Folder, Project } from '@/stores/app.store';
 import { ChevronRight, ChevronDown, Folder as FolderIcon, FolderKanban } from 'lucide-react';
@@ -188,7 +189,7 @@ export function ProjectTree({ theme }: ProjectTreeProps) {
         >
           {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         </button>
-        <a
+        <Link
           href="/projects"
           className={clsx(
             'text-xs font-semibold uppercase tracking-wider transition-colors flex-1 py-1 -my-1',
@@ -199,7 +200,7 @@ export function ProjectTree({ theme }: ProjectTreeProps) {
           )}
         >
           Projects
-        </a>
+        </Link>
       </div>
 
       {isExpanded && (
