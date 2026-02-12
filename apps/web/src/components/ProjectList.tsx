@@ -2,7 +2,7 @@
 
 import { useAppStore, Project } from '@/stores/app.store';
 import { FolderKanban, Flag, Calendar, Settings, ChevronRight, Plus, Layers, List, Eye, EyeOff, Search, X, CornerDownLeft, FolderPlus } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { ProjectTemplates } from './ProjectTemplates';
 import { FolderTree } from './FolderTree';
 import { StalledIndicator } from './StalledIndicator';
@@ -15,7 +15,6 @@ interface ProjectItemProps {
 }
 
 function ProjectItem({ project }: ProjectItemProps) {
-  const router = useRouter();
   const { setSelectedProject, selectedProjectId, theme } = useAppStore();
 
   const isSelected = selectedProjectId === project.id;
@@ -28,22 +27,19 @@ function ProjectItem({ project }: ProjectItemProps) {
   const completedActions = project._count?.completedActions || 0;
   const progressPercent = totalActions > 0 ? Math.round((completedActions / totalActions) * 100) : 0;
 
-  const handleNavigate = () => {
-    router.push(`/projects/${project.id}`);
-  };
-
   return (
-    <li
-      onClick={handleNavigate}
-      className={clsx(
-        'group flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors',
-        isSelected
-          ? 'bg-omnifocus-purple/20 border border-omnifocus-purple'
-          : theme === 'dark'
-            ? 'hover:bg-omnifocus-surface border border-transparent'
-            : 'hover:bg-gray-100 border border-transparent'
-      )}
-    >
+    <li>
+      <Link
+        href={`/projects/${project.id}`}
+        className={clsx(
+          'group flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors',
+          isSelected
+            ? 'bg-omnifocus-purple/20 border border-omnifocus-purple'
+            : theme === 'dark'
+              ? 'hover:bg-omnifocus-surface border border-transparent'
+              : 'hover:bg-gray-100 border border-transparent'
+        )}
+      >
       <TypeIcon size={18} className="text-blue-400 shrink-0" />
 
       <div className="flex-1 min-w-0">
@@ -100,6 +96,7 @@ function ProjectItem({ project }: ProjectItemProps) {
       {/* Settings gear - opens edit modal */}
       <button
         onClick={(e) => {
+          e.preventDefault();
           e.stopPropagation();
           setSelectedProject(project.id);
         }}
@@ -116,6 +113,7 @@ function ProjectItem({ project }: ProjectItemProps) {
 
       {/* Arrow - navigates to project detail */}
       <ChevronRight size={16} className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} />
+      </Link>
     </li>
   );
 }
