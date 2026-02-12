@@ -132,7 +132,6 @@ interface AppState {
   selectedFolderId: string | null;
   editingPerspectiveId: string | null;
   filterTagId: string | null;
-  viewingProjectId: string | null;
   focusedProjectId: string | null;
   focusedTagId: string | null;
   selectedActionIds: Set<string>;
@@ -171,7 +170,6 @@ interface AppState {
   setQuickOpenOpen: (open: boolean) => void;
   setShowCompleted: (show: boolean) => void;
   setFilterTagId: (tagId: string | null) => void;
-  setViewingProject: (projectId: string | null) => void;
   setFocusedProject: (projectId: string | null) => void;
   setFocusedTag: (tagId: string | null) => void;
   clearFocus: () => void;
@@ -246,7 +244,6 @@ export const useAppStore = create<AppState>((set, get) => ({
   selectedFolderId: null,
   editingPerspectiveId: null,
   filterTagId: null,
-  viewingProjectId: null,
   focusedProjectId: null,
   focusedTagId: null,
   selectedActionIds: new Set<string>(),
@@ -323,7 +320,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   // UI Actions
-  setCurrentPerspective: (id) => set({ currentPerspective: id, viewingProjectId: null }),
+  setCurrentPerspective: (id) => set({ currentPerspective: id }),
   setSelectedAction: (id) => set({ selectedActionId: id }),
   setSelectedProject: (id) => set({ selectedProjectId: id }),
   setSelectedFolderId: (id) => set({ selectedFolderId: id }),
@@ -333,7 +330,6 @@ export const useAppStore = create<AppState>((set, get) => ({
   setQuickOpenOpen: (open) => set({ isQuickOpenOpen: open }),
   setShowCompleted: (show) => set({ showCompleted: show }),
   setFilterTagId: (tagId) => set({ filterTagId: tagId }),
-  setViewingProject: (projectId) => set({ viewingProjectId: projectId }),
   setFocusedProject: (projectId) => set({ focusedProjectId: projectId, focusedTagId: null }),
   setFocusedTag: (tagId) => set({ focusedTagId: tagId, focusedProjectId: null }),
   clearFocus: () => set({ focusedProjectId: null, focusedTagId: null }),

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAppStore, Action, Project } from '@/stores/app.store';
 import { api } from '@/lib/api';
 import {
@@ -25,10 +26,13 @@ interface ProjectWithActions extends Project {
   actions?: Action[];
 }
 
-export function ProjectDetailView() {
+interface ProjectDetailViewProps {
+  projectId: string;
+}
+
+export function ProjectDetailView({ projectId }: ProjectDetailViewProps) {
+  const router = useRouter();
   const {
-    viewingProjectId,
-    setViewingProject,
     setSelectedAction,
     selectedActionId,
     completeAction,
@@ -46,17 +50,17 @@ export function ProjectDetailView() {
   const [showNewTaskForm, setShowNewTaskForm] = useState(false);
 
   const fetchProject = useCallback(async () => {
-    if (!viewingProjectId) return;
+    if (!projectId) return;
     setIsLoading(true);
     try {
-      const data = await api.get<ProjectWithActions>(`/projects/${viewingProjectId}`);
+      const data = await api.get<ProjectWithActions>(`/projects/${projectId}`);
       setProject(data);
     } catch (error) {
       console.error('Failed to fetch project:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [viewingProjectId]);
+  }, [projectId]);
 
   useEffect(() => {
     fetchProject();
@@ -82,13 +86,19 @@ export function ProjectDetailView() {
   const typeIcon = project?.type === 'sequential' ? List : project?.type === 'parallel' ? Layers : FolderKanban;
   const TypeIcon = typeIcon;
 
+  const handleBack = () => {
+    router.push('/');
+    // Ensure we're on the projects perspective when going back
+    useAppStore.getState().setCurrentPerspective('projects');
+  };
+
   const handleCreateTask = async () => {
-    if (!newTaskTitle.trim() || !viewingProjectId) return;
+    if (!newTaskTitle.trim() || !projectId) return;
     setIsCreating(true);
     try {
       await createAction({
         title: newTaskTitle.trim(),
-        projectId: viewingProjectId,
+        projectId,
       });
       setNewTaskTitle('');
       setShowNewTaskForm(false);
@@ -128,7 +138,7 @@ export function ProjectDetailView() {
       <div className="flex flex-col items-center justify-center h-full gap-4">
         <p className="text-gray-500">Project not found</p>
         <button
-          onClick={() => setViewingProject(null)}
+          onClick={handleBack}
           className="text-omnifocus-purple hover:underline"
         >
           Back to projects
@@ -146,7 +156,7 @@ export function ProjectDetailView() {
       )}>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setViewingProject(null)}
+            onClick={handleBack}
             className={clsx(
               'p-1.5 rounded-lg transition-colors',
               theme === 'dark'

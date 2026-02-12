@@ -1,7 +1,8 @@
 'use client';
 
 import { useAppStore, Project } from '@/stores/app.store';
-import { FolderKanban, Flag, Calendar, Settings, Plus, Layers, List, Eye, EyeOff, Search, X, CornerDownLeft, FolderPlus, Focus } from 'lucide-react';
+import { FolderKanban, Flag, Calendar, Settings, ChevronRight, Plus, Layers, List, Eye, EyeOff, Search, X, CornerDownLeft, FolderPlus, Focus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { ProjectTemplates } from './ProjectTemplates';
 import { FolderTree } from './FolderTree';
 import { StalledIndicator } from './StalledIndicator';
@@ -14,7 +15,8 @@ interface ProjectItemProps {
 }
 
 function ProjectItem({ project }: ProjectItemProps) {
-  const { setSelectedProject, selectedProjectId, setCurrentPerspective, theme, setFocusedProject, setViewingProject } = useAppStore();
+  const router = useRouter();
+  const { setSelectedProject, selectedProjectId, setCurrentPerspective, theme, setFocusedProject } = useAppStore();
 
   const isSelected = selectedProjectId === project.id;
   const isDueSoon = project.dueDate && (isToday(new Date(project.dueDate)) || isPast(new Date(project.dueDate)));
@@ -26,13 +28,13 @@ function ProjectItem({ project }: ProjectItemProps) {
   const completedActions = project._count?.completedActions || 0;
   const progressPercent = totalActions > 0 ? Math.round((completedActions / totalActions) * 100) : 0;
 
-  const handleClick = () => {
-    setViewingProject(project.id);
+  const handleNavigate = () => {
+    router.push(`/projects/${project.id}`);
   };
 
   return (
     <li
-      onClick={handleClick}
+      onClick={handleNavigate}
       className={clsx(
         'group flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors',
         isSelected
@@ -95,6 +97,24 @@ function ProjectItem({ project }: ProjectItemProps) {
         </div>
       </div>
 
+      {/* Settings gear - opens edit modal */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setSelectedProject(project.id);
+        }}
+        className={clsx(
+          'p-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity',
+          theme === 'dark'
+            ? 'hover:bg-omnifocus-surface text-gray-500 hover:text-gray-300'
+            : 'hover:bg-gray-100 text-gray-400 hover:text-gray-600'
+        )}
+        title="Project settings"
+      >
+        <Settings size={14} />
+      </button>
+
+      {/* Focus button */}
       <button
         onClick={(e) => {
           e.stopPropagation();
@@ -112,21 +132,8 @@ function ProjectItem({ project }: ProjectItemProps) {
         <Focus size={14} />
       </button>
 
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setSelectedProject(project.id);
-        }}
-        className={clsx(
-          'p-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity',
-          theme === 'dark'
-            ? 'hover:bg-omnifocus-surface text-gray-500 hover:text-gray-300'
-            : 'hover:bg-gray-100 text-gray-400 hover:text-gray-600'
-        )}
-        title="Project settings"
-      >
-        <Settings size={14} />
-      </button>
+      {/* Arrow - navigates to project detail */}
+      <ChevronRight size={16} className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} />
     </li>
   );
 }
