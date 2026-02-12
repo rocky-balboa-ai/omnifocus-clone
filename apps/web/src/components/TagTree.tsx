@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAppStore, Tag } from '@/stores/app.store';
 import { ChevronRight, ChevronDown, Tag as TagIcon } from 'lucide-react';
 import clsx from 'clsx';
@@ -113,6 +113,7 @@ function TagItem({
 export function TagTree({ theme }: TagTreeProps) {
   const { tags, focusedTagId, setFocusedTag, setCurrentPerspective } = useAppStore();
   const pathname = usePathname();
+  const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(true);
   const [expandedTags, setExpandedTags] = useState<Set<string>>(new Set());
 
@@ -153,8 +154,12 @@ export function TagTree({ theme }: TagTreeProps) {
         </button>
         <Link
           href="/tags"
+          onClick={() => {
+            setCurrentPerspective('tags');
+            router.push('/tags');
+          }}
           className={clsx(
-            'text-xs font-semibold uppercase tracking-wider transition-colors flex-1',
+            'text-xs font-semibold uppercase tracking-wider transition-colors flex-1 py-1 -my-1',
             isTagsActive
               ? 'text-omnifocus-purple'
               : themeClasses.sectionTitle[theme],
