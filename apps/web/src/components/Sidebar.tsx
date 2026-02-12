@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo } from 'react';
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAppStore } from '@/stores/app.store';
 import {
@@ -125,8 +124,8 @@ export function Sidebar() {
       <nav className="flex-1 overflow-y-auto px-2">
         <div className="space-y-1">
           {/* Today - special perspective */}
-          <Link
-            href="/today"
+          <button
+            onClick={() => { window.location.href = '/today'; }}
             className={clsx(
               'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
               isActive('today')
@@ -146,7 +145,7 @@ export function Sidebar() {
                 {counts.today}
               </span>
             )}
-          </Link>
+          </button>
 
           {builtInPerspectives.map((perspective) => {
             // Map perspective to count
@@ -159,9 +158,9 @@ export function Sidebar() {
             const active = isActive(perspective.id);
 
             return (
-              <Link
+              <button
                 key={perspective.id}
-                href={href}
+                onClick={() => { window.location.href = href; }}
                 className={clsx(
                   'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
                   active
@@ -185,13 +184,13 @@ export function Sidebar() {
                     {count}
                   </span>
                 )}
-              </Link>
+              </button>
             );
           })}
 
           {/* Rocky's Queue - special perspective */}
-          <Link
-            href="/rocky-queue"
+          <button
+            onClick={() => { window.location.href = '/rocky-queue'; }}
             className={clsx(
               'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
               isActive('rocky-queue')
@@ -211,11 +210,11 @@ export function Sidebar() {
                 {counts.rockyQueue}
               </span>
             )}
-          </Link>
+          </button>
 
           {/* Stats - special perspective */}
-          <Link
-            href="/stats"
+          <button
+            onClick={() => { window.location.href = '/stats'; }}
             className={clsx(
               'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
               isActive('stats')
@@ -225,7 +224,7 @@ export function Sidebar() {
           >
             <BarChart3 size={18} />
             <span>Statistics</span>
-          </Link>
+          </button>
         </div>
 
         {/* Projects Tree */}
@@ -257,9 +256,9 @@ export function Sidebar() {
           {customPerspectives.length > 0 ? (
             <div className="space-y-1">
               {customPerspectives.map((perspective) => (
-                <Link
+                <button
                   key={perspective.id}
-                  href={perspectiveHref[perspective.id] || `/inbox`}
+                  onClick={() => { window.location.href = perspectiveHref[perspective.id] || '/inbox'; }}
                   className={clsx(
                     'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
                     isActive(perspective.id)
@@ -269,7 +268,7 @@ export function Sidebar() {
                 >
                   <FolderKanban size={18} />
                   <span>{perspective.name}</span>
-                </Link>
+                </button>
               ))}
             </div>
           ) : (
