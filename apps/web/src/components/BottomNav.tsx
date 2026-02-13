@@ -53,8 +53,19 @@ export function BottomNav() {
   // Navigation helper for reliable SPA navigation
   const navigate = (path: string, perspectiveId: string) => {
     setCurrentPerspective(perspectiveId);
-    window.history.pushState({}, '', path);
-    router.refresh();
+    
+    // Check if navigating to a different base route (different page component)
+    const currentBase = pathname.split('/')[1];
+    const targetBase = path.split('/')[1];
+    
+    if (currentBase !== targetBase) {
+      // Different page component - need full navigation for PWA compatibility
+      window.location.href = path;
+    } else {
+      // Same page type - soft refresh
+      window.history.pushState({}, '', path);
+      router.refresh();
+    }
   };
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);

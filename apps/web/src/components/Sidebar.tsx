@@ -87,9 +87,19 @@ export function Sidebar() {
     if (perspectiveId) {
       setCurrentPerspective(perspectiveId);
     }
-    // Use history.pushState + router.refresh for reliable SPA navigation
-    window.history.pushState({}, '', path);
-    router.refresh();
+    
+    // Check if navigating to a different base route (different page component)
+    const currentBase = pathname.split('/')[1]; // e.g., "inbox", "projects", "tags"
+    const targetBase = path.split('/')[1];
+    
+    if (currentBase !== targetBase) {
+      // Different page component - need full navigation for PWA compatibility
+      window.location.href = path;
+    } else {
+      // Same page type (e.g., /projects to /projects/123) - soft refresh
+      window.history.pushState({}, '', path);
+      router.refresh();
+    }
   };
 
   const builtInPerspectives = perspectives.filter((p) => p.isBuiltIn);
