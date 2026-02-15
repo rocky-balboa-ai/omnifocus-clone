@@ -93,9 +93,7 @@ export function ProjectDetailView({ projectId }: ProjectDetailViewProps) {
   const TypeIcon = typeIcon;
 
   const handleBack = () => {
-    router.push('/');
-    // Ensure we're on the projects perspective when going back
-    useAppStore.getState().setCurrentPerspective('projects');
+    router.push('/projects');
   };
 
   const handleCreateTask = async () => {

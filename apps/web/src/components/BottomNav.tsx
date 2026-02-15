@@ -231,6 +231,36 @@ export function BottomNav() {
                 <span>Projects</span>
               </Link>
               <Link
+                href="/tags"
+                onClick={() => setIsMoreOpen(false)}
+                className={clsx(
+                  'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
+                  isActive('tags')
+                    ? 'text-omnifocus-purple bg-omnifocus-purple/10'
+                    : theme === 'dark'
+                      ? 'text-gray-300 hover:bg-omnifocus-surface'
+                      : 'text-gray-700 hover:bg-gray-100'
+                )}
+              >
+                <Tags size={18} />
+                <span>Tags</span>
+              </Link>
+              <Link
+                href="/review"
+                onClick={() => setIsMoreOpen(false)}
+                className={clsx(
+                  'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
+                  isActive('review')
+                    ? 'text-omnifocus-purple bg-omnifocus-purple/10'
+                    : theme === 'dark'
+                      ? 'text-gray-300 hover:bg-omnifocus-surface'
+                      : 'text-gray-700 hover:bg-gray-100'
+                )}
+              >
+                <RefreshCw size={18} />
+                <span>Review</span>
+              </Link>
+              <Link
                 href="/rocky-queue"
                 onClick={() => setIsMoreOpen(false)}
                 className={clsx(

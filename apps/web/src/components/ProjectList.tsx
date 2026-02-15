@@ -31,7 +31,6 @@ function ProjectItem({ project }: ProjectItemProps) {
     <li>
       <Link
         href={`/projects/${project.id}`}
-        onClick={() => { window.location.href = `/projects/${project.id}`; }}
         className={clsx(
           'group flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors',
           isSelected
