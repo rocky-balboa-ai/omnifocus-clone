@@ -77,29 +77,13 @@ const perspectiveHref: Record<string, string> = {
 };
 
 export function Sidebar() {
-  const { perspectives, setCurrentPerspective, setQuickEntryOpen, openPerspectiveEditor, setSettingsOpen, setWeeklyReviewOpen, theme, actions, logout } = useAppStore();
+  const { perspectives, setQuickEntryOpen, openPerspectiveEditor, setSettingsOpen, setWeeklyReviewOpen, theme, actions, logout } = useAppStore();
   const pathname = usePathname();
   const router = useRouter();
-  
-  // Navigation helper that updates URL and triggers re-render
-  const navigate = (path: string, perspectiveId?: string) => {
-    // Update state first for immediate UI feedback
-    if (perspectiveId) {
-      setCurrentPerspective(perspectiveId);
-    }
-    
-    // Check if navigating to a different base route (different page component)
-    const currentBase = pathname.split('/')[1]; // e.g., "inbox", "projects", "tags"
-    const targetBase = path.split('/')[1];
-    
-    if (currentBase !== targetBase) {
-      // Different page component - need full navigation for PWA compatibility
-      window.location.href = path;
-    } else {
-      // Same page type (e.g., /projects to /projects/123) - soft refresh
-      window.history.pushState({}, '', path);
-      router.refresh();
-    }
+
+  // Navigation helper - just use router.push, perspective will be derived from URL
+  const navigate = (path: string) => {
+    router.push(path);
   };
 
   const builtInPerspectives = perspectives.filter((p) => p.isBuiltIn);
@@ -147,7 +131,7 @@ export function Sidebar() {
         <div className="space-y-1">
           {/* Today - special perspective */}
           <button
-            onClick={() => navigate('/today', 'today')}
+            onClick={() => navigate('/today')}
             className={clsx(
               'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
               isActive('today')
@@ -182,7 +166,7 @@ export function Sidebar() {
             return (
               <button
                 key={perspective.id}
-                onClick={() => navigate(href, perspective.id)}
+                onClick={() => navigate(href)}
                 className={clsx(
                   'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
                   active
@@ -212,7 +196,7 @@ export function Sidebar() {
 
           {/* Rocky's Queue - special perspective */}
           <button
-            onClick={() => navigate('/rocky-queue', 'rocky-queue')}
+            onClick={() => navigate('/rocky-queue')}
             className={clsx(
               'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
               isActive('rocky-queue')
@@ -236,7 +220,7 @@ export function Sidebar() {
 
           {/* Stats - special perspective */}
           <button
-            onClick={() => navigate('/stats', 'stats')}
+            onClick={() => navigate('/stats')}
             className={clsx(
               'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
               isActive('stats')
@@ -280,7 +264,7 @@ export function Sidebar() {
               {customPerspectives.map((perspective) => (
                 <button
                   key={perspective.id}
-                  onClick={() => navigate(perspectiveHref[perspective.id] || '/inbox', perspective.id)}
+                  onClick={() => navigate(perspectiveHref[perspective.id] || '/inbox')}
                   className={clsx(
                     'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
                     isActive(perspective.id)

@@ -2,6 +2,16 @@ import { create } from 'zustand';
 import { api } from '@/lib/api';
 import { toLocalDateString } from '@/lib/dateUtils';
 
+export const derivePerspectiveFromPath = (pathname: string): string => {
+  const pathSegment = pathname.split('/')[1] || 'inbox';
+  const perspectiveMap: Record<string, string> = {
+    'inbox': 'inbox', 'projects': 'projects', 'tags': 'tags',
+    'forecast': 'forecast', 'flagged': 'flagged', 'review': 'review',
+    'today': 'today', 'rocky-queue': 'rocky-queue', 'stats': 'stats'
+  };
+  return perspectiveMap[pathSegment] || 'inbox';
+};
+
 export interface Attachment {
   id: string;
   filename: string;

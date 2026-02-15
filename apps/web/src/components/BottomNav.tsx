@@ -46,26 +46,13 @@ const perspectiveHref: Record<string, string> = {
 const perspectiveOrder = ['today', 'inbox', 'forecast', 'flagged'];
 
 export function BottomNav() {
-  const { perspectives, setCurrentPerspective, setSettingsOpen, logout, actions, projects, theme } = useAppStore();
+  const { perspectives, setSettingsOpen, logout, actions, projects, theme } = useAppStore();
   const pathname = usePathname();
   const router = useRouter();
-  
-  // Navigation helper for reliable SPA navigation
-  const navigate = (path: string, perspectiveId: string) => {
-    setCurrentPerspective(perspectiveId);
-    
-    // Check if navigating to a different base route (different page component)
-    const currentBase = pathname.split('/')[1];
-    const targetBase = path.split('/')[1];
-    
-    if (currentBase !== targetBase) {
-      // Different page component - need full navigation for PWA compatibility
-      window.location.href = path;
-    } else {
-      // Same page type - soft refresh
-      window.history.pushState({}, '', path);
-      router.refresh();
-    }
+
+  // Navigation helper - just use router.push, perspective will be derived from URL
+  const navigate = (path: string) => {
+    router.push(path);
   };
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
@@ -157,7 +144,7 @@ export function BottomNav() {
           return (
             <button
               key={perspective.id}
-              onClick={() => navigate(href, perspective.id)}
+              onClick={() => navigate(href)}
               className={clsx(
                 'relative flex flex-col items-center justify-center py-2 px-2 rounded-xl transition-all duration-200 min-w-[52px]',
                 active
@@ -234,7 +221,7 @@ export function BottomNav() {
             )}>
               {/* Navigation items */}
               <button
-                onClick={() => { setIsMoreOpen(false); navigate('/projects', 'projects'); }}
+                onClick={() => { setIsMoreOpen(false); navigate('/projects'); }}
                 className={clsx(
                   'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
                   isActive('projects')
@@ -248,7 +235,7 @@ export function BottomNav() {
                 <span>Projects</span>
               </button>
               <button
-                onClick={() => { setIsMoreOpen(false); navigate('/rocky-queue', 'rocky-queue'); }}
+                onClick={() => { setIsMoreOpen(false); navigate('/rocky-queue'); }}
                 className={clsx(
                   'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
                   isActive('rocky-queue')
@@ -262,7 +249,7 @@ export function BottomNav() {
                 <span>Rocky's Queue</span>
               </button>
               <button
-                onClick={() => { setIsMoreOpen(false); navigate('/stats', 'stats'); }}
+                onClick={() => { setIsMoreOpen(false); navigate('/stats'); }}
                 className={clsx(
                   'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
                   isActive('stats')

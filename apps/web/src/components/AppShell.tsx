@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
 import { BottomNav } from '@/components/BottomNav';
 import { FloatingActionButton } from '@/components/FloatingActionButton';
@@ -29,7 +30,7 @@ import { ToastProvider } from '@/components/Toast';
 import { ConfettiProvider } from '@/components/Confetti';
 import { KeyboardShortcutHints, useKeyboardShortcutsModal } from '@/components/KeyboardShortcutHints';
 import { LoginForm } from '@/components/LoginForm';
-import { useAppStore } from '@/stores/app.store';
+import { useAppStore, derivePerspectiveFromPath } from '@/stores/app.store';
 import { useKeyboardShortcuts } from '@/lib/useKeyboardShortcuts';
 import { useThemeInit } from '@/lib/useThemeInit';
 import { useNotifications } from '@/lib/useNotifications';
@@ -41,6 +42,7 @@ interface AppShellProps {
 }
 
 export function AppShell({ children }: AppShellProps) {
+  const pathname = usePathname();
   const {
     isAuthenticated,
     setAuthenticated,
@@ -51,6 +53,7 @@ export function AppShell({ children }: AppShellProps) {
     fetchTags,
     fetchFolders,
     currentPerspective,
+    setCurrentPerspective,
     selectedActionId,
     setSelectedAction,
     selectedProjectId,
@@ -85,6 +88,14 @@ export function AppShell({ children }: AppShellProps) {
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
+  // Sync perspective from URL pathname
+  useEffect(() => {
+    const perspectiveFromUrl = derivePerspectiveFromPath(pathname);
+    if (perspectiveFromUrl !== currentPerspective) {
+      setCurrentPerspective(perspectiveFromUrl);
+    }
+  }, [pathname, currentPerspective, setCurrentPerspective]);
 
   useThemeInit();
   useKeyboardShortcuts();
