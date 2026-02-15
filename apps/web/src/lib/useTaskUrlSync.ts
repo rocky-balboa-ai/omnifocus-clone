@@ -17,6 +17,8 @@ export function useTaskUrlSync() {
   const selectedActionId = useAppStore(s => s.selectedActionId);
   const setSelectedAction = useAppStore(s => s.setSelectedAction);
   const initializedRef = useRef(false);
+  const prevPathnameRef = useRef(pathname);
+  const isNavigatingRef = useRef(false);
 
   // On mount: read ?task= from URL and open detail panel
   useEffect(() => {
@@ -29,8 +31,24 @@ export function useTaskUrlSync() {
     }
   }, [searchParams, setSelectedAction]);
 
+  // Detect page navigations and suppress URL sync during transitions
+  // to avoid router.replace() conflicting with an in-flight router.push()
+  useEffect(() => {
+    if (prevPathnameRef.current !== pathname) {
+      isNavigatingRef.current = true;
+      prevPathnameRef.current = pathname;
+      const timer = setTimeout(() => {
+        isNavigatingRef.current = false;
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [pathname]);
+
   // When selectedActionId changes, update URL
   useEffect(() => {
+    // Don't interfere with an active page navigation
+    if (isNavigatingRef.current) return;
+
     const currentTaskParam = searchParams.get('task');
 
     if (selectedActionId && selectedActionId !== currentTaskParam) {
