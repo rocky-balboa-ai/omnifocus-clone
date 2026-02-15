@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
-import Link from 'next/link';
+import { NavLink } from '@/components/NavLink';
 import { usePathname } from 'next/navigation';
 import { useAppStore } from '@/stores/app.store';
 import {
@@ -137,7 +137,7 @@ export function BottomNav() {
           const href = perspectiveHref[perspective.id] || '/inbox';
 
           return (
-            <Link
+            <NavLink
               key={perspective.id}
               href={href}
               className={clsx(
@@ -174,7 +174,7 @@ export function BottomNav() {
               )}>
                 {perspective.name}
               </span>
-            </Link>
+            </NavLink>
           );
         })}
 
@@ -215,7 +215,7 @@ export function BottomNav() {
                 : 'bg-white border-gray-200'
             )}>
               {/* Navigation items */}
-              <Link
+              <NavLink
                 href="/projects"
                 onClick={() => setIsMoreOpen(false)}
                 className={clsx(
@@ -229,8 +229,8 @@ export function BottomNav() {
               >
                 <FolderKanban size={18} />
                 <span>Projects</span>
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href="/tags"
                 onClick={() => setIsMoreOpen(false)}
                 className={clsx(
@@ -244,8 +244,8 @@ export function BottomNav() {
               >
                 <Tags size={18} />
                 <span>Tags</span>
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href="/review"
                 onClick={() => setIsMoreOpen(false)}
                 className={clsx(
@@ -259,8 +259,8 @@ export function BottomNav() {
               >
                 <RefreshCw size={18} />
                 <span>Review</span>
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href="/rocky-queue"
                 onClick={() => setIsMoreOpen(false)}
                 className={clsx(
@@ -274,8 +274,8 @@ export function BottomNav() {
               >
                 <Bot size={18} />
                 <span>Rocky's Queue</span>
-              </Link>
-              <Link
+              </NavLink>
+              <NavLink
                 href="/stats"
                 onClick={() => setIsMoreOpen(false)}
                 className={clsx(
@@ -289,7 +289,7 @@ export function BottomNav() {
               >
                 <BarChart3 size={18} />
                 <span>Statistics</span>
-              </Link>
+              </NavLink>
 
               {/* Divider */}
               <div className={clsx(

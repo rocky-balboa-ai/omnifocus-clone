@@ -1,8 +1,8 @@
 'use client';
 
 import { useMemo, useCallback } from 'react';
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { NavLink } from '@/components/NavLink';
 import { useAppStore } from '@/stores/app.store';
 import {
   Inbox,
@@ -125,7 +125,7 @@ export function Sidebar() {
       <nav className="flex-1 overflow-y-auto px-2">
         <div className="space-y-1">
           {/* Today - special perspective */}
-          <Link
+          <NavLink
             href="/today"
             className={clsx(
               'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
@@ -146,7 +146,7 @@ export function Sidebar() {
                 {counts.today}
               </span>
             )}
-          </Link>
+          </NavLink>
 
           {builtInPerspectives.map((perspective) => {
             // Map perspective to count
@@ -159,7 +159,7 @@ export function Sidebar() {
             const active = isActive(perspective.id);
 
             return (
-              <Link
+              <NavLink
                 key={perspective.id}
                 href={href}
                 className={clsx(
@@ -185,12 +185,12 @@ export function Sidebar() {
                     {count}
                   </span>
                 )}
-              </Link>
+              </NavLink>
             );
           })}
 
           {/* Rocky's Queue - special perspective */}
-          <Link
+          <NavLink
             href="/rocky-queue"
             className={clsx(
               'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
@@ -211,10 +211,10 @@ export function Sidebar() {
                 {counts.rockyQueue}
               </span>
             )}
-          </Link>
+          </NavLink>
 
           {/* Stats - special perspective */}
-          <Link
+          <NavLink
             href="/stats"
             className={clsx(
               'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
@@ -225,7 +225,7 @@ export function Sidebar() {
           >
             <BarChart3 size={18} />
             <span>Statistics</span>
-          </Link>
+          </NavLink>
         </div>
 
         {/* Projects Tree */}
@@ -257,7 +257,7 @@ export function Sidebar() {
           {customPerspectives.length > 0 ? (
             <div className="space-y-1">
               {customPerspectives.map((perspective) => (
-                <Link
+                <NavLink
                   key={perspective.id}
                   href={perspectiveHref[perspective.id] || '/inbox'}
                   className={clsx(
@@ -269,7 +269,7 @@ export function Sidebar() {
                 >
                   <FolderKanban size={18} />
                   <span>{perspective.name}</span>
-                </Link>
+                </NavLink>
               ))}
             </div>
           ) : (
