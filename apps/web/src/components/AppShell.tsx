@@ -89,13 +89,11 @@ export function AppShell({ children }: AppShellProps) {
     checkAuth();
   }, [checkAuth]);
 
-  // Sync perspective from URL pathname
+  // Sync perspective from URL pathname (only when pathname changes)
   useEffect(() => {
     const perspectiveFromUrl = derivePerspectiveFromPath(pathname);
-    if (perspectiveFromUrl !== currentPerspective) {
-      setCurrentPerspective(perspectiveFromUrl);
-    }
-  }, [pathname, currentPerspective, setCurrentPerspective]);
+    setCurrentPerspective(perspectiveFromUrl);
+  }, [pathname, setCurrentPerspective]);
 
   useThemeInit();
   useKeyboardShortcuts();

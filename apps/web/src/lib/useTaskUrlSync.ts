@@ -1,28 +1,20 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useSearchParams, usePathname } from 'next/navigation';
 import { useAppStore } from '@/stores/app.store';
 
 /**
  * Syncs selectedActionId with ?task= URL query parameter.
- * - On mount: reads ?task= and opens the detail panel
- * - On selection: updates URL with ?task=<id>
- * - On close: removes ?task= from URL
+ * Uses history.replaceState instead of router.replace to avoid
+ * interfering with Next.js router transitions.
  */
 export function useTaskUrlSync() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const pathname = usePathname();
   const selectedActionId = useAppStore(s => s.selectedActionId);
   const setSelectedAction = useAppStore(s => s.setSelectedAction);
   const initializedRef = useRef(false);
-  const lastPathnameRef = useRef(pathname);
-
-  // Update lastPathnameRef when pathname changes
-  useEffect(() => {
-    lastPathnameRef.current = pathname;
-  }, [pathname]);
 
   // On mount: read ?task= from URL and open detail panel
   useEffect(() => {
@@ -35,24 +27,27 @@ export function useTaskUrlSync() {
     }
   }, [searchParams, setSelectedAction]);
 
-  // When selectedActionId changes, update URL
+  // When selectedActionId changes, update URL without touching the router
   useEffect(() => {
-    // Skip if we're mid-navigation (pathname has changed)
-    if (lastPathnameRef.current !== pathname) {
-      return;
-    }
-
-    const currentTaskParam = searchParams.get('task');
+    const currentTaskParam = new URLSearchParams(window.location.search).get('task');
 
     if (selectedActionId && selectedActionId !== currentTaskParam) {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(window.location.search);
       params.set('task', selectedActionId);
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      window.history.replaceState(
+        window.history.state,
+        '',
+        `${pathname}?${params.toString()}`
+      );
     } else if (!selectedActionId && currentTaskParam) {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(window.location.search);
       params.delete('task');
       const queryString = params.toString();
-      router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
+      window.history.replaceState(
+        window.history.state,
+        '',
+        queryString ? `${pathname}?${queryString}` : pathname
+      );
     }
-  }, [selectedActionId, searchParams, router, pathname]);
+  }, [selectedActionId, pathname]);
 }

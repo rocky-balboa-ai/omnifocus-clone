@@ -17,12 +17,6 @@ const instrumentSans = Instrument_Sans({
 export const metadata: Metadata = {
   title: 'OmniFocus Clone',
   description: 'A web-based GTD task management app',
-  manifest: '/manifest.json',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'black-translucent',
-    title: 'OmniFocus',
-  },
   formatDetection: {
     telephone: false,
   },
@@ -46,6 +40,15 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="apple-touch-icon" href="/icons/icon.svg" />
+        <script dangerouslySetInnerHTML={{ __html: `
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+              registrations.forEach(function(registration) {
+                registration.unregister();
+              });
+            });
+          }
+        ` }} />
       </head>
       <body className={`${dmSans.variable} ${instrumentSans.variable} font-sans antialiased`}>{children}</body>
     </html>
