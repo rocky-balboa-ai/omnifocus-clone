@@ -81,24 +81,15 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   
-  // Navigation helper that updates URL and triggers re-render
+  // Navigation helper — use hard navigation for cross-route changes
   const navigate = (path: string, perspectiveId?: string) => {
-    // Update state first for immediate UI feedback
     if (perspectiveId) {
       setCurrentPerspective(perspectiveId);
     }
     
-    // Check if navigating to a different base route (different page component)
-    const currentBase = pathname.split('/')[1]; // e.g., "inbox", "projects", "tags"
-    const targetBase = path.split('/')[1];
-    
-    if (currentBase !== targetBase) {
-      // Different page component - need full navigation for PWA compatibility
+    // Use window.location.href for reliable cross-route navigation (PWA-safe)
+    if (pathname !== path && !pathname.startsWith(path + '/')) {
       window.location.href = path;
-    } else {
-      // Same page type (e.g., /projects to /projects/123) - soft refresh
-      window.history.pushState({}, '', path);
-      router.refresh();
     }
   };
 

@@ -50,21 +50,12 @@ export function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
   
-  // Navigation helper for reliable SPA navigation
+  // Navigation helper — use hard navigation for cross-route changes (PWA-safe)
   const navigate = (path: string, perspectiveId: string) => {
     setCurrentPerspective(perspectiveId);
     
-    // Check if navigating to a different base route (different page component)
-    const currentBase = pathname.split('/')[1];
-    const targetBase = path.split('/')[1];
-    
-    if (currentBase !== targetBase) {
-      // Different page component - need full navigation for PWA compatibility
+    if (pathname !== path && !pathname.startsWith(path + '/')) {
       window.location.href = path;
-    } else {
-      // Same page type - soft refresh
-      window.history.pushState({}, '', path);
-      router.refresh();
     }
   };
   const [isMoreOpen, setIsMoreOpen] = useState(false);
