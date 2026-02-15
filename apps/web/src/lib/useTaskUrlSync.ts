@@ -17,6 +17,12 @@ export function useTaskUrlSync() {
   const selectedActionId = useAppStore(s => s.selectedActionId);
   const setSelectedAction = useAppStore(s => s.setSelectedAction);
   const initializedRef = useRef(false);
+  const lastPathnameRef = useRef(pathname);
+
+  // Update lastPathnameRef when pathname changes
+  useEffect(() => {
+    lastPathnameRef.current = pathname;
+  }, [pathname]);
 
   // On mount: read ?task= from URL and open detail panel
   useEffect(() => {
@@ -31,6 +37,11 @@ export function useTaskUrlSync() {
 
   // When selectedActionId changes, update URL
   useEffect(() => {
+    // Skip if we're mid-navigation (pathname has changed)
+    if (lastPathnameRef.current !== pathname) {
+      return;
+    }
+
     const currentTaskParam = searchParams.get('task');
 
     if (selectedActionId && selectedActionId !== currentTaskParam) {

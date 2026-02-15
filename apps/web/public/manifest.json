@@ -3,6 +3,7 @@
   "short_name": "OmniFocus",
   "description": "A web-based GTD task management app",
   "start_url": "/inbox",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#18181B",
   "theme_color": "#8B5CF6",

@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useMemo, useCallback } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAppStore } from '@/stores/app.store';
 import {
   Inbox,
@@ -79,12 +80,6 @@ const perspectiveHref: Record<string, string> = {
 export function Sidebar() {
   const { perspectives, setQuickEntryOpen, openPerspectiveEditor, setSettingsOpen, setWeeklyReviewOpen, theme, actions, logout } = useAppStore();
   const pathname = usePathname();
-  const router = useRouter();
-
-  // Navigation helper - just use router.push, perspective will be derived from URL
-  const navigate = (path: string) => {
-    router.push(path);
-  };
 
   const builtInPerspectives = perspectives.filter((p) => p.isBuiltIn);
   const customPerspectives = perspectives.filter((p) => !p.isBuiltIn);
@@ -130,8 +125,8 @@ export function Sidebar() {
       <nav className="flex-1 overflow-y-auto px-2">
         <div className="space-y-1">
           {/* Today - special perspective */}
-          <button
-            onClick={() => navigate('/today')}
+          <Link
+            href="/today"
             className={clsx(
               'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
               isActive('today')
@@ -151,7 +146,7 @@ export function Sidebar() {
                 {counts.today}
               </span>
             )}
-          </button>
+          </Link>
 
           {builtInPerspectives.map((perspective) => {
             // Map perspective to count
@@ -164,9 +159,9 @@ export function Sidebar() {
             const active = isActive(perspective.id);
 
             return (
-              <button
+              <Link
                 key={perspective.id}
-                onClick={() => navigate(href)}
+                href={href}
                 className={clsx(
                   'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
                   active
@@ -190,13 +185,13 @@ export function Sidebar() {
                     {count}
                   </span>
                 )}
-              </button>
+              </Link>
             );
           })}
 
           {/* Rocky's Queue - special perspective */}
-          <button
-            onClick={() => navigate('/rocky-queue')}
+          <Link
+            href="/rocky-queue"
             className={clsx(
               'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
               isActive('rocky-queue')
@@ -216,11 +211,11 @@ export function Sidebar() {
                 {counts.rockyQueue}
               </span>
             )}
-          </button>
+          </Link>
 
           {/* Stats - special perspective */}
-          <button
-            onClick={() => navigate('/stats')}
+          <Link
+            href="/stats"
             className={clsx(
               'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
               isActive('stats')
@@ -230,7 +225,7 @@ export function Sidebar() {
           >
             <BarChart3 size={18} />
             <span>Statistics</span>
-          </button>
+          </Link>
         </div>
 
         {/* Projects Tree */}
@@ -262,9 +257,9 @@ export function Sidebar() {
           {customPerspectives.length > 0 ? (
             <div className="space-y-1">
               {customPerspectives.map((perspective) => (
-                <button
+                <Link
                   key={perspective.id}
-                  onClick={() => navigate(perspectiveHref[perspective.id] || '/inbox')}
+                  href={perspectiveHref[perspective.id] || '/inbox'}
                   className={clsx(
                     'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
                     isActive(perspective.id)
@@ -274,7 +269,7 @@ export function Sidebar() {
                 >
                   <FolderKanban size={18} />
                   <span>{perspective.name}</span>
-                </button>
+                </Link>
               ))}
             </div>
           ) : (
