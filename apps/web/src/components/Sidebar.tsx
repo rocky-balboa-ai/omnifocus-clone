@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { useAppStore } from '@/stores/app.store';
 import {
   Inbox,
@@ -103,7 +104,7 @@ export function Sidebar() {
             const count = item.badgeKey ? counts[item.badgeKey] : 0;
 
             return (
-              <a
+              <Link
                 key={item.id}
                 href={item.href}
                 className={clsx(
@@ -137,7 +138,7 @@ export function Sidebar() {
                     {count}
                   </span>
                 )}
-              </a>
+              </Link>
             );
           })}
         </div>
@@ -173,7 +174,7 @@ export function Sidebar() {
           {customPerspectives.length > 0 ? (
             <div className="space-y-1">
               {customPerspectives.map((p) => (
-                <a
+                <Link
                   key={p.id}
                   href={`/perspectives/${p.id}`}
                   className={clsx(
@@ -187,7 +188,7 @@ export function Sidebar() {
                 >
                   <FolderKanban size={18} />
                   <span>{p.name}</span>
-                </a>
+                </Link>
               ))}
             </div>
           ) : (

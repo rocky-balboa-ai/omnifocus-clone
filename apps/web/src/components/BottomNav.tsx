@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { useAppStore } from '@/stores/app.store';
 import {
   Inbox,
@@ -110,7 +111,7 @@ export function BottomNav() {
           const count = item.badgeKey ? counts[item.badgeKey] ?? 0 : 0;
 
           return (
-            <a
+            <Link
               key={item.id}
               href={item.href}
               className={clsx(
@@ -148,7 +149,7 @@ export function BottomNav() {
               >
                 {item.label}
               </span>
-            </a>
+            </Link>
           );
         })}
 
@@ -193,7 +194,7 @@ export function BottomNav() {
                 const Icon = item.icon;
                 const active = isActive(item.href);
                 return (
-                  <a
+                  <Link
                     key={item.id}
                     href={item.href}
                     className={clsx(
@@ -207,7 +208,7 @@ export function BottomNav() {
                   >
                     <Icon size={18} />
                     <span>{item.label}</span>
-                  </a>
+                  </Link>
                 );
               })}
 

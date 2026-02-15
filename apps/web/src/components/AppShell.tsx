@@ -98,7 +98,8 @@ export function AppShell({ children }: AppShellProps) {
   useThemeInit();
   useKeyboardShortcuts();
   useNotifications();
-  useTaskUrlSync();
+  // DISABLED: useTaskUrlSync uses history.replaceState which corrupts Next.js router state
+  // useTaskUrlSync();
 
   useEffect(() => {
     if (isAuthenticated) {
