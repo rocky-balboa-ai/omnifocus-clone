@@ -1,10 +1,10 @@
 import { Suspense } from 'react';
-import { AppShell } from '@/components/AppShell';
+import { AppShellMinimal } from '@/components/AppShellMinimal';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <Suspense>
-      <AppShell>{children}</AppShell>
+      <AppShellMinimal>{children}</AppShellMinimal>
     </Suspense>
   );
 }
