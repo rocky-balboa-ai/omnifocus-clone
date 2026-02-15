@@ -32,9 +32,13 @@ async function bootstrap() {
     }),
   );
 
-  // CORS for frontend
+  // CORS for frontend (supports comma-separated origins)
+  const corsOrigin = configService.get('CORS_ORIGIN', 'http://localhost:7847');
+  const origins = corsOrigin.includes(',')
+    ? corsOrigin.split(',').map((o: string) => o.trim())
+    : corsOrigin;
   app.enableCors({
-    origin: configService.get('CORS_ORIGIN', 'http://localhost:7847'),
+    origin: origins,
     credentials: true,
   });
 
