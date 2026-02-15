@@ -1,8 +1,7 @@
 'use client';
 
-import { useMemo, useCallback } from 'react';
+import { useMemo } from 'react';
 import { usePathname } from 'next/navigation';
-import Link from 'next/link';
 import { useAppStore } from '@/stores/app.store';
 import {
   Inbox,
@@ -24,230 +23,147 @@ import { SidebarCalendar } from './MiniCalendar';
 import { ProjectTree } from './ProjectTree';
 import { TagTree } from './TagTree';
 
-const themeClasses = {
-  sidebar: {
-    dark: 'bg-omnifocus-sidebar border-omnifocus-border',
-    light: 'bg-omnifocus-light-sidebar border-omnifocus-light-border',
-  },
-  title: {
-    dark: 'text-white',
-    light: 'text-gray-900',
-  },
-  navItem: {
-    active: 'bg-omnifocus-purple text-white',
-    inactive: {
-      dark: 'text-gray-400 hover:bg-omnifocus-surface hover:text-white',
-      light: 'text-gray-600 hover:bg-omnifocus-light-surface hover:text-gray-900',
-    },
-  },
-  sectionTitle: {
-    dark: 'text-gray-500',
-    light: 'text-gray-400',
-  },
-  emptyText: {
-    dark: 'text-gray-600',
-    light: 'text-gray-400',
-  },
-  button: {
-    dark: 'bg-omnifocus-surface text-gray-400 hover:text-white',
-    light: 'bg-omnifocus-light-surface text-gray-600 hover:text-gray-900',
-  },
-};
+/* ─── nav items ─── */
+interface NavItem {
+  id: string;
+  label: string;
+  href: string;
+  icon: React.ReactNode;
+  badgeKey?: 'inbox' | 'today' | 'flagged' | 'forecast' | 'rockyQueue';
+}
 
-const iconMap: Record<string, React.ReactNode> = {
-  inbox: <Inbox size={18} />,
-  folder: <FolderKanban size={18} />,
-  tag: <Tags size={18} />,
-  calendar: <Calendar size={18} />,
-  flag: <Flag size={18} />,
-  refresh: <RefreshCw size={18} />,
-  sun: <Sun size={18} />,
-};
-
-// Map perspective IDs to URL paths
-const perspectiveHref: Record<string, string> = {
-  inbox: '/inbox',
-  projects: '/projects',
-  tags: '/tags',
-  forecast: '/forecast',
-  flagged: '/flagged',
-  review: '/review',
-  today: '/today',
-  stats: '/stats',
-  'rocky-queue': '/rocky-queue',
-};
+const navItems: NavItem[] = [
+  { id: 'today',       label: 'Today',          href: '/today',       icon: <Sun size={18} />,           badgeKey: 'today' },
+  { id: 'inbox',       label: 'Inbox',          href: '/inbox',       icon: <Inbox size={18} />,         badgeKey: 'inbox' },
+  { id: 'projects',    label: 'Projects',       href: '/projects',    icon: <FolderKanban size={18} /> },
+  { id: 'tags',        label: 'Tags',           href: '/tags',        icon: <Tags size={18} /> },
+  { id: 'forecast',    label: 'Forecast',       href: '/forecast',    icon: <Calendar size={18} />,      badgeKey: 'forecast' },
+  { id: 'flagged',     label: 'Flagged',        href: '/flagged',     icon: <Flag size={18} />,          badgeKey: 'flagged' },
+  { id: 'review',      label: 'Review',         href: '/review',      icon: <RefreshCw size={18} /> },
+  { id: 'rocky-queue', label: "Rocky's Queue",  href: '/rocky-queue', icon: <Bot size={18} />,           badgeKey: 'rockyQueue' },
+  { id: 'stats',       label: 'Statistics',     href: '/stats',       icon: <BarChart3 size={18} /> },
+];
 
 export function Sidebar() {
-  const { perspectives, setQuickEntryOpen, openPerspectiveEditor, setSettingsOpen, setWeeklyReviewOpen, theme, actions, logout } = useAppStore();
+  const {
+    setQuickEntryOpen,
+    openPerspectiveEditor,
+    setSettingsOpen,
+    setWeeklyReviewOpen,
+    theme,
+    actions,
+    perspectives,
+    logout,
+  } = useAppStore();
   const pathname = usePathname();
 
-  const builtInPerspectives = perspectives.filter((p) => p.isBuiltIn);
   const customPerspectives = perspectives.filter((p) => !p.isBuiltIn);
 
-  // Determine active perspective from pathname
-  const isActive = (id: string) => {
-    const href = perspectiveHref[id];
-    if (!href) return false;
-    return pathname === href || pathname.startsWith(href + '/');
-  };
+  const isActive = (href: string) =>
+    pathname === href || pathname.startsWith(href + '/');
 
-  // Calculate counts for badges
   const counts = useMemo(() => {
     const today = startOfDay(new Date());
-    const activeActions = actions.filter(a => a.status === 'active');
-
+    const active = actions.filter((a) => a.status === 'active');
     return {
-      // Inbox: Actions without a project
-      inbox: activeActions.filter(a => !a.projectId).length,
-      // Today: Due today or overdue
-      today: activeActions.filter(a => {
+      inbox: active.filter((a) => !a.projectId).length,
+      today: active.filter((a) => {
         if (!a.dueDate) return false;
         return isToday(new Date(a.dueDate)) || isBefore(new Date(a.dueDate), today);
       }).length,
-      // Flagged: Flagged actions
-      flagged: activeActions.filter(a => a.flagged).length,
-      // Forecast: Actions with due dates
-      forecast: activeActions.filter(a => a.dueDate).length,
-      // Rocky's Queue: Actions managed by Rocky
-      rockyQueue: activeActions.filter(a => a.managedBy === 'rocky').length,
+      flagged: active.filter((a) => a.flagged).length,
+      forecast: active.filter((a) => !!a.dueDate).length,
+      rockyQueue: active.filter((a) => a.managedBy === 'rocky').length,
     };
   }, [actions]);
 
+  const dark = theme === 'dark';
+
   return (
-    <aside className={clsx(
-      'hidden md:flex w-64 border-r flex-col',
-      themeClasses.sidebar[theme]
-    )}>
+    <aside
+      className={clsx(
+        'hidden md:flex w-64 border-r flex-col',
+        dark
+          ? 'bg-omnifocus-sidebar border-omnifocus-border'
+          : 'bg-omnifocus-light-sidebar border-omnifocus-light-border',
+      )}
+    >
+      {/* Header */}
       <div className="p-4">
-        <h1 className={clsx('text-xl font-semibold', themeClasses.title[theme])}>OmniFocus</h1>
+        <h1 className={clsx('text-xl font-semibold', dark ? 'text-white' : 'text-gray-900')}>
+          OmniFocus
+        </h1>
       </div>
 
+      {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-2">
         <div className="space-y-1">
-          {/* Today - special perspective */}
-          <Link
-            href="/today"
-            className={clsx(
-              'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
-              isActive('today')
-                ? themeClasses.navItem.active
-                : themeClasses.navItem.inactive[theme]
-            )}
-          >
-            <Sun size={18} />
-            <span className="flex-1 text-left">Today</span>
-            {counts.today > 0 && (
-              <span className={clsx(
-                'px-1.5 py-0.5 text-xs rounded-full font-medium',
-                isActive('today')
-                  ? 'bg-white/20'
-                  : 'bg-omnifocus-orange text-white'
-              )}>
-                {counts.today}
-              </span>
-            )}
-          </Link>
-
-          {builtInPerspectives.map((perspective) => {
-            // Map perspective to count
-            const count = perspective.id === 'inbox' ? counts.inbox
-              : perspective.id === 'flagged' ? counts.flagged
-              : perspective.id === 'forecast' ? counts.forecast
-              : 0;
-
-            const href = perspectiveHref[perspective.id] || '/inbox';
-            const active = isActive(perspective.id);
+          {navItems.map((item) => {
+            const active = isActive(item.href);
+            const count = item.badgeKey ? counts[item.badgeKey] : 0;
 
             return (
-              <Link
-                key={perspective.id}
-                href={href}
+              <a
+                key={item.id}
+                href={item.href}
                 className={clsx(
                   'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
                   active
-                    ? themeClasses.navItem.active
-                    : themeClasses.navItem.inactive[theme]
+                    ? 'bg-omnifocus-purple text-white'
+                    : dark
+                      ? 'text-gray-400 hover:bg-omnifocus-surface hover:text-white'
+                      : 'text-gray-600 hover:bg-omnifocus-light-surface hover:text-gray-900',
                 )}
               >
-                {iconMap[perspective.icon || 'inbox']}
-                <span className="flex-1 text-left">{perspective.name}</span>
+                {item.icon}
+                <span className="flex-1 text-left">{item.label}</span>
                 {count > 0 && (
-                  <span className={clsx(
-                    'px-1.5 py-0.5 text-xs rounded-full font-medium',
-                    active
-                      ? 'bg-white/20'
-                      : perspective.id === 'flagged'
-                        ? 'bg-omnifocus-orange text-white'
-                        : theme === 'dark'
-                          ? 'bg-omnifocus-surface text-gray-400'
-                          : 'bg-gray-200 text-gray-600'
-                  )}>
+                  <span
+                    className={clsx(
+                      'px-1.5 py-0.5 text-xs rounded-full font-medium',
+                      active
+                        ? 'bg-white/20'
+                        : item.badgeKey === 'flagged'
+                          ? 'bg-omnifocus-orange text-white'
+                          : item.badgeKey === 'today'
+                            ? 'bg-omnifocus-orange text-white'
+                            : item.badgeKey === 'rockyQueue'
+                              ? 'bg-omnifocus-purple text-white'
+                              : dark
+                                ? 'bg-omnifocus-surface text-gray-400'
+                                : 'bg-gray-200 text-gray-600',
+                    )}
+                  >
                     {count}
                   </span>
                 )}
-              </Link>
+              </a>
             );
           })}
-
-          {/* Rocky's Queue - special perspective */}
-          <Link
-            href="/rocky-queue"
-            className={clsx(
-              'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
-              isActive('rocky-queue')
-                ? themeClasses.navItem.active
-                : themeClasses.navItem.inactive[theme]
-            )}
-          >
-            <Bot size={18} />
-            <span className="flex-1 text-left">Rocky's Queue</span>
-            {counts.rockyQueue > 0 && (
-              <span className={clsx(
-                'px-1.5 py-0.5 text-xs rounded-full font-medium',
-                isActive('rocky-queue')
-                  ? 'bg-white/20'
-                  : 'bg-omnifocus-purple text-white'
-              )}>
-                {counts.rockyQueue}
-              </span>
-            )}
-          </Link>
-
-          {/* Stats - special perspective */}
-          <Link
-            href="/stats"
-            className={clsx(
-              'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
-              isActive('stats')
-                ? themeClasses.navItem.active
-                : themeClasses.navItem.inactive[theme]
-            )}
-          >
-            <BarChart3 size={18} />
-            <span>Statistics</span>
-          </Link>
         </div>
 
-        {/* Projects Tree */}
+        {/* Project & Tag trees */}
         <ProjectTree theme={theme} />
-
-        {/* Tags Tree */}
         <TagTree theme={theme} />
 
+        {/* Custom perspectives */}
         <div className="mt-6">
           <div className="flex items-center justify-between px-3 mb-2">
-            <h3 className={clsx(
-              'text-xs font-semibold uppercase tracking-wider',
-              themeClasses.sectionTitle[theme]
-            )}>
+            <h3
+              className={clsx(
+                'text-xs font-semibold uppercase tracking-wider',
+                dark ? 'text-gray-500' : 'text-gray-400',
+              )}
+            >
               Custom
             </h3>
             <button
               onClick={() => openPerspectiveEditor()}
               className={clsx(
                 'p-1 rounded transition-colors',
-                themeClasses.sectionTitle[theme],
-                theme === 'dark' ? 'hover:bg-omnifocus-surface hover:text-white' : 'hover:bg-omnifocus-light-surface hover:text-gray-900'
+                dark
+                  ? 'text-gray-500 hover:bg-omnifocus-surface hover:text-white'
+                  : 'text-gray-400 hover:bg-omnifocus-light-surface hover:text-gray-900',
               )}
               title="New Perspective"
             >
@@ -256,44 +172,51 @@ export function Sidebar() {
           </div>
           {customPerspectives.length > 0 ? (
             <div className="space-y-1">
-              {customPerspectives.map((perspective) => (
-                <Link
-                  key={perspective.id}
-                  href={perspectiveHref[perspective.id] || '/inbox'}
+              {customPerspectives.map((p) => (
+                <a
+                  key={p.id}
+                  href={`/perspectives/${p.id}`}
                   className={clsx(
                     'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
-                    isActive(perspective.id)
-                      ? themeClasses.navItem.active
-                      : themeClasses.navItem.inactive[theme]
+                    pathname === `/perspectives/${p.id}`
+                      ? 'bg-omnifocus-purple text-white'
+                      : dark
+                        ? 'text-gray-400 hover:bg-omnifocus-surface hover:text-white'
+                        : 'text-gray-600 hover:bg-omnifocus-light-surface hover:text-gray-900',
                   )}
                 >
                   <FolderKanban size={18} />
-                  <span>{perspective.name}</span>
-                </Link>
+                  <span>{p.name}</span>
+                </a>
               ))}
             </div>
           ) : (
-            <p className={clsx('px-3 text-xs', themeClasses.emptyText[theme])}>
+            <p className={clsx('px-3 text-xs', dark ? 'text-gray-600' : 'text-gray-400')}>
               No custom perspectives yet
             </p>
           )}
         </div>
 
-        {/* Mini Calendar */}
+        {/* Mini calendar */}
         <div className="mt-6 px-2">
           <SidebarCalendar onSelectDate={() => {}} />
         </div>
       </nav>
 
-      <div className={clsx(
-        'p-4 border-t space-y-2',
-        theme === 'dark' ? 'border-omnifocus-border' : 'border-omnifocus-light-border'
-      )}>
+      {/* Footer actions */}
+      <div
+        className={clsx(
+          'p-4 border-t space-y-2',
+          dark ? 'border-omnifocus-border' : 'border-omnifocus-light-border',
+        )}
+      >
         <button
           onClick={() => setQuickEntryOpen(true)}
           className={clsx(
             'w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors',
-            themeClasses.button[theme]
+            dark
+              ? 'bg-omnifocus-surface text-gray-400 hover:text-white'
+              : 'bg-omnifocus-light-surface text-gray-600 hover:text-gray-900',
           )}
         >
           <Plus size={18} />
@@ -303,7 +226,9 @@ export function Sidebar() {
           onClick={() => setWeeklyReviewOpen(true)}
           className={clsx(
             'w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors',
-            themeClasses.button[theme]
+            dark
+              ? 'bg-omnifocus-surface text-gray-400 hover:text-white'
+              : 'bg-omnifocus-light-surface text-gray-600 hover:text-gray-900',
           )}
         >
           <RefreshCw size={18} />
@@ -313,7 +238,9 @@ export function Sidebar() {
           onClick={() => setSettingsOpen(true)}
           className={clsx(
             'w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors',
-            themeClasses.button[theme]
+            dark
+              ? 'bg-omnifocus-surface text-gray-400 hover:text-white'
+              : 'bg-omnifocus-light-surface text-gray-600 hover:text-gray-900',
           )}
         >
           <Settings size={18} />
@@ -321,10 +248,7 @@ export function Sidebar() {
         </button>
         <button
           onClick={logout}
-          className={clsx(
-            'w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors',
-            'text-red-400 hover:bg-red-500/10'
-          )}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-colors text-red-400 hover:bg-red-500/10"
         >
           <LogOut size={18} />
           <span className="text-sm">Sign out</span>

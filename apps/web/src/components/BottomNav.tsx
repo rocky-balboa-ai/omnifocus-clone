@@ -1,7 +1,6 @@
 'use client';
 
-import { useMemo, useState, useRef, useEffect, useCallback } from 'react';
-import Link from 'next/link';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAppStore } from '@/stores/app.store';
 import {
@@ -21,299 +20,222 @@ import {
 import clsx from 'clsx';
 import { isBefore, isToday, startOfDay } from 'date-fns';
 
-const perspectiveIcons: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
-  today: Sun,
-  inbox: Inbox,
-  projects: FolderKanban,
-  tags: Tags,
-  forecast: Calendar,
-  flagged: Flag,
-  review: RefreshCw,
-};
+/* ─── types ─── */
+interface NavItem {
+  id: string;
+  label: string;
+  href: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  badgeKey?: 'today' | 'inbox' | 'flagged' | 'forecast' | 'review';
+}
 
-const perspectiveHref: Record<string, string> = {
-  inbox: '/inbox',
-  projects: '/projects',
-  tags: '/tags',
-  forecast: '/forecast',
-  flagged: '/flagged',
-  review: '/review',
-  today: '/today',
-  stats: '/stats',
-  'rocky-queue': '/rocky-queue',
-};
+/* Bottom bar shows 4 main items + More */
+const primaryItems: NavItem[] = [
+  { id: 'today',    label: 'Today',    href: '/today',    icon: Sun,      badgeKey: 'today' },
+  { id: 'inbox',    label: 'Inbox',    href: '/inbox',    icon: Inbox,    badgeKey: 'inbox' },
+  { id: 'forecast', label: 'Forecast', href: '/forecast', icon: Calendar, badgeKey: 'forecast' },
+  { id: 'flagged',  label: 'Flagged',  href: '/flagged',  icon: Flag,     badgeKey: 'flagged' },
+];
 
-// Mobile shows fewer items due to space constraints - reduced to make room for More
-const perspectiveOrder = ['today', 'inbox', 'forecast', 'flagged'];
+/* Items inside the "More" menu */
+const moreItems: NavItem[] = [
+  { id: 'projects',    label: 'Projects',       href: '/projects',    icon: FolderKanban },
+  { id: 'tags',        label: 'Tags',           href: '/tags',        icon: Tags },
+  { id: 'review',      label: 'Review',         href: '/review',      icon: RefreshCw, badgeKey: 'review' },
+  { id: 'rocky-queue', label: "Rocky's Queue",  href: '/rocky-queue', icon: Bot },
+  { id: 'stats',       label: 'Statistics',     href: '/stats',       icon: BarChart3 },
+];
 
 export function BottomNav() {
-  const { perspectives, setSettingsOpen, logout, actions, projects, theme } = useAppStore();
+  const { setSettingsOpen, logout, actions, projects, theme } = useAppStore();
   const pathname = usePathname();
-  const [isMoreOpen, setIsMoreOpen] = useState(false);
-  const moreMenuRef = useRef<HTMLDivElement>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  const isActive = (id: string) => {
-    const href = perspectiveHref[id];
-    if (!href) return false;
-    return pathname === href || pathname.startsWith(href + '/');
-  };
+  const isActive = (href: string) =>
+    pathname === href || pathname.startsWith(href + '/');
 
-  // Close menu when clicking outside
+  /* close menu on outside click */
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
-        setIsMoreOpen(false);
+    if (!moreOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMoreOpen(false);
       }
-    }
-    if (isMoreOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [isMoreOpen]);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [moreOpen]);
 
-  // Calculate badge counts for each perspective
-  const badgeCounts = useMemo(() => {
+  const counts = useMemo(() => {
     const today = startOfDay(new Date());
-    const activeActions = actions.filter(a => a.status === 'active');
-
-    const overdueCount = activeActions.filter(a =>
-      a.dueDate && isBefore(new Date(a.dueDate), today)
-    ).length;
-
-    const dueTodayCount = activeActions.filter(a =>
-      a.dueDate && isToday(new Date(a.dueDate))
-    ).length;
-
+    const active = actions.filter((a) => a.status === 'active');
     return {
-      today: overdueCount + dueTodayCount,
-      inbox: activeActions.filter(a => !a.projectId).length,
-      flagged: activeActions.filter(a => a.flagged).length,
-      forecast: activeActions.filter(a => {
+      today: active.filter((a) => {
         if (!a.dueDate) return false;
-        const dueDate = new Date(a.dueDate);
-        return isBefore(dueDate, today) || isToday(dueDate);
+        const d = new Date(a.dueDate);
+        return isToday(d) || isBefore(d, today);
       }).length,
-      review: projects.filter(p => {
+      inbox: active.filter((a) => !a.projectId).length,
+      flagged: active.filter((a) => a.flagged).length,
+      forecast: active.filter((a) => {
+        if (!a.dueDate) return false;
+        const d = new Date(a.dueDate);
+        return isBefore(d, today) || isToday(d);
+      }).length,
+      review: projects.filter((p) => {
         if (p.status !== 'active' || !p.reviewInterval) return false;
         if (!p.nextReviewAt) return true;
-        return isBefore(new Date(p.nextReviewAt), today) || isToday(new Date(p.nextReviewAt));
+        const d = new Date(p.nextReviewAt);
+        return isBefore(d, today) || isToday(d);
       }).length,
     };
   }, [actions, projects]);
 
-  // Get perspectives in the correct order (including special 'today')
-  const orderedPerspectives = perspectiveOrder
-    .map(id => {
-      if (id === 'today') {
-        return { id: 'today', name: 'Today', isBuiltIn: true };
-      }
-      return perspectives.find(p => p.id === id);
-    })
-    .filter(Boolean);
-
-  const handleLogout = () => {
-    setIsMoreOpen(false);
-    logout();
-  };
-
-  const handleOpenSettings = () => {
-    setIsMoreOpen(false);
-    setSettingsOpen(true);
-  };
+  const dark = theme === 'dark';
 
   return (
-    <nav className={clsx(
-      'md:hidden fixed bottom-0 left-0 right-0 backdrop-blur-lg border-t z-40',
-      theme === 'dark'
-        ? 'bg-omnifocus-sidebar/95 border-omnifocus-border'
-        : 'bg-white/95 border-gray-200'
-    )}>
+    <nav
+      className={clsx(
+        'md:hidden fixed bottom-0 left-0 right-0 backdrop-blur-lg border-t z-40',
+        dark
+          ? 'bg-omnifocus-sidebar/95 border-omnifocus-border'
+          : 'bg-white/95 border-gray-200',
+      )}
+    >
       <div className="flex items-center justify-around px-1 pb-safe">
-        {orderedPerspectives.map((perspective) => {
-          if (!perspective) return null;
-          const Icon = perspectiveIcons[perspective.id] || Inbox;
-          const active = isActive(perspective.id);
-          const badgeCount = badgeCounts[perspective.id as keyof typeof badgeCounts] || 0;
-          const href = perspectiveHref[perspective.id] || '/inbox';
+        {primaryItems.map((item) => {
+          const Icon = item.icon;
+          const active = isActive(item.href);
+          const count = item.badgeKey ? counts[item.badgeKey] ?? 0 : 0;
 
           return (
-            <Link
-              key={perspective.id}
-              href={href}
+            <a
+              key={item.id}
+              href={item.href}
               className={clsx(
                 'relative flex flex-col items-center justify-center py-2 px-2 rounded-xl transition-all duration-200 min-w-[52px]',
                 active
                   ? 'text-omnifocus-purple'
-                  : theme === 'dark' ? 'text-gray-500 active:scale-95' : 'text-gray-400 active:scale-95'
+                  : dark
+                    ? 'text-gray-500 active:scale-95'
+                    : 'text-gray-400 active:scale-95',
               )}
             >
               <div className="relative">
                 <Icon
                   size={24}
-                  className={clsx(
-                    'transition-transform duration-200',
-                    active && 'scale-110'
-                  )}
+                  className={clsx('transition-transform duration-200', active && 'scale-110')}
                 />
-                {badgeCount > 0 && (
-                  <span className={clsx(
-                    'absolute -top-1 -right-2 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full text-[10px] font-bold',
-                    perspective.id === 'forecast'
-                      ? 'bg-red-500 text-white'
-                      : 'bg-omnifocus-purple text-white'
-                  )}>
-                    {badgeCount > 99 ? '99+' : badgeCount}
+                {count > 0 && (
+                  <span
+                    className={clsx(
+                      'absolute -top-1 -right-2 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full text-[10px] font-bold',
+                      item.id === 'forecast'
+                        ? 'bg-red-500 text-white'
+                        : 'bg-omnifocus-purple text-white',
+                    )}
+                  >
+                    {count > 99 ? '99+' : count}
                   </span>
                 )}
               </div>
-              <span className={clsx(
-                'text-[10px] mt-0.5 font-medium',
-                active
-                  ? 'text-omnifocus-purple'
-                  : theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-              )}>
-                {perspective.name}
+              <span
+                className={clsx(
+                  'text-[10px] mt-0.5 font-medium',
+                  active ? 'text-omnifocus-purple' : dark ? 'text-gray-500' : 'text-gray-400',
+                )}
+              >
+                {item.label}
               </span>
-            </Link>
+            </a>
           );
         })}
 
-        {/* More Menu Button */}
-        <div className="relative" ref={moreMenuRef}>
+        {/* More button */}
+        <div className="relative" ref={menuRef}>
           <button
-            onClick={() => setIsMoreOpen(!isMoreOpen)}
+            onClick={() => setMoreOpen((v) => !v)}
             className={clsx(
               'relative flex flex-col items-center justify-center py-2 px-2 rounded-xl transition-all duration-200 min-w-[52px]',
-              isMoreOpen
+              moreOpen
                 ? 'text-omnifocus-purple'
-                : theme === 'dark' ? 'text-gray-500 active:scale-95' : 'text-gray-400 active:scale-95'
+                : dark
+                  ? 'text-gray-500 active:scale-95'
+                  : 'text-gray-400 active:scale-95',
             )}
           >
             <MoreHorizontal
               size={24}
-              className={clsx(
-                'transition-transform duration-200',
-                isMoreOpen && 'scale-110'
-              )}
+              className={clsx('transition-transform duration-200', moreOpen && 'scale-110')}
             />
-            <span className={clsx(
-              'text-[10px] mt-0.5 font-medium',
-              isMoreOpen
-                ? 'text-omnifocus-purple'
-                : theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-            )}>
+            <span
+              className={clsx(
+                'text-[10px] mt-0.5 font-medium',
+                moreOpen ? 'text-omnifocus-purple' : dark ? 'text-gray-500' : 'text-gray-400',
+              )}
+            >
               More
             </span>
           </button>
 
-          {/* Popup Menu */}
-          {isMoreOpen && (
-            <div className={clsx(
-              'absolute bottom-full right-0 mb-2 w-48 rounded-xl shadow-lg border overflow-hidden',
-              theme === 'dark'
-                ? 'bg-omnifocus-sidebar border-omnifocus-border'
-                : 'bg-white border-gray-200'
-            )}>
-              {/* Navigation items */}
-              <Link
-                href="/projects"
-                onClick={() => setIsMoreOpen(false)}
-                className={clsx(
-                  'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
-                  isActive('projects')
-                    ? 'text-omnifocus-purple bg-omnifocus-purple/10'
-                    : theme === 'dark'
-                      ? 'text-gray-300 hover:bg-omnifocus-surface'
-                      : 'text-gray-700 hover:bg-gray-100'
-                )}
-              >
-                <FolderKanban size={18} />
-                <span>Projects</span>
-              </Link>
-              <Link
-                href="/tags"
-                onClick={() => setIsMoreOpen(false)}
-                className={clsx(
-                  'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
-                  isActive('tags')
-                    ? 'text-omnifocus-purple bg-omnifocus-purple/10'
-                    : theme === 'dark'
-                      ? 'text-gray-300 hover:bg-omnifocus-surface'
-                      : 'text-gray-700 hover:bg-gray-100'
-                )}
-              >
-                <Tags size={18} />
-                <span>Tags</span>
-              </Link>
-              <Link
-                href="/review"
-                onClick={() => setIsMoreOpen(false)}
-                className={clsx(
-                  'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
-                  isActive('review')
-                    ? 'text-omnifocus-purple bg-omnifocus-purple/10'
-                    : theme === 'dark'
-                      ? 'text-gray-300 hover:bg-omnifocus-surface'
-                      : 'text-gray-700 hover:bg-gray-100'
-                )}
-              >
-                <RefreshCw size={18} />
-                <span>Review</span>
-              </Link>
-              <Link
-                href="/rocky-queue"
-                onClick={() => setIsMoreOpen(false)}
-                className={clsx(
-                  'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
-                  isActive('rocky-queue')
-                    ? 'text-omnifocus-purple bg-omnifocus-purple/10'
-                    : theme === 'dark'
-                      ? 'text-gray-300 hover:bg-omnifocus-surface'
-                      : 'text-gray-700 hover:bg-gray-100'
-                )}
-              >
-                <Bot size={18} />
-                <span>Rocky's Queue</span>
-              </Link>
-              <Link
-                href="/stats"
-                onClick={() => setIsMoreOpen(false)}
-                className={clsx(
-                  'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
-                  isActive('stats')
-                    ? 'text-omnifocus-purple bg-omnifocus-purple/10'
-                    : theme === 'dark'
-                      ? 'text-gray-300 hover:bg-omnifocus-surface'
-                      : 'text-gray-700 hover:bg-gray-100'
-                )}
-              >
-                <BarChart3 size={18} />
-                <span>Statistics</span>
-              </Link>
+          {/* Popup menu */}
+          {moreOpen && (
+            <div
+              className={clsx(
+                'absolute bottom-full right-0 mb-2 w-48 rounded-xl shadow-lg border overflow-hidden',
+                dark
+                  ? 'bg-omnifocus-sidebar border-omnifocus-border'
+                  : 'bg-white border-gray-200',
+              )}
+            >
+              {moreItems.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.href);
+                return (
+                  <a
+                    key={item.id}
+                    href={item.href}
+                    className={clsx(
+                      'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
+                      active
+                        ? 'text-omnifocus-purple bg-omnifocus-purple/10'
+                        : dark
+                          ? 'text-gray-300 hover:bg-omnifocus-surface'
+                          : 'text-gray-700 hover:bg-gray-100',
+                    )}
+                  >
+                    <Icon size={18} />
+                    <span>{item.label}</span>
+                  </a>
+                );
+              })}
 
-              {/* Divider */}
-              <div className={clsx(
-                'border-t',
-                theme === 'dark' ? 'border-omnifocus-border' : 'border-gray-200'
-              )} />
+              <div
+                className={clsx('border-t', dark ? 'border-omnifocus-border' : 'border-gray-200')}
+              />
 
-              {/* Settings */}
               <button
-                onClick={handleOpenSettings}
+                onClick={() => {
+                  setMoreOpen(false);
+                  setSettingsOpen(true);
+                }}
                 className={clsx(
                   'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors',
-                  theme === 'dark'
+                  dark
                     ? 'text-gray-300 hover:bg-omnifocus-surface'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    : 'text-gray-700 hover:bg-gray-100',
                 )}
               >
                 <Settings size={18} />
                 <span>Settings</span>
               </button>
 
-              {/* Sign out */}
               <button
-                onClick={handleLogout}
+                onClick={() => {
+                  setMoreOpen(false);
+                  logout();
+                }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
               >
                 <LogOut size={18} />

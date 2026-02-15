@@ -2,7 +2,7 @@
 
 import { useAppStore, Project } from '@/stores/app.store';
 import { FolderKanban, Flag, Calendar, Settings, ChevronRight, Plus, Layers, List, Eye, EyeOff, Search, X, CornerDownLeft, FolderPlus } from 'lucide-react';
-import Link from 'next/link';
+// Using plain <a> tags — Next.js Link client-side routing broken in prod
 import { ProjectTemplates } from './ProjectTemplates';
 import { FolderTree } from './FolderTree';
 import { StalledIndicator } from './StalledIndicator';
@@ -29,7 +29,7 @@ function ProjectItem({ project }: ProjectItemProps) {
 
   return (
     <li>
-      <Link
+      <a
         href={`/projects/${project.id}`}
         className={clsx(
           'group flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors',
@@ -113,7 +113,7 @@ function ProjectItem({ project }: ProjectItemProps) {
 
       {/* Arrow - navigates to project detail */}
       <ChevronRight size={16} className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'} />
-      </Link>
+      </a>
     </li>
   );
 }
