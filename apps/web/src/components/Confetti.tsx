@@ -199,11 +199,13 @@ export function ConfettiProvider({ children }: ConfettiProviderProps) {
   return (
     <ConfettiContext.Provider value={{ trigger, triggerFromElement }}>
       {children}
-      <ConfettiDisplay
-        active={isActive}
-        onComplete={handleComplete}
-        {...options}
-      />
+      {isActive && (
+        <ConfettiDisplay
+          active={isActive}
+          onComplete={handleComplete}
+          {...options}
+        />
+      )}
     </ConfettiContext.Provider>
   );
 }
