@@ -122,7 +122,7 @@ export function AppShellMinimal({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    // ToastProvider and ConfettiProvider removed to test if they kill nav
+    <ToastProvider>
     <div className={clsx(
       'flex h-screen',
       theme === 'dark' ? 'bg-omnifocus-bg' : 'bg-omnifocus-light-bg'
@@ -220,5 +220,6 @@ export function AppShellMinimal({ children }: { children: React.ReactNode }) {
         onClose={keyboardShortcutsModal.close}
       />
     </div>
+    </ToastProvider>
   );
 }
