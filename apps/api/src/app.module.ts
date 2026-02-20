@@ -14,6 +14,7 @@ import { ExportModule } from './modules/export/export.module';
 import { HealthModule } from './modules/health/health.module';
 import { ChangelogModule } from './modules/changelog/changelog.module';
 import { PushModule } from './modules/push/push.module';
+import { ChatModule } from './modules/chat/chat.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { PushModule } from './modules/push/push.module';
     HealthModule,
     ChangelogModule,
     PushModule,
+    ChatModule,
   ],
 })
 export class AppModule {}
