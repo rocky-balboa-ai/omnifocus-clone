@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
 import { BottomNav } from '@/components/BottomNav';
@@ -19,6 +19,8 @@ import { WeeklyReviewFlow } from '@/components/WeeklyReviewFlow';
 import { KeyboardHintBar } from '@/components/KeyboardHintBar';
 import { Scratchpad } from '@/components/Scratchpad';
 import { BatchActionsBar } from '@/components/BatchActionsBar';
+import { ChatPanel } from '@/components/ChatPanel';
+import { MessageCircle } from 'lucide-react';
 import { FocusModeOverlay } from '@/components/FocusModeOverlay';
 import { FocusBar } from '@/components/FocusBar';
 import { EndOfDaySummary } from '@/components/EndOfDaySummary';
@@ -43,6 +45,7 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const {
     isAuthenticated,
     setAuthenticated,
@@ -224,6 +227,17 @@ export function AppShell({ children }: AppShellProps) {
         isOpen={keyboardShortcutsModal.isOpen}
         onClose={keyboardShortcutsModal.close}
       />
+
+      {/* AI Chat Toggle Button */}
+      <button
+        onClick={() => setIsChatOpen(true)}
+        className="fixed bottom-36 right-4 md:bottom-6 md:right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center"
+        title="AI Assistant"
+      >
+        <MessageCircle size={24} />
+      </button>
+
+      <ChatPanel isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
     </ConfettiProvider>
     </ToastProvider>
