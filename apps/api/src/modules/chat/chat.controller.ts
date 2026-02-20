@@ -3,7 +3,7 @@ import { ChatService } from './chat.service';
 import { SendMessageDto } from './dto/send-message.dto';
 import { AuthGuard } from '../auth/guards/auth.guard';
 
-@Controller('api/chat')
+@Controller('chat')
 @UseGuards(AuthGuard)
 export class ChatController {
   constructor(private chatService: ChatService) {}
