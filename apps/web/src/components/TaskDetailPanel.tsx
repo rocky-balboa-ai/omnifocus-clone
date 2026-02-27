@@ -107,6 +107,7 @@ export function TaskDetailPanel({ actionId, onClose }: TaskDetailPanelProps) {
       flagged,
       estimatedMinutes: estimatedMinutes ? Number(estimatedMinutes) : undefined,
       projectId: projectId || undefined,
+      tagIds: selectedTags,
       repeatMode: repeatMode || undefined,
       repeatInterval: repeatInterval || undefined,
       // Rocky fields

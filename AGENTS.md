@@ -38,3 +38,22 @@ bd sync               # Sync with git
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
 
+
+## Vercel Deployment (CRITICAL)
+
+- **Vercel project name:** `omnifocus-clone` (NOT the old `web` project)
+- **Custom domain:** `omnifocus.mycyborg.ai` (aliased, not auto-assigned)
+- **API URL:** `https://api-omnifocus.mycyborg.ai` (set as `NEXT_PUBLIC_API_URL` env var in Vercel)
+- **After EVERY deploy to production**, run: `vercel alias omnifocus.mycyborg.ai`
+- **Verify deploy reached production:** `curl -sI "https://omnifocus.mycyborg.ai" | grep age` — must be `age: 0` or very low
+- **If `age` is large (thousands+):** The CDN is serving stale content. Re-run `vercel alias`.
+- **Build command:** `turbo build --filter=omnifocus-web` (defined in `vercel.json`)
+- **Output:** `apps/web/.next`
+
+### Deploy Checklist
+```bash
+git add -A && git commit -m "description" && git push
+npx vercel --prod --force
+vercel alias omnifocus.mycyborg.ai
+curl -sI "https://omnifocus.mycyborg.ai" | grep age  # verify age: 0
+```
