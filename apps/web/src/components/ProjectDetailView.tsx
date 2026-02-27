@@ -79,11 +79,17 @@ export function ProjectDetailView({ projectId }: ProjectDetailViewProps) {
     }
   }, [selectedActionId, fetchProject]);
 
+  // Track completing actions for fade-out animation
+  const [completingActionIds, setCompletingActionIds] = useState<Set<string>>(new Set());
+
   const allActions = project?.actions || [];
   const completedCount = allActions.filter(a => a.status === 'completed').length;
   const activeActions = useMemo(
-    () => showCompleted ? allActions : allActions.filter(a => a.status !== 'completed'),
-    [allActions, showCompleted]
+    () => {
+      if (showCompleted) return allActions;
+      return allActions.filter(a => a.status !== 'completed' && !completingActionIds.has(a.id));
+    },
+    [allActions, showCompleted, completingActionIds]
   );
 
   const totalActions = allActions.length;
@@ -139,8 +145,6 @@ export function ProjectDetailView({ projectId }: ProjectDetailViewProps) {
     }
   };
 
-  // Track completing actions for fade-out animation
-  const [completingActionIds, setCompletingActionIds] = useState<Set<string>>(new Set());
   // Track newly created actions for fade-in animation
   const [newActionIds, setNewActionIds] = useState<Set<string>>(new Set());
 
@@ -164,8 +168,10 @@ export function ProjectDetailView({ projectId }: ProjectDetailViewProps) {
 
         // Wait for animation to complete before actually completing
         setTimeout(async () => {
+          console.log('[complete] animation done, updating local state for', action.id);
           // Optimistically update local project state immediately
           setProject(prev => {
+            console.log('[complete] setProject called, actions count:', prev?.actions?.length, 'marking', action.id, 'completed');
             if (!prev) return prev;
             return {
               ...prev,
