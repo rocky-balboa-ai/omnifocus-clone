@@ -583,10 +583,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const action = actions.find(a => a.id === id);
     const actionTitle = action?.title || 'Action';
 
-    await api.post(`/actions/${id}/complete`);
-
-    // Update action status - keep in store for progress tracking
-    // Filtering for display is done at the component level
+    // Optimistic update - remove from visible list immediately
     set((state) => ({
       actions: state.actions.map(a =>
         a.id === id
@@ -600,6 +597,21 @@ export const useAppStore = create<AppState>((set, get) => ({
       window.dispatchEvent(new CustomEvent('action-completed', {
         detail: { actionId: id, title: actionTitle }
       }));
+    }
+
+    // Persist to server (if it fails, revert)
+    try {
+      await api.post(`/actions/${id}/complete`);
+    } catch (error) {
+      // Revert optimistic update on failure
+      set((state) => ({
+        actions: state.actions.map(a =>
+          a.id === id
+            ? { ...a, status: 'active' as const, completedAt: undefined }
+            : a
+        ),
+      }));
+      throw error;
     }
   },
 
