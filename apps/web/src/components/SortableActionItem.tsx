@@ -93,16 +93,17 @@ export function SortableActionItem({
   const handleComplete = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (action.status === 'completed') {
-      // If already completed, just toggle back
+      // If already completed, toggle back to active
+      setIsCompleting(false);
       await completeAction(action.id);
       return;
     }
-    // Start completion animation
+    // Start completion animation - don't reset isCompleting after,
+    // let the component unmount when parent filters out completed tasks
     setIsCompleting(true);
-    // Wait for animation
-    setTimeout(async () => {
-      await completeAction(action.id);
-      setIsCompleting(false);
+    // Wait for animation then mark complete - parent will filter this out
+    setTimeout(() => {
+      completeAction(action.id);
     }, 300);
   };
 
