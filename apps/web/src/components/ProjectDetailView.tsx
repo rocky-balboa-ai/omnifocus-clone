@@ -164,6 +164,16 @@ export function ProjectDetailView({ projectId }: ProjectDetailViewProps) {
 
         // Wait for animation to complete before actually completing
         setTimeout(async () => {
+          // Optimistically update local project state immediately
+          setProject(prev => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              actions: prev.actions?.map(a =>
+                a.id === action.id ? { ...a, status: 'completed' as const, completedAt: new Date().toISOString() } : a
+              )
+            };
+          });
           await completeAction(action.id);
           // Remove from completing set
           setCompletingActionIds(prev => {
