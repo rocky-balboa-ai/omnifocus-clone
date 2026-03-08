@@ -144,13 +144,14 @@ function ProjectItem({
 }
 
 export function ProjectTree({ theme }: ProjectTreeProps) {
-  const { projects, folders, focusedProjectId, setFocusedProject, setCurrentPerspective } = useAppStore();
+  const { projects, folders, setCurrentPerspective } = useAppStore();
   const pathname = usePathname();
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(true);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
   const isProjectsActive = pathname === '/projects' || pathname.startsWith('/projects/');
+  const activeProjectId = pathname.startsWith('/projects/') ? pathname.split('/')[2] : null;
 
   const toggleFolder = (id: string) => {
     setExpandedFolders(prev => {
@@ -172,8 +173,8 @@ export function ProjectTree({ theme }: ProjectTreeProps) {
   );
 
   const handleProjectClick = (projectId: string) => {
-    setFocusedProject(projectId);
     setCurrentPerspective('projects');
+    router.push(`/projects/${projectId}`);
   };
 
   return (
@@ -220,7 +221,7 @@ export function ProjectTree({ theme }: ProjectTreeProps) {
               theme={theme}
               expandedFolders={expandedFolders}
               toggleFolder={toggleFolder}
-              focusedProjectId={focusedProjectId}
+              focusedProjectId={activeProjectId}
               setFocusedProject={handleProjectClick}
             />
           ))}
@@ -230,7 +231,7 @@ export function ProjectTree({ theme }: ProjectTreeProps) {
               project={project}
               level={0}
               theme={theme}
-              isActive={focusedProjectId === project.id}
+              isActive={activeProjectId === project.id}
               onClick={() => handleProjectClick(project.id)}
             />
           ))}
